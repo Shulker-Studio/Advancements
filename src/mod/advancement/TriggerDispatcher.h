@@ -16,6 +16,9 @@ struct TriggerContext {
     Player&                    player;
     std::string                triggerId;
     std::optional<std::string> blockId;
+    std::optional<std::string> itemId;
+    std::optional<int>         itemCount;
+    std::optional<std::string> entityTypeId;
 };
 
 class TriggerDispatcher {

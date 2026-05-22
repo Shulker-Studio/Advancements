@@ -1,0 +1,57 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:story/mine_diamond",
+  "display": {
+    "title": {
+      "translate": "advancements.story.shiny_gear.title"
+    },
+    "description": {
+      "translate": "advancements.story.shiny_gear.description"
+    },
+    "icon": {
+      "item": "minecraft:diamond_chestplate"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "diamond_helmet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:diamond_helmet",
+        "count": 1
+      }
+    },
+    "diamond_chestplate": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:diamond_chestplate",
+        "count": 1
+      }
+    },
+    "diamond_leggings": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:diamond_leggings",
+        "count": 1
+      }
+    },
+    "diamond_boots": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:diamond_boots",
+        "count": 1
+      }
+    }
+  },
+  "requirements": [
+    [
+      "diamond_helmet",
+      "diamond_chestplate",
+      "diamond_leggings",
+      "diamond_boots"
+    ]
+  ]
+}

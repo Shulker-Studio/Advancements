@@ -1,6 +1,7 @@
 #include "mod/MyMod.h"
 
 #include "ll/api/mod/RegisterHelper.h"
+#include "mod/advancement/RuntimeTriggerAdapters.h"
 #include "mod/commands/AdvancementsCommand.h"
 
 namespace my_mod {
@@ -19,11 +20,13 @@ bool MyMod::load() {
 bool MyMod::enable() {
     getSelf().getLogger().debug("Enabling...");
     reloadAdvancements();
+    advancement::registerRuntimeTriggerAdapters(*this);
     return true;
 }
 
 bool MyMod::disable() const {
     getSelf().getLogger().debug("Disabling...");
+    advancement::unregisterRuntimeTriggerAdapters();
     commands::unregisterAdvancementsCommand();
     return true;
 }

@@ -5,17 +5,13 @@
 #include "ll/api/command/SoftEnum.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/command/ServerCommandRegisterEvent.h"
-#include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "mod/MyMod.h"
-#include "mod/advancement/TriggerDispatcher.h"
 
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
-#include "mc/world/level/BlockSource.h"
-#include "mc/world/level/block/Block.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -46,7 +42,6 @@ namespace {
 
 bool gCommandRegistered = false;
 std::vector<std::string> gPendingAdvancementIds;
-ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gCommandRegisterListener;
 
 void ensureAdvancementEnumRegistered() {
@@ -150,34 +145,6 @@ void executeProgressCommand(
     }
 }
 
-void registerTriggerSourceAdapters(MyMod& mod) {
-    if (gDestroyBlockListener) {
-        return;
-    }
-
-    gDestroyBlockListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::PlayerDestroyBlockEvent>(
-        [&mod](ll::event::PlayerDestroyBlockEvent& event) {
-            auto worldDataDir = mod.getSelf().getWorldDataDir();
-            if (!worldDataDir) {
-                return true;
-            }
-
-            auto const& block = event.self().getDimensionBlockSource().getBlock(event.pos());
-            auto dispatcher = advancement::TriggerDispatcher{mod.getTriggerIndex(), mod.getProgressService()};
-            dispatcher.dispatch(
-                *worldDataDir,
-                mod.getAdvancementLoadResult(),
-                advancement::TriggerContext{
-                    event.self(),
-                    "bedrock:player_destroy_block",
-                    block.getTypeName(),
-                }
-            );
-            return true;
-        }
-    );
-}
-
 } // namespace
 
 void updateAdvancementCommandEnums(advancement::LoadResult const& result) {
@@ -254,7 +221,6 @@ void registerAdvancementsCommandNow(MyMod& mod) {
 }
 
 void registerAdvancementsCommand(MyMod& mod) {
-    registerTriggerSourceAdapters(mod);
     if (gCommandRegisterListener) {
         return;
     }
@@ -267,10 +233,6 @@ void registerAdvancementsCommand(MyMod& mod) {
 
 void unregisterAdvancementsCommand() {
     auto& eventBus = ll::event::EventBus::getInstance();
-    if (gDestroyBlockListener) {
-        eventBus.removeListener(gDestroyBlockListener);
-        gDestroyBlockListener.reset();
-    }
     if (gCommandRegisterListener) {
         eventBus.removeListener(gCommandRegisterListener);
         gCommandRegisterListener.reset();

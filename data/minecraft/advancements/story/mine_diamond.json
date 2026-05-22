@@ -1,32 +1,33 @@
 {
   "format_version": "1.0.0",
+  "parent": "minecraft:story/iron_tools",
   "display": {
     "title": {
-      "translate": "advancements.story.root.title"
+      "translate": "advancements.story.mine_diamond.title"
     },
     "description": {
-      "translate": "advancements.story.root.description"
+      "translate": "advancements.story.mine_diamond.description"
     },
     "icon": {
-      "item": "minecraft:crafting_table"
+      "item": "minecraft:diamond"
     },
     "frame": "task",
-    "show_toast": false,
-    "announce_to_chat": false,
+    "show_toast": true,
+    "announce_to_chat": true,
     "hidden": false
   },
   "criteria": {
-    "crafting_table": {
+    "diamond": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
-        "item": "minecraft:crafting_table",
+        "item": "minecraft:diamond",
         "count": 1
       }
     }
   },
   "requirements": [
     [
-      "crafting_table"
+      "diamond"
     ]
   ]
 }

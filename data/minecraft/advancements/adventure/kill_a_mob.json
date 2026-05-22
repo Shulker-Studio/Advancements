@@ -1,0 +1,208 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:adventure/root",
+  "display": {
+    "title": {
+      "translate": "advancements.adventure.kill_a_mob.title"
+    },
+    "description": {
+      "translate": "advancements.adventure.kill_a_mob.description"
+    },
+    "icon": {
+      "item": "minecraft:rotten_flesh"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "minecraft:blaze": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:blaze"
+      }
+    },
+    "minecraft:cave_spider": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:cave_spider"
+      }
+    },
+    "minecraft:zombie": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:zombie"
+      }
+    },
+    "minecraft:skeleton": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:skeleton"
+      }
+    },
+    "minecraft:spider": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:spider"
+      }
+    },
+    "minecraft:creeper": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:creeper"
+      }
+    },
+    "minecraft:drowned": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:drowned"
+      }
+    },
+    "minecraft:elder_guardian": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:elder_guardian"
+      }
+    },
+    "minecraft:ender_dragon": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:ender_dragon"
+      }
+    },
+    "minecraft:enderman": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:enderman"
+      }
+    },
+    "minecraft:endermite": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:endermite"
+      }
+    },
+    "minecraft:ghast": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:ghast"
+      }
+    },
+    "minecraft:guardian": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:guardian"
+      }
+    },
+    "minecraft:hoglin": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:hoglin"
+      }
+    },
+    "minecraft:husk": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:husk"
+      }
+    },
+    "minecraft:magma_cube": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:magma_cube"
+      }
+    },
+    "minecraft:phantom": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:phantom"
+      }
+    },
+    "minecraft:piglin": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:piglin"
+      }
+    },
+    "minecraft:piglin_brute": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:piglin_brute"
+      }
+    },
+    "minecraft:pillager": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:pillager"
+      }
+    },
+    "minecraft:ravager": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:ravager"
+      }
+    },
+    "minecraft:shulker": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:shulker"
+      }
+    },
+    "minecraft:silverfish": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:silverfish"
+      }
+    },
+    "minecraft:slime": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:slime"
+      }
+    },
+    "minecraft:stray": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:stray"
+      }
+    },
+    "minecraft:vex": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:vex"
+      }
+    },
+    "minecraft:vindicator": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:vindicator"
+      }
+    },
+    "minecraft:witch": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:witch"
+      }
+    },
+    "minecraft:wither_skeleton": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:wither_skeleton"
+      }
+    },
+    "minecraft:zombified_piglin": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:zombified_piglin"
+      }
+    },
+    "minecraft:zombie_villager": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:zombie_villager"
+      }
+    }
+  },
+  "requirements": [["minecraft:blaze", "minecraft:cave_spider", "minecraft:creeper", "minecraft:drowned", "minecraft:elder_guardian", "minecraft:ender_dragon", "minecraft:enderman", "minecraft:endermite", "minecraft:ghast", "minecraft:guardian", "minecraft:hoglin", "minecraft:husk", "minecraft:magma_cube", "minecraft:phantom", "minecraft:piglin", "minecraft:piglin_brute", "minecraft:pillager", "minecraft:ravager", "minecraft:shulker", "minecraft:silverfish", "minecraft:skeleton", "minecraft:slime", "minecraft:spider", "minecraft:stray", "minecraft:vex", "minecraft:vindicator", "minecraft:witch", "minecraft:wither_skeleton", "minecraft:zombie", "minecraft:zombified_piglin", "minecraft:zombie_villager"]]
+}

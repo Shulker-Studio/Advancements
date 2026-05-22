@@ -9,7 +9,7 @@
       "translate": "advancements.story.mine_stone.description"
     },
     "icon": {
-      "item": "minecraft:stone"
+      "item": "minecraft:cobblestone"
     },
     "frame": "task",
     "show_toast": true,
@@ -17,16 +17,33 @@
     "hidden": false
   },
   "criteria": {
-    "mine_stone": {
-      "trigger": "bedrock:player_destroy_block",
+    "minecraft:cobblestone": {
+      "trigger": "minecraft:inventory_changed",
       "conditions": {
-        "block": "minecraft:stone"
+        "item": "minecraft:cobblestone",
+        "count": 1
+      }
+    },
+    "minecraft:blackstone": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:blackstone",
+        "count": 1
+      }
+    },
+    "minecraft:cobbled_deepslate": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:cobbled_deepslate",
+        "count": 1
       }
     }
   },
   "requirements": [
     [
-      "mine_stone"
+      "minecraft:cobblestone",
+      "minecraft:blackstone",
+      "minecraft:cobbled_deepslate"
     ]
   ],
   "rewards": {
