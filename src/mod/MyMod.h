@@ -21,18 +21,17 @@ public:
     bool enable();
 
     /// @return True if the mod is disabled successfully.
-    bool disable();
+    bool disable() const;
 
     [[nodiscard]] advancement::LoadResult const& getAdvancementLoadResult() const { return mAdvancementLoadResult; }
+
+    void reloadAdvancements();
 
     // TODO: Implement this method if you need to unload the mod.
     // /// @return True if the mod is unloaded successfully.
     // bool unload();
 
 private:
-    void registerCommands();
-    void reloadAdvancements();
-
     ll::mod::NativeMod& mSelf;
     advancement::LoadResult mAdvancementLoadResult;
 };

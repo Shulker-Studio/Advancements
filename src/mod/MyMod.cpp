@@ -1,12 +1,7 @@
 #include "mod/MyMod.h"
 
-#include "ll/api/command/CommandHandle.h"
-#include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/mod/RegisterHelper.h"
-
-#include "mc/server/commands/CommandOrigin.h"
-#include "mc/server/commands/CommandOutput.h"
-#include "mc/server/commands/CommandPermissionLevel.h"
+#include "mod/commands/AdvancementsCommand.h"
 
 namespace my_mod {
 
@@ -17,7 +12,7 @@ MyMod& MyMod::getInstance() {
 
 bool MyMod::load() {
     getSelf().getLogger().debug("Loading...");
-    registerCommands();
+    commands::registerAdvancementsCommand(*this);
     return true;
 }
 
@@ -27,37 +22,14 @@ bool MyMod::enable() {
     return true;
 }
 
-bool MyMod::disable() {
+bool MyMod::disable() const {
     getSelf().getLogger().debug("Disabling...");
     return true;
 }
 
-void MyMod::registerCommands() {
-    auto& command = ll::command::CommandRegistrar::getServerInstance().getOrCreateCommand(
-        "advancements",
-        "Advancements management",
-        CommandPermissionLevel::GameDirectors
-    );
-    command.overload().execute([](CommandOrigin const&, CommandOutput& output) {
-        auto const& result = MyMod::getInstance().getAdvancementLoadResult();
-        output.success("Loaded {} advancement definitions with {} errors.", result.loadedCount(), result.errorCount());
-    });
-    command.overload().text("reload").execute([](CommandOrigin const&, CommandOutput& output) {
-        auto& mod = MyMod::getInstance();
-        mod.reloadAdvancements();
-        auto const& result = mod.getAdvancementLoadResult();
-
-        if (result.errorCount() == 0) {
-            output.success("Reloaded {} advancement definitions with no errors.", result.loadedCount());
-            return;
-        }
-
-        output.error("Reloaded {} advancement definitions with {} errors.", result.loadedCount(), result.errorCount());
-    });
-}
-
 void MyMod::reloadAdvancements() {
     mAdvancementLoadResult = advancement::loadAdvancements(getSelf().getModDir());
+    commands::updateAdvancementCommandEnums(mAdvancementLoadResult);
     auto& logger = getSelf().getLogger();
     logger.info(
         "Loaded {} advancement definitions with {} errors.",
