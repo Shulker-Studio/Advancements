@@ -32,6 +32,17 @@ target("Advancements") -- Change this to your mod name.
     add_headerfiles("src/**.h")
     add_files("src/**.cpp")
     add_includedirs("src")
+    after_build(function (target)
+        local outputdir = path.join(os.projectdir(), "bin", target:name())
+        if os.isdir("data") then
+            os.rm(path.join(outputdir, "data"))
+            os.cp("data", outputdir)
+        end
+        if os.isdir("lang") then
+            os.rm(path.join(outputdir, "lang"))
+            os.cp("lang", outputdir)
+        end
+    end)
     if is_config("target_type", "server") then
     --  add_includedirs("src-server")
     --  add_files("src-server/**.cpp")

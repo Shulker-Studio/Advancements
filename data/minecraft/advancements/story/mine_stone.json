@@ -1,0 +1,37 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:story/root",
+  "display": {
+    "title": {
+      "translate": "advancements.story.mine_stone.title"
+    },
+    "description": {
+      "translate": "advancements.story.mine_stone.description"
+    },
+    "icon": {
+      "item": "minecraft:stone"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "mine_stone": {
+      "trigger": "bedrock:player_destroy_block",
+      "conditions": {
+        "block": "minecraft:stone"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "mine_stone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [],
+    "loot": [],
+    "experience": 0
+  }
+}
