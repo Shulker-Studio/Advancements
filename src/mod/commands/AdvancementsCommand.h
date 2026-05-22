@@ -9,6 +9,7 @@ class MyMod;
 namespace commands {
 
 void registerAdvancementsCommand(MyMod& mod);
+void unregisterAdvancementsCommand();
 void updateAdvancementCommandEnums(advancement::LoadResult const& result);
 
 } // namespace commands

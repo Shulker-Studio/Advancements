@@ -24,17 +24,25 @@ bool MyMod::enable() {
 
 bool MyMod::disable() const {
     getSelf().getLogger().debug("Disabling...");
+    commands::unregisterAdvancementsCommand();
     return true;
 }
 
 void MyMod::reloadAdvancements() {
-    mAdvancementLoadResult = advancement::loadAdvancements(getSelf().getModDir());
+    auto loadResult = advancement::loadAdvancements(getSelf().getModDir());
+    auto triggerIndex = advancement::TriggerIndex{};
+    triggerIndex.rebuild(loadResult);
+
+    mAdvancementLoadResult = std::move(loadResult);
+    mTriggerIndex = std::move(triggerIndex);
     commands::updateAdvancementCommandEnums(mAdvancementLoadResult);
     auto& logger = getSelf().getLogger();
     logger.info(
-        "Loaded {} advancement definitions with {} errors.",
+        "Loaded {} advancement definitions with {} errors, {} triggers, and {} trigger bindings.",
         mAdvancementLoadResult.loadedCount(),
-        mAdvancementLoadResult.errorCount()
+        mAdvancementLoadResult.errorCount(),
+        mTriggerIndex.triggerCount(),
+        mTriggerIndex.bindingCount()
     );
 
     for (auto const& issue : mAdvancementLoadResult.issues) {

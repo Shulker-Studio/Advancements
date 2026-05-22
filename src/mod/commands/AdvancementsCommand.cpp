@@ -5,14 +5,17 @@
 #include "ll/api/command/SoftEnum.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/command/ServerCommandRegisterEvent.h"
+#include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "mod/MyMod.h"
-#include "mod/advancement/ProgressStore.h"
+#include "mod/advancement/TriggerDispatcher.h"
 
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/level/BlockSource.h"
+#include "mc/world/level/block/Block.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -43,6 +46,8 @@ namespace {
 
 bool gCommandRegistered = false;
 std::vector<std::string> gPendingAdvancementIds;
+ll::event::ListenerPtr gDestroyBlockListener;
+ll::event::ListenerPtr gCommandRegisterListener;
 
 void ensureAdvancementEnumRegistered() {
     auto& registrar = ll::command::CommandRegistrar::getServerInstance();
@@ -134,11 +139,43 @@ void executeProgressCommand(
         if (!player) {
             continue;
         }
-        auto const& playerUuid = player->getUuid();
-        auto result = grant ? advancement::grantProgress(*worldDataDir, playerUuid, *advancement, criterion)
-                            : advancement::revokeProgress(*worldDataDir, playerUuid, *advancement, criterion);
+        auto const& playerUuid       = player->getUuid();
+        auto const& progressService = mod.getProgressService();
+        auto        result          = grant
+                 ? (criterion ? progressService.grantCriterion(*worldDataDir, playerUuid, *advancement, *criterion)
+                              : progressService.grantAdvancement(*worldDataDir, playerUuid, *advancement))
+                 : (criterion ? progressService.revokeCriterion(*worldDataDir, playerUuid, *advancement, *criterion)
+                              : progressService.revokeAdvancement(*worldDataDir, playerUuid, *advancement));
         outputProgressResult(output, result, grant ? "Granted" : "Revoked", *player);
     }
+}
+
+void registerTriggerSourceAdapters(MyMod& mod) {
+    if (gDestroyBlockListener) {
+        return;
+    }
+
+    gDestroyBlockListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::PlayerDestroyBlockEvent>(
+        [&mod](ll::event::PlayerDestroyBlockEvent& event) {
+            auto worldDataDir = mod.getSelf().getWorldDataDir();
+            if (!worldDataDir) {
+                return true;
+            }
+
+            auto const& block = event.self().getDimensionBlockSource().getBlock(event.pos());
+            auto dispatcher = advancement::TriggerDispatcher{mod.getTriggerIndex(), mod.getProgressService()};
+            dispatcher.dispatch(
+                *worldDataDir,
+                mod.getAdvancementLoadResult(),
+                advancement::TriggerContext{
+                    event.self(),
+                    "bedrock:player_destroy_block",
+                    block.getTypeName(),
+                }
+            );
+            return true;
+        }
+    );
 }
 
 } // namespace
@@ -217,10 +254,27 @@ void registerAdvancementsCommandNow(MyMod& mod) {
 }
 
 void registerAdvancementsCommand(MyMod& mod) {
-    ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerCommandRegisterEvent>([&mod](auto&) {
+    registerTriggerSourceAdapters(mod);
+    if (gCommandRegisterListener) {
+        return;
+    }
+
+    gCommandRegisterListener = ll::event::EventBus::getInstance().emplaceListener<ll::event::ServerCommandRegisterEvent>([&mod](auto&) {
         registerAdvancementsCommandNow(mod);
         return true;
     });
+}
+
+void unregisterAdvancementsCommand() {
+    auto& eventBus = ll::event::EventBus::getInstance();
+    if (gDestroyBlockListener) {
+        eventBus.removeListener(gDestroyBlockListener);
+        gDestroyBlockListener.reset();
+    }
+    if (gCommandRegisterListener) {
+        eventBus.removeListener(gCommandRegisterListener);
+        gCommandRegisterListener.reset();
+    }
 }
 
 } // namespace my_mod::commands
