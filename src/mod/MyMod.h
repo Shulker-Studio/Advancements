@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ll/api/mod/NativeMod.h"
+#include "mod/advancement/AdvancementLoader.h"
 
 namespace my_mod {
 
@@ -22,12 +23,18 @@ public:
     /// @return True if the mod is disabled successfully.
     bool disable();
 
+    [[nodiscard]] advancement::LoadResult const& getAdvancementLoadResult() const { return mAdvancementLoadResult; }
+
     // TODO: Implement this method if you need to unload the mod.
     // /// @return True if the mod is unloaded successfully.
     // bool unload();
 
 private:
+    void registerCommands();
+    void reloadAdvancements();
+
     ll::mod::NativeMod& mSelf;
+    advancement::LoadResult mAdvancementLoadResult;
 };
 
 } // namespace my_mod
