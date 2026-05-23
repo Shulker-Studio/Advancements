@@ -23,6 +23,7 @@
 - `minecraft:consume_item`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
+- `minecraft:changed_dimension`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -41,7 +42,7 @@
 | `bee_nest_destroyed` | missing-trigger | |
 | `bred_animals` | missing-trigger | |
 | `brewed_potion` | missing-trigger | |
-| `changed_dimension` | missing-trigger | |
+| `changed_dimension` | done | 当前窄实现，支持 `conditions.from` / `conditions.to`；通知时机仍有 caveat |
 | `channeled_lightning` | missing-trigger | |
 | `construct_beacon` | missing-trigger | |
 | `consume_item` | done | 当前窄实现，仅 `conditions.item` |
@@ -110,25 +111,25 @@
 | `story/deflect_arrow` | `killed_by_arrow` | missing-trigger | |
 | `story/enchant_item` | `enchanted_item` | missing-trigger | |
 | `story/shiny_gear` | `inventory_changed` | done | |
-| `story/enter_the_nether` | `changed_dimension` | missing-trigger | |
+| `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `story/cure_zombie_villager` | `cured_zombie_villager` | missing-trigger | |
 | `story/follow_ender_eye` | `used_ender_eye` | missing-trigger | |
-| `story/enter_the_end` | `changed_dimension` | missing-trigger | |
+| `story/enter_the_end` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension`；当前临时挂在 `story/enter_the_nether` 下，等 `follow_ender_eye` 补齐后回正父节点 |
 
 ## Nether Vanilla Inventory
 
 | Vanilla ID | Main trigger family | Status | Notes |
 | --- | --- | --- | --- |
-| `nether/root` | `changed_dimension` | missing-trigger | |
+| `nether/root` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `nether/return_to_sender` | projectile / ghast fireball family | missing-trigger | |
 | `nether/find_bastion` | `location` / structure entry family | missing-trigger | |
-| `nether/obtain_ancient_debris` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `nether/obtain_ancient_debris` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/fast_travel` | `nether_travel` | missing-trigger | |
 | `nether/find_fortress` | `location` / structure entry family | missing-trigger | |
 | `nether/uneasy_alliance` | complex entity transport / kill family | missing-trigger | |
-| `nether/get_wither_skull` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `nether/get_wither_skull` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/summon_wither` | `summoned_entity` | missing-trigger | |
-| `nether/obtain_blaze_rod` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `nether/obtain_blaze_rod` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/create_beacon` | `construct_beacon` | missing-trigger | |
 | `nether/brew_potion` | `brewed_potion` | missing-trigger | |
 | `nether/all_potions` | `effects_changed` | missing-trigger | |
@@ -143,23 +144,23 @@
 | `nether/obtain_crying_obsidian` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
 | `nether/charge_respawn_anchor` | interaction / block use family | missing-trigger | |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`，但纯“获得某物”型条目有一批已经可以靠 `inventory_changed` 先补数据。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，`obtain_crying_obsidian` 仍缺数据。
 
 ## End Vanilla Inventory
 
 | Vanilla ID | Main trigger family | Status | Notes |
 | --- | --- | --- | --- |
-| `end/root` | `changed_dimension` | missing-trigger | |
+| `end/root` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `end/kill_dragon` | boss kill family | missing-trigger | |
-| `end/dragon_egg` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `end/dragon_egg` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `end/enter_end_gateway` | location / gateway family | missing-trigger | |
-| `end/elytra` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `end/elytra` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `end/levitate` | `levitation` | missing-trigger | |
 | `end/respawn_dragon` | summon / boss event family | missing-trigger | |
 | `end/find_end_city` | `location` | missing-trigger | |
-| `end/dragon_breath` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `end/dragon_breath` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 
-当前总评：`end/*` 仍主要卡在 `changed_dimension / location / levitation / boss` 这些未实现 trigger，但少量物品获得型条目已具备先补数据的条件。
+当前总评：`end/*` 仍主要卡在 `location / levitation / boss` 这些未实现 trigger；root 与少量物品获得型条目已具备基础数据。
 
 ## Adventure Vanilla Inventory
 
@@ -218,8 +219,8 @@
 | `husbandry/balanced_diet` | `consume_item` | partial | 已补原版 ID，但当前仅实现已支持 consumable 子集，不是原版完整食物集合 |
 | `husbandry/obtain_netherite_hoe` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `husbandry/tame_an_animal` | `tame_animal` | missing-trigger | |
-| `husbandry/fishy_business` | `inventory_changed` | partial | 已补近似定义：获得任一鱼物品，复用现有 `inventory_changed` |
-| `husbandry/tactical_fishing` | `inventory_changed` | partial | 已补近似定义：获得任一鱼桶物品，复用现有 `inventory_changed` |
+| `husbandry/fishy_business` | `fishing_rod_hooked` | missing-trigger | 已删除旧 `inventory_changed` 近似 JSON；原版应按钓起的 item 匹配 |
+| `husbandry/tactical_fishing` | `filled_bucket` | missing-trigger | 已删除旧 `inventory_changed` 近似 JSON；原版应按填充后的桶 item 匹配 |
 | `husbandry/axolotl_in_a_bucket` | `inventory_changed` | missing-data | |
 | `husbandry/kill_axolotl_target` | other | missing-trigger | |
 | `husbandry/complete_catalogue` | `inventory_changed` / tame family | missing-trigger | |
@@ -243,10 +244,14 @@
 补充：当前已保留的 husbandry 定义：
 
 - `husbandry/root`
+- `husbandry/balanced_diet`
+- `husbandry/obtain_netherite_hoe`
 
 ## Immediate Alignment Fixes
 
 1. `adventure/kill_all_mobs` 用当前已支持敌对怪集合正式建成原版 ID，而不是 demo
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. 基于 `inventory_changed` / `consume_item` 继续补 husbandry 原版条目（如 `fishy_business`、`tactical_fishing`、`obtain_sniffer_egg`）
-4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
+3. 实现 `fishing_rod_hooked` 后重新添加 `husbandry/fishy_business` 的原版 JSON
+4. 实现 `filled_bucket` 后重新添加 `husbandry/tactical_fishing` 的原版 JSON
+5. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `obtain_sniffer_egg`）
+6. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
