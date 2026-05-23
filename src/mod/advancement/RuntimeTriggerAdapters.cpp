@@ -161,6 +161,17 @@ void dispatchFilledBucket(MyMod& mod, Player& player, std::string const& itemId)
     );
 }
 
+void dispatchSleptInBed(MyMod& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:slept_in_bed",
+            NoTriggerPayload{},
+        }
+    );
+}
+
 std::string dimensionId(DimensionType dimension) {
     if (dimension == VanillaDimensions::Overworld()) {
         return "minecraft:overworld";
@@ -327,6 +338,27 @@ LL_TYPE_INSTANCE_HOOK(PlayerConsumeTotemHook, HookPriority::Normal, Player, &Pla
 }
 
 LL_TYPE_INSTANCE_HOOK(
+    PlayerStartSleepInBedHook,
+    HookPriority::Normal,
+    Player,
+    &Player::$startSleepInBed,
+    BedSleepingResult,
+    BlockPos const& pos
+) {
+    auto const result = origin(pos);
+    if (result != BedSleepingResult::Ok) {
+        return result;
+    }
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod != nullptr) {
+        dispatchSleptInBed(*mod, *this);
+    }
+
+    return result;
+}
+
+LL_TYPE_INSTANCE_HOOK(
     PullFishingHookHook,
     HookPriority::Normal,
     FishingHook,
@@ -419,6 +451,8 @@ void touchPlayerFireDimensionChangedEventHookAutoCount() {
 
 void touchPlayerConsumeTotemHookAutoCount() { (void)PlayerConsumeTotemHook::_AutoHookCount; }
 
+void touchPlayerStartSleepInBedHookAutoCount() { (void)PlayerStartSleepInBedHook::_AutoHookCount; }
+
 void touchPullFishingHookHookAutoCount() { (void)PullFishingHookHook::_AutoHookCount; }
 
 void touchBucketUseOnEntityHookAutoCount() { (void)BucketUseOnEntityHook::_AutoHookCount; }
@@ -430,6 +464,7 @@ struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerConsumeTotemHook>               consumeTotemHook;
+    ll::memory::HookRegistrar<PlayerStartSleepInBedHook>            startSleepInBedHook;
     ll::memory::HookRegistrar<PullFishingHookHook>                  pullFishingHook;
     ll::memory::HookRegistrar<BucketUseOnEntityHook>                bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>             playerInteractEntityHook;
@@ -451,6 +486,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchPlayerUseItemHookAutoCount();
     touchPlayerFireDimensionChangedEventHookAutoCount();
     touchPlayerConsumeTotemHookAutoCount();
+    touchPlayerStartSleepInBedHookAutoCount();
     touchPullFishingHookHookAutoCount();
     touchBucketUseOnEntityHookAutoCount();
     touchPlayerInteractEntityHookAutoCount();

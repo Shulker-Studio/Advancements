@@ -13,6 +13,8 @@ class Player;
 
 namespace my_mod::advancement {
 
+struct NoTriggerPayload {};
+
 struct ItemTriggerPayload {
     std::string        itemId;
     std::optional<int> itemCount;
@@ -31,7 +33,8 @@ struct DimensionTriggerPayload {
     std::string toDimension;
 };
 
-using TriggerPayload = std::variant<ItemTriggerPayload, EntityTriggerPayload, BlockTriggerPayload, DimensionTriggerPayload>;
+using TriggerPayload =
+    std::variant<NoTriggerPayload, ItemTriggerPayload, EntityTriggerPayload, BlockTriggerPayload, DimensionTriggerPayload>;
 
 struct TriggerContext {
     Player&        player;
