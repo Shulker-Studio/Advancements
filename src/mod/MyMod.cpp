@@ -31,6 +31,12 @@ bool MyMod::enable() {
 
 bool MyMod::disable() const {
     getSelf().getLogger().debug("Disabling...");
+    if (auto worldDataDir = getSelf().getWorldDataDir(); worldDataDir) {
+        auto const flushErrors = mProgressService.flushAll(*worldDataDir);
+        for (auto const& error : flushErrors) {
+            getSelf().getLogger().error("{}", error);
+        }
+    }
     advancement::unregisterRuntimeTriggerAdapters();
     commands::unregisterAdvancementsCommand();
     return true;
