@@ -22,6 +22,7 @@
 - `minecraft:inventory_changed`
 - `minecraft:consume_item`
 - `minecraft:used_totem`
+- `minecraft:filled_bucket`
 - `minecraft:fishing_rod_hooked`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
@@ -58,7 +59,7 @@
 | `entity_killed_player` | done | 当前窄实现，支持 `conditions.entity` |
 | `fall_after_explosion` | missing-trigger | |
 | `fall_from_height` | missing-trigger | |
-| `filled_bucket` | missing-trigger | |
+| `filled_bucket` | done | 当前窄实现，基于 `BucketItem::$_useOn` 对可入桶实体（鱼 / 蝌蚪 / 美西螈）交互成功后的结果桶 item 匹配 |
 | `fishing_rod_hooked` | done | 当前窄实现，基于 LSE `FishingHook::_pullCloser` 语义支持钓起的 item |
 | `hero_of_the_village` | missing-trigger | |
 | `impossible` | missing-trigger | 可后续纯数据实现 |
@@ -222,14 +223,14 @@
 | `husbandry/obtain_netherite_hoe` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `husbandry/tame_an_animal` | `tame_animal` | missing-trigger | |
 | `husbandry/fishy_business` | `fishing_rod_hooked` | done | 原版 JSON 已恢复，按钓起的四种鱼 item 匹配 |
-| `husbandry/tactical_fishing` | `filled_bucket` | missing-trigger | 已删除旧 `inventory_changed` 近似 JSON；原版应按填充后的桶 item 匹配 |
-| `husbandry/axolotl_in_a_bucket` | `inventory_changed` | missing-data | |
+| `husbandry/tactical_fishing` | `filled_bucket` | done | 原版 JSON 已恢复，按填充后的四种鱼桶 item 匹配 |
+| `husbandry/axolotl_in_a_bucket` | `filled_bucket` | done | 已按填充后的美西螈桶 item 匹配 |
 | `husbandry/kill_axolotl_target` | other | missing-trigger | |
 | `husbandry/complete_catalogue` | `inventory_changed` / tame family | missing-trigger | |
 | `husbandry/safely_harvest_honey` | other | missing-trigger | |
 | `husbandry/wax_on` | other | missing-trigger | |
 | `husbandry/wax_off` | other | missing-trigger | |
-| `husbandry/tadpole_in_a_bucket` | `inventory_changed` | missing-data | |
+| `husbandry/tadpole_in_a_bucket` | `filled_bucket` | done | 已按填充后的蝌蚪桶 item 匹配 |
 | `husbandry/leash_all_frog_variants` | other | missing-trigger | |
 | `husbandry/froglights` | `inventory_changed` | missing-data | |
 | `husbandry/silk_touch_nest` | `inventory_changed` | missing-data | |
@@ -247,6 +248,9 @@
 
 - `husbandry/root`
 - `husbandry/fishy_business`
+- `husbandry/tactical_fishing`
+- `husbandry/tadpole_in_a_bucket`
+- `husbandry/axolotl_in_a_bucket`
 - `husbandry/balanced_diet`
 - `husbandry/obtain_netherite_hoe`
 
@@ -254,6 +258,5 @@
 
 1. `adventure/kill_all_mobs` 用当前已支持敌对怪集合正式建成原版 ID，而不是 demo
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. 实现 `filled_bucket` 后重新添加 `husbandry/tactical_fishing` 的原版 JSON
-4. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `obtain_sniffer_egg`）
-5. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
+3. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `obtain_sniffer_egg`）
+4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
