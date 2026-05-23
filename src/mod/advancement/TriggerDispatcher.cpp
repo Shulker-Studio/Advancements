@@ -14,84 +14,53 @@ T const* payloadAs(TriggerContext const& context) {
     return std::get_if<T>(&context.payload);
 }
 
-bool hasOnlyKeys(nlohmann::json const& conditions, std::initializer_list<char const*> keys) {
-    for (auto const& [key, _] : conditions.items()) {
-        if (std::ranges::find(keys, key) == keys.end()) {
-            return false;
-        }
+bool matchesBlockCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<BlockTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<BlockTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
     }
-    return true;
+    return payload->blockId == compiled->blockId;
 }
 
-bool matchesBlockCondition(nlohmann::json const& conditions, TriggerContext const& context) {
-    auto const* payload = payloadAs<BlockTriggerPayload>(context);
-    if (payload == nullptr) {
+bool matchesItemCondition(TriggerCondition const& condition, TriggerContext const& context, bool allowCount) {
+    auto const* compiled = std::get_if<ItemTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<ItemTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    if (!hasOnlyKeys(conditions, {"block"})) {
+    if (payload->itemId != compiled->itemId) {
         return false;
     }
-    if (!conditions.contains("block") || !conditions.at("block").is_string()) {
-        return false;
-    }
-    return payload->blockId == conditions.at("block").get<std::string>();
-}
-
-bool matchesItemCondition(nlohmann::json const& conditions, TriggerContext const& context, bool allowCount) {
-    auto const* payload = payloadAs<ItemTriggerPayload>(context);
-    if (payload == nullptr) {
-        return false;
-    }
-    if (!hasOnlyKeys(conditions, allowCount ? std::initializer_list<char const*>{"item", "count"}
-                                             : std::initializer_list<char const*>{"item"})) {
-        return false;
-    }
-    if (!conditions.contains("item") || !conditions.at("item").is_string()) {
-        return false;
-    }
-    if (payload->itemId != conditions.at("item").get<std::string>()) {
-        return false;
-    }
-    if (!allowCount || !conditions.contains("count")) {
+    if (!allowCount || !compiled->count) {
         return true;
     }
-    if (!conditions.at("count").is_number_integer() || !payload->itemCount) {
+    if (!payload->itemCount) {
         return false;
     }
-    return *payload->itemCount >= conditions.at("count").get<int>();
+    return *payload->itemCount >= *compiled->count;
 }
 
-bool matchesEntityCondition(nlohmann::json const& conditions, TriggerContext const& context) {
-    auto const* payload = payloadAs<EntityTriggerPayload>(context);
-    if (payload == nullptr) {
+bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<EntityTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    if (!hasOnlyKeys(conditions, {"entity"})) {
-        return false;
-    }
-    if (!conditions.contains("entity") || !conditions.at("entity").is_string()) {
-        return false;
-    }
-    return payload->entityTypeId == conditions.at("entity").get<std::string>();
+    return payload->entityTypeId == compiled->entityTypeId;
 }
 
-bool matchesChangedDimensionCondition(nlohmann::json const& conditions, TriggerContext const& context) {
-    auto const* payload = payloadAs<DimensionTriggerPayload>(context);
-    if (payload == nullptr) {
+bool matchesChangedDimensionCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<DimensionTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<DimensionTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    if (!hasOnlyKeys(conditions, {"from", "to"})) {
+    if (compiled->fromDimension && payload->fromDimension != *compiled->fromDimension) {
         return false;
     }
-    if (conditions.contains("from")) {
-        if (!conditions.at("from").is_string() || payload->fromDimension != conditions.at("from").get<std::string>()) {
-            return false;
-        }
-    }
-    if (conditions.contains("to")) {
-        if (!conditions.at("to").is_string() || payload->toDimension != conditions.at("to").get<std::string>()) {
-            return false;
-        }
+    if (compiled->toDimension && payload->toDimension != *compiled->toDimension) {
+        return false;
     }
     return true;
 }
@@ -153,32 +122,30 @@ void TriggerDispatcher::dispatch(
 }
 
 bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext const& context) const {
-    if (!binding.conditions) {
+    if (std::holds_alternative<NoTriggerCondition>(binding.condition)) {
         return true;
     }
-
-    auto const& conditions = *binding.conditions;
-    if (!conditions.is_object() || conditions.empty()) {
-        return true;
+    if (std::holds_alternative<InvalidTriggerCondition>(binding.condition)) {
+        return false;
     }
 
     if (binding.triggerId == "bedrock:player_destroy_block") {
-        return matchesBlockCondition(conditions, context);
+        return matchesBlockCondition(binding.condition, context);
     }
     if (binding.triggerId == "minecraft:inventory_changed") {
-        return matchesItemCondition(conditions, context, true);
+        return matchesItemCondition(binding.condition, context, true);
     }
     if (binding.triggerId == "minecraft:consume_item") {
-        return matchesItemCondition(conditions, context, false);
+        return matchesItemCondition(binding.condition, context, false);
     }
     if (binding.triggerId == "minecraft:player_killed_entity") {
-        return matchesEntityCondition(conditions, context);
+        return matchesEntityCondition(binding.condition, context);
     }
     if (binding.triggerId == "minecraft:entity_killed_player") {
-        return matchesEntityCondition(conditions, context);
+        return matchesEntityCondition(binding.condition, context);
     }
     if (binding.triggerId == "minecraft:changed_dimension") {
-        return matchesChangedDimensionCondition(conditions, context);
+        return matchesChangedDimensionCondition(binding.condition, context);
     }
     return false;
 }

@@ -2,22 +2,46 @@
 
 #include "mod/advancement/AdvancementLoader.h"
 
-#include <nlohmann/json.hpp>
-
 #include <map>
 #include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace my_mod::advancement {
 
+struct NoTriggerCondition {};
+
+struct InvalidTriggerCondition {};
+
+struct ItemTriggerCondition {
+    std::string        itemId;
+    std::optional<int> count;
+};
+
+struct EntityTriggerCondition {
+    std::string entityTypeId;
+};
+
+struct BlockTriggerCondition {
+    std::string blockId;
+};
+
+struct DimensionTriggerCondition {
+    std::optional<std::string> fromDimension;
+    std::optional<std::string> toDimension;
+};
+
+using TriggerCondition =
+    std::variant<NoTriggerCondition, InvalidTriggerCondition, ItemTriggerCondition, EntityTriggerCondition, BlockTriggerCondition, DimensionTriggerCondition>;
+
 struct CriterionBinding {
-    std::string                   advancementId;
-    std::string                   criterionName;
-    std::string                   triggerId;
-    std::optional<nlohmann::json> conditions;
+    std::string      advancementId;
+    std::string      criterionName;
+    std::string      triggerId;
+    TriggerCondition condition;
 };
 
 class TriggerIndex {
