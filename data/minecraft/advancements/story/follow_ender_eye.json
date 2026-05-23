@@ -1,0 +1,25 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:story/enter_the_nether",
+  "display": {
+    "title": {
+      "translate": "advancements.story.follow_ender_eye.title"
+    },
+    "description": {
+      "translate": "advancements.story.follow_ender_eye.description"
+    },
+    "icon": {
+      "item": "minecraft:ender_eye"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "in_stronghold": {
+      "trigger": "minecraft:used_ender_eye"
+    }
+  },
+  "requirements": [["in_stronghold"]]
+}
