@@ -21,12 +21,16 @@
 #include "mc/world/item/BucketItem.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/ChunkPos.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
+#include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
 
-#include <optional>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -39,6 +43,15 @@ ll::event::ListenerPtr gMobDieListener;
 ll::event::ListenerPtr gPlayerDieListener;
 MyMod*                  gRuntimeTriggerMod = nullptr;
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
+
+constexpr int EnderEyeCheckIntervalTicks = 40;
+
+struct EnderEyePlayerState {
+    int                     ticksUntilCheck{EnderEyeCheckIntervalTicks};
+    std::optional<ChunkPos> lastCheckedChunk;
+};
+
+std::unordered_map<mce::UUID, EnderEyePlayerState> gEnderEyePlayerStates;
 
 void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
     auto& logger = mod.getSelf().getLogger();
@@ -172,6 +185,69 @@ void dispatchSleptInBed(MyMod& mod, Player& player) {
     );
 }
 
+void dispatchUsedEnderEye(MyMod& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:used_ender_eye",
+            NoTriggerPayload{},
+        }
+    );
+}
+
+[[nodiscard]] bool hasCompletedAdvancement(MyMod& mod, Player& player, std::string const& advancementId) {
+    auto worldDataDir = mod.getSelf().getWorldDataDir();
+    if (!worldDataDir) {
+        return false;
+    }
+
+    auto progress = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
+    if (!progress.ok()) {
+        return false;
+    }
+
+    auto const found = progress.progress.advancements.find(advancementId);
+    return found != progress.progress.advancements.end() && found->second.done;
+}
+
+[[nodiscard]] bool isInsideStrongholdBounds(Player& player) {
+    if (player.getDimensionId() != VanillaDimensions::Overworld()) {
+        return false;
+    }
+
+    return player.getCurrentStructureFeature() == VanillaStructureFeatureType::Stronghold();
+}
+
+void checkUsedEnderEye(MyMod& mod, Player& player) {
+    if (player.getDimensionId() != VanillaDimensions::Overworld()) {
+        gEnderEyePlayerStates.erase(player.getUuid());
+        return;
+    }
+
+    if (hasCompletedAdvancement(mod, player, "minecraft:story/follow_ender_eye")) {
+        gEnderEyePlayerStates.erase(player.getUuid());
+        return;
+    }
+
+    auto& state = gEnderEyePlayerStates[player.getUuid()];
+    --state.ticksUntilCheck;
+    if (state.ticksUntilCheck > 0) {
+        return;
+    }
+    state.ticksUntilCheck = EnderEyeCheckIntervalTicks;
+
+    auto const playerChunk = ChunkPos{player.getFeetPos()};
+    if (state.lastCheckedChunk && *state.lastCheckedChunk == playerChunk) {
+        return;
+    }
+    state.lastCheckedChunk = playerChunk;
+
+    if (isInsideStrongholdBounds(player)) {
+        dispatchUsedEnderEye(mod, player);
+    }
+}
+
 std::string dimensionId(DimensionType dimension) {
     if (dimension == VanillaDimensions::Overworld()) {
         return "minecraft:overworld";
@@ -300,6 +376,15 @@ LL_TYPE_INSTANCE_HOOK(
     }
 
     dispatchConsumeItem(*mod, *this, itemId);
+}
+
+LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
+    origin(currentTick);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod != nullptr) {
+        checkUsedEnderEye(*mod, *this);
+    }
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -445,6 +530,8 @@ void touchPlayerInventoryChangedHookAutoCount() {
 
 void touchPlayerUseItemHookAutoCount() { (void)PlayerUseItemHook::_AutoHookCount; }
 
+void touchPlayerTickWorldHookAutoCount() { (void)PlayerTickWorldHook::_AutoHookCount; }
+
 void touchPlayerFireDimensionChangedEventHookAutoCount() {
     (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
 }
@@ -462,6 +549,7 @@ void touchPlayerInteractEntityHookAutoCount() { (void)PlayerInteractEntityHook::
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
+    ll::memory::HookRegistrar<PlayerTickWorldHook>         tickWorldHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerConsumeTotemHook>               consumeTotemHook;
     ll::memory::HookRegistrar<PlayerStartSleepInBedHook>            startSleepInBedHook;
@@ -484,6 +572,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     gRuntimeTriggerMod = &mod;
     touchPlayerInventoryChangedHookAutoCount();
     touchPlayerUseItemHookAutoCount();
+    touchPlayerTickWorldHookAutoCount();
     touchPlayerFireDimensionChangedEventHookAutoCount();
     touchPlayerConsumeTotemHookAutoCount();
     touchPlayerStartSleepInBedHookAutoCount();
@@ -543,6 +632,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
 void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
     gPendingBucketedEntities.clear();
+    gEnderEyePlayerStates.clear();
 
     auto& eventBus = ll::event::EventBus::getInstance();
     gRuntimeTriggerHookState.reset();
