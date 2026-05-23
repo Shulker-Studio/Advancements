@@ -47,7 +47,7 @@
 namespace my_mod::advancement {
 namespace {
 
-constexpr auto TradeResultContainer = ContainerEnumName::CreatedOutputContainer;
+constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
 
 ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gMobDieListener;
@@ -218,6 +218,17 @@ void dispatchVillagerTrade(MyMod& mod, Player& player) {
     );
 }
 
+void dispatchEnchantedItem(MyMod& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:enchanted_item",
+            NoTriggerPayload{},
+        }
+    );
+}
+
 [[nodiscard]] bool hasCompletedAdvancement(MyMod& mod, Player& player, std::string const& advancementId) {
     auto worldDataDir = mod.getSelf().getWorldDataDir();
     if (!worldDataDir) {
@@ -371,22 +382,29 @@ LL_TYPE_INSTANCE_HOOK(
     bool                                        isSwap
 ) {
     auto const& sourceSlot = *requestAction.mSrc;
-    bool const isTradeResultTransfer = sourceSlot.mFullContainerName.mName == TradeResultContainer;
-    auto const  screenType           = mItemStackNetManager.getScreenContext().mScreenContainerType;
-    bool const isTradeScreen         = screenType == SharedTypes::Legacy::ContainerType::Trade;
+    bool const isSuccessfulOutputTransfer = sourceSlot.mFullContainerName.mName == SuccessfulOutputContainer;
+    auto const screenType                 = mItemStackNetManager.getScreenContext().mScreenContainerType;
 
     auto const result = origin(requestAction, isSrcHintSlot, isDstHintSlot, isSwap);
     auto*      mod    = currentRuntimeTriggerMod();
-    if (result != ItemStackNetResult::Success || !isTradeResultTransfer || !isTradeScreen) {
+    if (result != ItemStackNetResult::Success || !isSuccessfulOutputTransfer || mod == nullptr) {
         return result;
     }
 
-    if (mod != nullptr) {
+    if (screenType == SharedTypes::Legacy::ContainerType::Trade) {
         mod->getSelf().getLogger().info(
             "Advancements debug: villager_trade dispatch player={}",
             mPlayer.getRealName()
         );
         dispatchVillagerTrade(*mod, mPlayer);
+    }
+
+    if (screenType == SharedTypes::Legacy::ContainerType::Enchantment) {
+        mod->getSelf().getLogger().info(
+            "Advancements debug: enchanted_item dispatch player={}",
+            mPlayer.getRealName()
+        );
+        dispatchEnchantedItem(*mod, mPlayer);
     }
 
     return result;
