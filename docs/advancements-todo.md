@@ -22,6 +22,7 @@
 - `minecraft:inventory_changed`
 - `minecraft:consume_item`
 - `minecraft:used_totem`
+- `minecraft:fishing_rod_hooked`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
 - `minecraft:changed_dimension`
@@ -58,7 +59,7 @@
 | `fall_after_explosion` | missing-trigger | |
 | `fall_from_height` | missing-trigger | |
 | `filled_bucket` | missing-trigger | |
-| `fishing_rod_hooked` | missing-trigger | |
+| `fishing_rod_hooked` | done | 当前窄实现，基于 LSE `FishingHook::_pullCloser` 语义支持钓起的 item |
 | `hero_of_the_village` | missing-trigger | |
 | `impossible` | missing-trigger | 可后续纯数据实现 |
 | `inventory_changed` | done | 当前窄实现，支持 `item` + `count` |
@@ -220,7 +221,7 @@
 | `husbandry/balanced_diet` | `consume_item` | partial | 已补原版 ID，但当前仅实现已支持 consumable 子集，不是原版完整食物集合 |
 | `husbandry/obtain_netherite_hoe` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `husbandry/tame_an_animal` | `tame_animal` | missing-trigger | |
-| `husbandry/fishy_business` | `fishing_rod_hooked` | missing-trigger | 已删除旧 `inventory_changed` 近似 JSON；原版应按钓起的 item 匹配 |
+| `husbandry/fishy_business` | `fishing_rod_hooked` | done | 原版 JSON 已恢复，按钓起的四种鱼 item 匹配 |
 | `husbandry/tactical_fishing` | `filled_bucket` | missing-trigger | 已删除旧 `inventory_changed` 近似 JSON；原版应按填充后的桶 item 匹配 |
 | `husbandry/axolotl_in_a_bucket` | `inventory_changed` | missing-data | |
 | `husbandry/kill_axolotl_target` | other | missing-trigger | |
@@ -245,6 +246,7 @@
 补充：当前已保留的 husbandry 定义：
 
 - `husbandry/root`
+- `husbandry/fishy_business`
 - `husbandry/balanced_diet`
 - `husbandry/obtain_netherite_hoe`
 
@@ -252,7 +254,6 @@
 
 1. `adventure/kill_all_mobs` 用当前已支持敌对怪集合正式建成原版 ID，而不是 demo
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. 实现 `fishing_rod_hooked` 后重新添加 `husbandry/fishy_business` 的原版 JSON
-4. 实现 `filled_bucket` 后重新添加 `husbandry/tactical_fishing` 的原版 JSON
-5. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `obtain_sniffer_egg`）
-6. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
+3. 实现 `filled_bucket` 后重新添加 `husbandry/tactical_fishing` 的原版 JSON
+4. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `obtain_sniffer_egg`）
+5. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
