@@ -11,6 +11,7 @@
 
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
+#include "mc/world/actor/FishingHook.h"
 #include "mc/world/actor/item/ItemActor.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
@@ -129,6 +130,17 @@ void dispatchUsedTotem(MyMod& mod, Player& player) {
             player,
             "minecraft:used_totem",
             ItemTriggerPayload{"minecraft:totem_of_undying", std::nullopt},
+        }
+    );
+}
+
+void dispatchFishingRodHooked(MyMod& mod, Player& player, std::string const& itemId) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:fishing_rod_hooked",
+            ItemTriggerPayload{itemId, std::nullopt},
         }
     );
 }
@@ -279,6 +291,34 @@ LL_TYPE_INSTANCE_HOOK(PlayerConsumeTotemHook, HookPriority::Normal, Player, &Pla
     return true;
 }
 
+LL_TYPE_INSTANCE_HOOK(
+    PullFishingHookHook,
+    HookPriority::Normal,
+    FishingHook,
+    &FishingHook::_pullCloser,
+    void,
+    Actor& inEntity,
+    float  inSpeed
+) {
+    auto* mod = currentRuntimeTriggerMod();
+    auto* player = getPlayerOwner();
+    std::optional<std::string> itemId;
+    if (inEntity.isType(ActorType::ItemEntity)) {
+        auto const& item = static_cast<ItemActor&>(inEntity).item();
+        if (!item.isNull()) {
+            itemId = item.getTypeName();
+        }
+    }
+
+    origin(inEntity, inSpeed);
+
+    if (mod == nullptr || player == nullptr || !itemId) {
+        return;
+    }
+
+    dispatchFishingRodHooked(*mod, *player, *itemId);
+}
+
 void touchPlayerInventoryChangedHookAutoCount() {
     (void)PlayerInventoryChangedHook::_AutoHookCount;
 }
@@ -291,11 +331,14 @@ void touchPlayerFireDimensionChangedEventHookAutoCount() {
 
 void touchPlayerConsumeTotemHookAutoCount() { (void)PlayerConsumeTotemHook::_AutoHookCount; }
 
+void touchPullFishingHookHookAutoCount() { (void)PullFishingHookHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerConsumeTotemHook>               consumeTotemHook;
+    ll::memory::HookRegistrar<PullFishingHookHook>                  pullFishingHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -314,6 +357,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchPlayerUseItemHookAutoCount();
     touchPlayerFireDimensionChangedEventHookAutoCount();
     touchPlayerConsumeTotemHookAutoCount();
+    touchPullFishingHookHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
