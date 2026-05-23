@@ -7,20 +7,36 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <variant>
 
 class Player;
 
 namespace my_mod::advancement {
 
+struct ItemTriggerPayload {
+    std::string        itemId;
+    std::optional<int> itemCount;
+};
+
+struct EntityTriggerPayload {
+    std::string entityTypeId;
+};
+
+struct BlockTriggerPayload {
+    std::string blockId;
+};
+
+struct DimensionTriggerPayload {
+    std::string fromDimension;
+    std::string toDimension;
+};
+
+using TriggerPayload = std::variant<ItemTriggerPayload, EntityTriggerPayload, BlockTriggerPayload, DimensionTriggerPayload>;
+
 struct TriggerContext {
-    Player&                    player;
-    std::string                triggerId;
-    std::optional<std::string> blockId;
-    std::optional<std::string> itemId;
-    std::optional<int>         itemCount;
-    std::optional<std::string> entityTypeId;
-    std::optional<std::string> fromDimension;
-    std::optional<std::string> toDimension;
+    Player&        player;
+    std::string    triggerId;
+    TriggerPayload payload;
 };
 
 class TriggerDispatcher {

@@ -24,6 +24,7 @@
 #include <optional>
 #include <memory>
 #include <string>
+#include <variant>
 
 namespace my_mod::advancement {
 namespace {
@@ -35,16 +36,42 @@ MyMod*                  gRuntimeTriggerMod = nullptr;
 
 void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
     auto& logger = mod.getSelf().getLogger();
-    logger.debug(
-        "Advancements debug: trigger={} player={} block={} item={} count={} entity={} from={} to={}",
-        context.triggerId,
-        context.player.getRealName(),
-        context.blockId.value_or("-"),
-        context.itemId.value_or("-"),
-        context.itemCount ? std::to_string(*context.itemCount) : std::string{"-"},
-        context.entityTypeId.value_or("-"),
-        context.fromDimension.value_or("-"),
-        context.toDimension.value_or("-")
+    std::visit(
+        [&](auto const& payload) {
+            using Payload = std::decay_t<decltype(payload)>;
+            if constexpr (std::is_same_v<Payload, BlockTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} block={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.blockId
+                );
+            } else if constexpr (std::is_same_v<Payload, ItemTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} item={} count={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.itemId,
+                    payload.itemCount ? std::to_string(*payload.itemCount) : std::string{"-"}
+                );
+            } else if constexpr (std::is_same_v<Payload, EntityTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} entity={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.entityTypeId
+                );
+            } else if constexpr (std::is_same_v<Payload, DimensionTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} from={} to={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.fromDimension,
+                    payload.toDimension
+                );
+            }
+        },
+        context.payload
     );
 }
 
@@ -79,12 +106,7 @@ void dispatchInventoryChangedForItem(MyMod& mod, Player& player, std::string con
         TriggerContext{
             player,
             "minecraft:inventory_changed",
-            std::nullopt,
-            itemId,
-            countMatchingItems(player, itemId),
-            std::nullopt,
-            std::nullopt,
-            std::nullopt,
+            ItemTriggerPayload{itemId, countMatchingItems(player, itemId)},
         }
     );
 }
@@ -95,12 +117,7 @@ void dispatchConsumeItem(MyMod& mod, Player& player, std::string const& itemId) 
         TriggerContext{
             player,
             "minecraft:consume_item",
-            std::nullopt,
-            itemId,
-            std::nullopt,
-            std::nullopt,
-            std::nullopt,
-            std::nullopt,
+            ItemTriggerPayload{itemId, std::nullopt},
         }
     );
 }
@@ -124,12 +141,7 @@ void dispatchChangedDimension(MyMod& mod, Player& player, DimensionType fromDime
         TriggerContext{
             player,
             "minecraft:changed_dimension",
-            std::nullopt,
-            std::nullopt,
-            std::nullopt,
-            std::nullopt,
-            dimensionId(fromDimension),
-            dimensionId(toDimension),
+            DimensionTriggerPayload{dimensionId(fromDimension), dimensionId(toDimension)},
         }
     );
 }
@@ -282,12 +294,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
             TriggerContext{
                 event.self(),
                 "bedrock:player_destroy_block",
-                block.getTypeName(),
-                std::nullopt,
-                std::nullopt,
-                std::nullopt,
-                std::nullopt,
-                std::nullopt,
+                BlockTriggerPayload{block.getTypeName()},
             }
         );
         return true;
@@ -304,12 +311,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
             TriggerContext{
                 **player,
                 "minecraft:player_killed_entity",
-                std::nullopt,
-                std::nullopt,
-                std::nullopt,
-                event.self().getTypeName(),
-                std::nullopt,
-                std::nullopt,
+                EntityTriggerPayload{event.self().getTypeName()},
             }
         );
         return true;
@@ -326,12 +328,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
             TriggerContext{
                 event.self(),
                 "minecraft:entity_killed_player",
-                std::nullopt,
-                std::nullopt,
-                std::nullopt,
-                *killerEntityTypeId,
-                std::nullopt,
-                std::nullopt,
+                EntityTriggerPayload{*killerEntityTypeId},
             }
         );
         return true;
