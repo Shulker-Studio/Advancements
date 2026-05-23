@@ -52,5 +52,19 @@
   "advancements.adventure.kill_all_mobs.title": "资深怪物猎人",
   "advancements.adventure.kill_all_mobs.description": "击杀每一种敌对怪物",
   "advancements.nether.root.title": "下界",
-  "advancements.end.root.title": "末地"
+  "advancements.nether.root.description": "带上夏装",
+  "advancements.nether.obtain_ancient_debris.title": "深藏不露",
+  "advancements.nether.obtain_ancient_debris.description": "获得远古残骸",
+  "advancements.nether.get_wither_skull.title": "诡异又吓人的骷髅",
+  "advancements.nether.get_wither_skull.description": "获得凋灵骷髅的头颅",
+  "advancements.nether.obtain_blaze_rod.title": "与火共舞",
+  "advancements.nether.obtain_blaze_rod.description": "从烈焰人身上取得烈焰棒",
+  "advancements.end.root.title": "末地",
+  "advancements.end.root.description": "亦或是开始？",
+  "advancements.end.dragon_egg.title": "下一世代",
+  "advancements.end.dragon_egg.description": "持有龙蛋",
+  "advancements.end.elytra.title": "天空即为极限",
+  "advancements.end.elytra.description": "找到鞘翅",
+  "advancements.end.dragon_breath.title": "你需要来点薄荷糖",
+  "advancements.end.dragon_breath.description": "用玻璃瓶收集龙息"
 }

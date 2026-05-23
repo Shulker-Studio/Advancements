@@ -58,6 +58,23 @@ bool matchesEntityCondition(nlohmann::json const& conditions, TriggerContext con
     return context.entityTypeId == conditions.at("entity").get<std::string>();
 }
 
+bool matchesChangedDimensionCondition(nlohmann::json const& conditions, TriggerContext const& context) {
+    if (!hasOnlyKeys(conditions, {"from", "to"})) {
+        return false;
+    }
+    if (conditions.contains("from")) {
+        if (!conditions.at("from").is_string() || context.fromDimension != conditions.at("from").get<std::string>()) {
+            return false;
+        }
+    }
+    if (conditions.contains("to")) {
+        if (!conditions.at("to").is_string() || context.toDimension != conditions.at("to").get<std::string>()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // namespace
 
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
@@ -138,6 +155,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
     }
     if (binding.triggerId == "minecraft:entity_killed_player") {
         return matchesEntityCondition(conditions, context);
+    }
+    if (binding.triggerId == "minecraft:changed_dimension") {
+        return matchesChangedDimensionCondition(conditions, context);
     }
     return false;
 }

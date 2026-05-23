@@ -52,5 +52,19 @@
   "advancements.adventure.kill_all_mobs.title": "Monsters Hunted",
   "advancements.adventure.kill_all_mobs.description": "Kill one of every hostile monster",
   "advancements.nether.root.title": "Nether",
-  "advancements.end.root.title": "End"
+  "advancements.nether.root.description": "Bring summer clothes",
+  "advancements.nether.obtain_ancient_debris.title": "Hidden in the Depths",
+  "advancements.nether.obtain_ancient_debris.description": "Obtain Ancient Debris",
+  "advancements.nether.get_wither_skull.title": "Spooky Scary Skeleton",
+  "advancements.nether.get_wither_skull.description": "Obtain a Wither Skeleton's skull",
+  "advancements.nether.obtain_blaze_rod.title": "Into Fire",
+  "advancements.nether.obtain_blaze_rod.description": "Relieve a Blaze of its rod",
+  "advancements.end.root.title": "End",
+  "advancements.end.root.description": "Or the beginning?",
+  "advancements.end.dragon_egg.title": "The Next Generation",
+  "advancements.end.dragon_egg.description": "Hold the Dragon Egg",
+  "advancements.end.elytra.title": "Sky's the Limit",
+  "advancements.end.elytra.description": "Find elytra",
+  "advancements.end.dragon_breath.title": "You Need a Mint",
+  "advancements.end.dragon_breath.description": "Collect dragon's breath in a glass bottle"
 }

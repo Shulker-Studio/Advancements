@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:end/root",
+  "display": {
+    "title": {
+      "translate": "advancements.end.dragon_egg.title"
+    },
+    "description": {
+      "translate": "advancements.end.dragon_egg.description"
+    },
+    "icon": {
+      "item": "minecraft:dragon_egg"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "dragon_egg": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:dragon_egg",
+        "count": 1
+      }
+    }
+  },
+  "requirements": [["dragon_egg"]]
+}

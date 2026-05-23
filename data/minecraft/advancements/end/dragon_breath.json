@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:end/root",
+  "display": {
+    "title": {
+      "translate": "advancements.end.dragon_breath.title"
+    },
+    "description": {
+      "translate": "advancements.end.dragon_breath.description"
+    },
+    "icon": {
+      "item": "minecraft:dragon_breath"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "dragon_breath": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:dragon_breath",
+        "count": 1
+      }
+    }
+  },
+  "requirements": [["dragon_breath"]]
+}

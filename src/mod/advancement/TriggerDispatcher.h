@@ -19,6 +19,8 @@ struct TriggerContext {
     std::optional<std::string> itemId;
     std::optional<int>         itemCount;
     std::optional<std::string> entityTypeId;
+    std::optional<std::string> fromDimension;
+    std::optional<std::string> toDimension;
 };
 
 class TriggerDispatcher {

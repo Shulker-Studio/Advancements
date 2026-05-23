@@ -19,6 +19,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/dimension/VanillaDimensions.h"
 
 #include <optional>
 #include <memory>
@@ -35,13 +36,15 @@ MyMod*                  gRuntimeTriggerMod = nullptr;
 void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
     auto& logger = mod.getSelf().getLogger();
     logger.debug(
-        "Advancements debug: trigger={} player={} block={} item={} count={} entity={}",
+        "Advancements debug: trigger={} player={} block={} item={} count={} entity={} from={} to={}",
         context.triggerId,
         context.player.getRealName(),
         context.blockId.value_or("-"),
         context.itemId.value_or("-"),
         context.itemCount ? std::to_string(*context.itemCount) : std::string{"-"},
-        context.entityTypeId.value_or("-")
+        context.entityTypeId.value_or("-"),
+        context.fromDimension.value_or("-"),
+        context.toDimension.value_or("-")
     );
 }
 
@@ -80,6 +83,8 @@ void dispatchInventoryChangedForItem(MyMod& mod, Player& player, std::string con
             itemId,
             countMatchingItems(player, itemId),
             std::nullopt,
+            std::nullopt,
+            std::nullopt,
         }
     );
 }
@@ -94,6 +99,37 @@ void dispatchConsumeItem(MyMod& mod, Player& player, std::string const& itemId) 
             itemId,
             std::nullopt,
             std::nullopt,
+            std::nullopt,
+            std::nullopt,
+        }
+    );
+}
+
+std::string dimensionId(DimensionType dimension) {
+    if (dimension == VanillaDimensions::Overworld()) {
+        return "minecraft:overworld";
+    }
+    if (dimension == VanillaDimensions::Nether()) {
+        return "minecraft:the_nether";
+    }
+    if (dimension == VanillaDimensions::TheEnd()) {
+        return "minecraft:the_end";
+    }
+    return std::to_string(static_cast<int>(dimension));
+}
+
+void dispatchChangedDimension(MyMod& mod, Player& player, DimensionType fromDimension, DimensionType toDimension) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:changed_dimension",
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
+            std::nullopt,
+            dimensionId(fromDimension),
+            dimensionId(toDimension),
         }
     );
 }
@@ -185,15 +221,41 @@ LL_TYPE_INSTANCE_HOOK(
     dispatchConsumeItem(*mod, *this, itemId);
 }
 
+LL_TYPE_INSTANCE_HOOK(
+    PlayerFireDimensionChangedEventHook,
+    HookPriority::Normal,
+    Player,
+    &Player::fireDimensionChangedEvent,
+    void,
+    DimensionType fromDimension,
+    DimensionType toDimension
+) {
+    origin(fromDimension, toDimension);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return;
+    }
+
+    if (fromDimension != toDimension) {
+        dispatchChangedDimension(*mod, *this, fromDimension, toDimension);
+    }
+}
+
 void touchPlayerInventoryChangedHookAutoCount() {
     (void)PlayerInventoryChangedHook::_AutoHookCount;
 }
 
 void touchPlayerUseItemHookAutoCount() { (void)PlayerUseItemHook::_AutoHookCount; }
 
+void touchPlayerFireDimensionChangedEventHookAutoCount() {
+    (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
+}
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
+    ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -210,6 +272,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     gRuntimeTriggerMod = &mod;
     touchPlayerInventoryChangedHookAutoCount();
     touchPlayerUseItemHookAutoCount();
+    touchPlayerFireDimensionChangedEventHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
@@ -220,6 +283,8 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
                 event.self(),
                 "bedrock:player_destroy_block",
                 block.getTypeName(),
+                std::nullopt,
+                std::nullopt,
                 std::nullopt,
                 std::nullopt,
                 std::nullopt,
@@ -243,6 +308,8 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
                 std::nullopt,
                 std::nullopt,
                 event.self().getTypeName(),
+                std::nullopt,
+                std::nullopt,
             }
         );
         return true;
@@ -263,6 +330,8 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
                 std::nullopt,
                 std::nullopt,
                 *killerEntityTypeId,
+                std::nullopt,
+                std::nullopt,
             }
         );
         return true;
