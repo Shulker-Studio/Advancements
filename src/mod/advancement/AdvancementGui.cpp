@@ -3,7 +3,6 @@
 #include "ll/api/form/SimpleForm.h"
 #include "mod/MyMod.h"
 #include "mod/advancement/Localization.h"
-#include "mod/advancement/ProgressStore.h"
 
 #include "mc/world/actor/player/Player.h"
 
@@ -212,7 +211,7 @@ void showDetail(MyMod& mod, Player& player, std::string const& categoryKey, std:
         return;
     }
 
-    auto progressResult = loadPlayerProgress(*worldDataDir, player.getUuid());
+    auto progressResult = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
     if (!progressResult.ok()) {
         player.sendMessage(localizeKey("advancements.gui.error.progress_load_failed", player));
         return;
@@ -255,7 +254,7 @@ void showCategory(MyMod& mod, Player& player, std::string const& categoryKey) {
         return;
     }
 
-    auto progressResult = loadPlayerProgress(*worldDataDir, player.getUuid());
+    auto progressResult = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
     if (!progressResult.ok()) {
         player.sendMessage(localizeKey("advancements.gui.error.progress_load_failed", player));
         return;
@@ -295,7 +294,7 @@ void showAdvancementsGui(MyMod& mod, Player& player) {
         return;
     }
 
-    auto progressResult = loadPlayerProgress(*worldDataDir, player.getUuid());
+    auto progressResult = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
     if (!progressResult.ok()) {
         player.sendMessage(localizeKey("advancements.gui.error.progress_load_failed", player));
         return;
