@@ -163,6 +163,7 @@ ProgressMutationResult mutateProgress(
         entry.done             = isDone(advancement, entry);
         result.changed         = result.changed || previousDone != entry.done;
         result.done            = entry.done;
+        result.becameDone      = !previousDone && entry.done;
     } else {
         auto advancementProgress = playerProgress.advancements.find(advancement.id);
         if (advancementProgress == playerProgress.advancements.end()) {

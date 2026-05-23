@@ -6,11 +6,14 @@
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/command/ServerCommandRegisterEvent.h"
 #include "mod/MyMod.h"
+#include "mod/advancement/AdvancementGui.h"
 
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
+#include "mc/server/commands/CommandOriginType.h"
 #include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandSelector.h"
+#include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
 
 #include <algorithm>
@@ -145,6 +148,27 @@ void executeProgressCommand(
     }
 }
 
+void executeGuiCommand(MyMod& mod, CommandOrigin const& origin, CommandOutput& output) {
+    if (origin.getOriginType() != CommandOriginType::Player) {
+        output.error("The advancements GUI command can only be used by a player.");
+        return;
+    }
+
+    auto* actor = origin.getEntity();
+    if (!actor || !actor->isPlayer()) {
+        output.error("The advancements GUI command can only be used by a player.");
+        return;
+    }
+
+    auto* player = Player::tryGetFromEntity(actor->getEntityContext(), false);
+    if (!player) {
+        output.error("Unable to resolve the command player.");
+        return;
+    }
+
+    advancement::showAdvancementsGui(mod, *player);
+}
+
 } // namespace
 
 void updateAdvancementCommandEnums(advancement::LoadResult const& result) {
@@ -184,6 +208,18 @@ void registerAdvancementsCommandNow(MyMod& mod) {
 
         output.error("Reloaded {} advancement definitions with {} errors.", result.loadedCount(), result.errorCount());
     });
+    command.overload().text("gui").execute([&mod](CommandOrigin const& origin, CommandOutput& output) {
+        executeGuiCommand(mod, origin, output);
+    });
+
+    auto& guiCommand = ll::command::CommandRegistrar::getServerInstance().getOrCreateCommand(
+        "advancementsgui",
+        "Open the advancements GUI"
+    );
+    guiCommand.overload().execute([&mod](CommandOrigin const& origin, CommandOutput& output) {
+        executeGuiCommand(mod, origin, output);
+    });
+
     command.overload<ProgressParams>()
         .text("grant")
         .required("target")

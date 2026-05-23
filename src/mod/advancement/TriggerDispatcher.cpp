@@ -1,5 +1,6 @@
 #include "mod/advancement/TriggerDispatcher.h"
 
+#include "mod/advancement/AdvancementNotifier.h"
 #include "mod/MyMod.h"
 #include "mc/world/actor/player/Player.h"
 
@@ -82,7 +83,8 @@ void TriggerDispatcher::dispatch(
         auto const result =
             mProgressService.grantCriterion(worldDataDir, context.player.getUuid(), advancement->second, binding.criterionName);
 
-        auto& logger = my_mod::MyMod::getInstance().getSelf().getLogger();
+        auto& mod    = my_mod::MyMod::getInstance();
+        auto& logger = mod.getSelf().getLogger();
         if (!result.ok()) {
             logger.debug(
                 "Advancements debug: grant failed advancement={} criterion={} player={} errors={}",
@@ -102,6 +104,10 @@ void TriggerDispatcher::dispatch(
                 context.player.getRealName(),
                 result.done
             );
+        }
+
+        if (result.becameDone) {
+            notifyAdvancementCompleted(mod, context.player, advancement->second);
         }
 
         ignoreResult(result);

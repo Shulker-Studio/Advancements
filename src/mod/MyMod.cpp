@@ -1,5 +1,6 @@
 #include "mod/MyMod.h"
 
+#include "ll/api/i18n/I18n.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "mod/advancement/RuntimeTriggerAdapters.h"
 #include "mod/commands/AdvancementsCommand.h"
@@ -13,6 +14,10 @@ MyMod& MyMod::getInstance() {
 
 bool MyMod::load() {
     getSelf().getLogger().debug("Loading...");
+    if (auto result = ll::i18n::getInstance().load(getSelf().getLangDir()); !result) {
+        getSelf().getLogger().error("Failed to load advancement translations.");
+        result.error().log(getSelf().getLogger());
+    }
     commands::registerAdvancementsCommand(*this);
     return true;
 }

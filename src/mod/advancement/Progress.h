@@ -28,6 +28,7 @@ struct ProgressLoadResult {
 struct ProgressMutationResult {
     bool                     changed{false};
     bool                     done{false};
+    bool                     becameDone{false};
     std::vector<std::string> errors;
 
     [[nodiscard]] bool ok() const { return errors.empty(); }
