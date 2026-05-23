@@ -105,6 +105,9 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     if (triggerId == "minecraft:changed_dimension") {
         return compileChangedDimensionCondition(conditions);
     }
+    if (triggerId == "minecraft:villager_trade") {
+        return InvalidTriggerCondition{};
+    }
     return InvalidTriggerCondition{};
 }
 

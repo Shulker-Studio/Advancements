@@ -9,13 +9,22 @@
 #include "mod/MyMod.h"
 #include "mod/advancement/TriggerDispatcher.h"
 
+#include "mc/deps/shared_types/legacy/ContainerType.h"
+#include "mc/world/SimpleSparseContainer.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/FishingHook.h"
 #include "mc/world/actor/item/ItemActor.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/containers/FullContainerName.h"
 #include "mc/world/gamemode/InteractionResult.h"
+#include "mc/world/inventory/network/ContainerScreenContext.h"
+#include "mc/world/inventory/network/ItemStackNetManagerServer.h"
+#include "mc/world/inventory/network/ItemStackNetResult.h"
+#include "mc/world/inventory/network/ItemStackRequestActionHandler.h"
+#include "mc/world/inventory/network/ItemStackRequestActionTransferBase.h"
+#include "mc/world/inventory/network/ItemStackRequestSlotInfo.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
 #include "mc/world/item/BucketItem.h"
@@ -37,6 +46,8 @@
 
 namespace my_mod::advancement {
 namespace {
+
+constexpr auto TradeResultContainer = ContainerEnumName::CreatedOutputContainer;
 
 ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gMobDieListener;
@@ -196,6 +207,17 @@ void dispatchUsedEnderEye(MyMod& mod, Player& player) {
     );
 }
 
+void dispatchVillagerTrade(MyMod& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:villager_trade",
+            NoTriggerPayload{},
+        }
+    );
+}
+
 [[nodiscard]] bool hasCompletedAdvancement(MyMod& mod, Player& player, std::string const& advancementId) {
     auto worldDataDir = mod.getSelf().getWorldDataDir();
     if (!worldDataDir) {
@@ -322,6 +344,52 @@ std::optional<std::string> findKillerEntityTypeId(ActorDamageSource const& sourc
         return std::nullopt;
     }
     return actor->getTypeName();
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    VillagerTradeRemoveHook,
+    HookPriority::Normal,
+    ItemStackRequestActionHandler,
+    &ItemStackRequestActionHandler::_handleRemove,
+    ::ItemStackNetResult,
+    ::ItemStackRequestActionTransferBase const& requestAction,
+    ::ItemStack&                                removedItem,
+    ::ItemStackRequestActionHandler::RemoveType removeType
+) {
+    return origin(requestAction, removedItem, removeType);
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    VillagerTradeTransferHook,
+    HookPriority::Normal,
+    ItemStackRequestActionHandler,
+    &ItemStackRequestActionHandler::_handleTransfer,
+    ::ItemStackNetResult,
+    ::ItemStackRequestActionTransferBase const& requestAction,
+    bool                                        isSrcHintSlot,
+    bool                                        isDstHintSlot,
+    bool                                        isSwap
+) {
+    auto const& sourceSlot = *requestAction.mSrc;
+    bool const isTradeResultTransfer = sourceSlot.mFullContainerName.mName == TradeResultContainer;
+    auto const  screenType           = mItemStackNetManager.getScreenContext().mScreenContainerType;
+    bool const isTradeScreen         = screenType == SharedTypes::Legacy::ContainerType::Trade;
+
+    auto const result = origin(requestAction, isSrcHintSlot, isDstHintSlot, isSwap);
+    auto*      mod    = currentRuntimeTriggerMod();
+    if (result != ItemStackNetResult::Success || !isTradeResultTransfer || !isTradeScreen) {
+        return result;
+    }
+
+    if (mod != nullptr) {
+        mod->getSelf().getLogger().info(
+            "Advancements debug: villager_trade dispatch player={}",
+            mPlayer.getRealName()
+        );
+        dispatchVillagerTrade(*mod, mPlayer);
+    }
+
+    return result;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -546,6 +614,10 @@ void touchBucketUseOnEntityHookAutoCount() { (void)BucketUseOnEntityHook::_AutoH
 
 void touchPlayerInteractEntityHookAutoCount() { (void)PlayerInteractEntityHook::_AutoHookCount; }
 
+void touchVillagerTradeRemoveHookAutoCount() { (void)VillagerTradeRemoveHook::_AutoHookCount; }
+
+void touchVillagerTradeTransferHookAutoCount() { (void)VillagerTradeTransferHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
@@ -556,6 +628,7 @@ struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PullFishingHookHook>                  pullFishingHook;
     ll::memory::HookRegistrar<BucketUseOnEntityHook>                bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>             playerInteractEntityHook;
+    ll::memory::HookRegistrar<VillagerTradeTransferHook>            villagerTradeTransferHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -579,6 +652,8 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchPullFishingHookHookAutoCount();
     touchBucketUseOnEntityHookAutoCount();
     touchPlayerInteractEntityHookAutoCount();
+    touchVillagerTradeRemoveHookAutoCount();
+    touchVillagerTradeTransferHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
