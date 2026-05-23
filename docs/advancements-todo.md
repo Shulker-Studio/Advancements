@@ -28,6 +28,7 @@
 - `minecraft:entity_killed_player`
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
+- `minecraft:used_ender_eye`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -93,7 +94,7 @@
 | `thrown_item_picked_up_by_entity` | missing-trigger | |
 | `thrown_item_picked_up_by_player` | missing-trigger | |
 | `tick` | missing-trigger | 已不再用于现有 advancement 定义，应继续保持移除状态 |
-| `used_ender_eye` | missing-trigger | |
+| `used_ender_eye` | done | 当前窄实现：周期性检查玩家所在结构，主世界内且未完成 `story/follow_ender_eye` 的玩家进入 Stronghold 结构范围时触发；保留区块变化去抖，不依赖物品使用 hook |
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
 | `villager_trade` | missing-trigger | |
@@ -117,8 +118,8 @@
 | `story/shiny_gear` | `inventory_changed` | done | |
 | `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `story/cure_zombie_villager` | `cured_zombie_villager` | missing-trigger | |
-| `story/follow_ender_eye` | `used_ender_eye` | missing-trigger | |
-| `story/enter_the_end` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension`；当前临时挂在 `story/enter_the_nether` 下，等 `follow_ender_eye` 补齐后回正父节点 |
+| `story/follow_ender_eye` | `used_ender_eye` | done | 已补数据，复用当前 `used_ender_eye`：周期性检查玩家是否位于 Stronghold 结构范围内，不再依赖物品使用 hook |
+| `story/enter_the_end` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension`；父节点已回正为 `story/follow_ender_eye` |
 
 ## Nether Vanilla Inventory
 
