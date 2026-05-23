@@ -30,6 +30,7 @@
 - `minecraft:changed_dimension`
 - `minecraft:used_ender_eye`
 - `minecraft:villager_trade`
+- `minecraft:enchanted_item`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -56,7 +57,7 @@
 | `cured_zombie_villager` | missing-trigger | |
 | `default_block_use` | missing-trigger | |
 | `effects_changed` | missing-trigger | |
-| `enchanted_item` | missing-trigger | |
+| `enchanted_item` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Enchantment` 后触发；不依赖打开附魔 UI |
 | `enter_block` | missing-trigger | |
 | `entity_hurt_player` | missing-trigger | |
 | `entity_killed_player` | done | 当前窄实现，支持 `conditions.entity` |
@@ -115,7 +116,7 @@
 | `story/mine_diamond` | `inventory_changed` | done | |
 | `story/form_obsidian` | `inventory_changed` | done | |
 | `story/deflect_arrow` | `killed_by_arrow` | missing-trigger | |
-| `story/enchant_item` | `enchanted_item` | missing-trigger | |
+| `story/enchant_item` | `enchanted_item` | done | 已补数据，复用当前完成附魔结果转移语义的 `enchanted_item` |
 | `story/shiny_gear` | `inventory_changed` | done | |
 | `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `story/cure_zombie_villager` | `cured_zombie_villager` | missing-trigger | |
