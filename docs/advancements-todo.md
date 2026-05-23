@@ -26,6 +26,7 @@
 - `minecraft:fishing_rod_hooked`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
+- `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
 - `bedrock:player_destroy_block`
 
@@ -82,7 +83,7 @@
 | `recipe_unlocked` | missing-trigger | |
 | `ride_entity_in_lava` | missing-trigger | |
 | `shot_crossbow` | missing-trigger | |
-| `slept_in_bed` | missing-trigger | |
+| `slept_in_bed` | done | 当前窄实现，Hook `Player::$startSleepInBed` 且仅在 `BedSleepingResult::Ok` 后触发 |
 | `slide_down_block` | missing-trigger | |
 | `started_riding` | missing-trigger | |
 | `summoned_entity` | missing-trigger | |
@@ -187,7 +188,7 @@
 | `adventure/trade` | `villager_trade` | missing-trigger | |
 | `adventure/trade_at_world_height` | `villager_trade` | missing-trigger | |
 | `adventure/salvage_sherd` | other | missing-trigger | |
-| `adventure/sleep_in_bed` | `slept_in_bed` | missing-trigger | |
+| `adventure/sleep_in_bed` | `slept_in_bed` | done | 已补数据，复用现有 `slept_in_bed` |
 | `adventure/adventuring_time` | `location` | missing-trigger | |
 | `adventure/play_jukebox_in_meadows` | other | missing-trigger | |
 | `adventure/fall_from_world_height` | `fall_from_height` | missing-trigger | |
