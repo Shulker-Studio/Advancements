@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:story/obtain_armor",
+  "display": {
+    "title": {
+      "translate": "advancements.story.enchant_item.title"
+    },
+    "description": {
+      "translate": "advancements.story.enchant_item.description"
+    },
+    "icon": {
+      "item": "minecraft:enchanted_book"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enchant_item": {
+      "trigger": "minecraft:enchanted_item"
+    }
+  },
+  "requirements": [
+    [
+      "enchant_item"
+    ]
+  ]
+}
