@@ -216,10 +216,10 @@
 | `husbandry/plant_seed` | other | missing-trigger | |
 | `husbandry/breed_an_animal` | `bred_animals` | missing-trigger | |
 | `husbandry/balanced_diet` | `consume_item` | partial | 已补原版 ID，但当前仅实现已支持 consumable 子集，不是原版完整食物集合 |
-| `husbandry/obtain_netherite_hoe` | `inventory_changed` | missing-data | 可后续直接补 |
+| `husbandry/obtain_netherite_hoe` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `husbandry/tame_an_animal` | `tame_animal` | missing-trigger | |
-| `husbandry/fishy_business` | `inventory_changed` | missing-data | 可近似为“获得鱼” |
-| `husbandry/tactical_fishing` | `inventory_changed` | missing-data | 可近似为“获得鱼桶” |
+| `husbandry/fishy_business` | `inventory_changed` | partial | 已补近似定义：获得任一鱼物品，复用现有 `inventory_changed` |
+| `husbandry/tactical_fishing` | `inventory_changed` | partial | 已补近似定义：获得任一鱼桶物品，复用现有 `inventory_changed` |
 | `husbandry/axolotl_in_a_bucket` | `inventory_changed` | missing-data | |
 | `husbandry/kill_axolotl_target` | other | missing-trigger | |
 | `husbandry/complete_catalogue` | `inventory_changed` / tame family | missing-trigger | |

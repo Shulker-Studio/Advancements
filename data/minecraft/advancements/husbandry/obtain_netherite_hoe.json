@@ -1,0 +1,33 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:husbandry/balanced_diet",
+  "display": {
+    "title": {
+      "translate": "advancements.husbandry.obtain_netherite_hoe.title"
+    },
+    "description": {
+      "translate": "advancements.husbandry.obtain_netherite_hoe.description"
+    },
+    "icon": {
+      "item": "minecraft:netherite_hoe"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "netherite_hoe": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:netherite_hoe",
+        "count": 1
+      }
+    }
+  },
+  "requirements": [
+    [
+      "netherite_hoe"
+    ]
+  ]
+}
