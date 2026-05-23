@@ -21,17 +21,22 @@ namespace my_mod::advancement {
     mce::UUID const&             playerUuid
 );
 
+[[nodiscard]] bool savePlayerProgress(
+    std::filesystem::path const& worldDataDir,
+    mce::UUID const&             playerUuid,
+    PlayerProgress const&        progress,
+    std::vector<std::string>&    errors
+);
+
 [[nodiscard]] ProgressMutationResult grantProgress(
-    std::filesystem::path const&          worldDataDir,
-    mce::UUID const&                      playerUuid,
     AdvancementDefinition const&          advancement,
+    PlayerProgress&                       playerProgress,
     std::optional<std::string> const&     criterion
 );
 
 [[nodiscard]] ProgressMutationResult revokeProgress(
-    std::filesystem::path const&          worldDataDir,
-    mce::UUID const&                      playerUuid,
     AdvancementDefinition const&          advancement,
+    PlayerProgress&                       playerProgress,
     std::optional<std::string> const&     criterion
 );
 

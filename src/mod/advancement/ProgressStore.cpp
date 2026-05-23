@@ -129,9 +129,8 @@ bool saveToPath(std::filesystem::path const& filePath, PlayerProgress const& pro
 }
 
 ProgressMutationResult mutateProgress(
-    std::filesystem::path const&      worldDataDir,
-    mce::UUID const&                  playerUuid,
     AdvancementDefinition const&      advancement,
+    PlayerProgress&                   playerProgress,
     std::optional<std::string> const& criterion,
     bool                              grant
 ) {
@@ -140,14 +139,6 @@ ProgressMutationResult mutateProgress(
         addError(result.errors, std::format("{} has no criterion {}", advancement.id, *criterion));
         return result;
     }
-
-    auto loadResult = loadPlayerProgress(worldDataDir, playerUuid);
-    if (!loadResult.ok()) {
-        result.errors = std::move(loadResult.errors);
-        return result;
-    }
-
-    auto& playerProgress = loadResult.progress;
 
     if (grant) {
         auto& entry          = playerProgress.advancements[advancement.id];
@@ -186,9 +177,6 @@ ProgressMutationResult mutateProgress(
         }
     }
 
-    if (result.changed) {
-        saveToPath(progressFilePath(worldDataDir, playerUuid), playerProgress, result.errors);
-    }
     return result;
 }
 
@@ -202,22 +190,29 @@ ProgressLoadResult loadPlayerProgress(std::filesystem::path const& worldDataDir,
     return loadFromPath(progressFilePath(worldDataDir, playerUuid));
 }
 
+bool savePlayerProgress(
+    std::filesystem::path const& worldDataDir,
+    mce::UUID const&             playerUuid,
+    PlayerProgress const&        progress,
+    std::vector<std::string>&    errors
+) {
+    return saveToPath(progressFilePath(worldDataDir, playerUuid), progress, errors);
+}
+
 ProgressMutationResult grantProgress(
-    std::filesystem::path const&      worldDataDir,
-    mce::UUID const&                  playerUuid,
     AdvancementDefinition const&      advancement,
+    PlayerProgress&                   playerProgress,
     std::optional<std::string> const& criterion
 ) {
-    return mutateProgress(worldDataDir, playerUuid, advancement, criterion, true);
+    return mutateProgress(advancement, playerProgress, criterion, true);
 }
 
 ProgressMutationResult revokeProgress(
-    std::filesystem::path const&      worldDataDir,
-    mce::UUID const&                  playerUuid,
     AdvancementDefinition const&      advancement,
+    PlayerProgress&                   playerProgress,
     std::optional<std::string> const& criterion
 ) {
-    return mutateProgress(worldDataDir, playerUuid, advancement, criterion, false);
+    return mutateProgress(advancement, playerProgress, criterion, false);
 }
 
 } // namespace my_mod::advancement
