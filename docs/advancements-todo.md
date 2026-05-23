@@ -29,6 +29,7 @@
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
 - `minecraft:used_ender_eye`
+- `minecraft:villager_trade`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -97,7 +98,7 @@
 | `used_ender_eye` | done | 当前窄实现：周期性检查玩家所在结构，主世界内且未完成 `story/follow_ender_eye` 的玩家进入 Stronghold 结构范围时触发；保留区块变化去抖，不依赖物品使用 hook |
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
-| `villager_trade` | missing-trigger | |
+| `villager_trade` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Trade` 后触发；不依赖打开交易 UI |
 | `voluntary_exile` | missing-trigger | |
 
 ## Story Vanilla Inventory
@@ -186,7 +187,7 @@
 | `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
 | `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
 | `adventure/ol_betsy` | `shot_crossbow` | missing-trigger | |
-| `adventure/trade` | `villager_trade` | missing-trigger | |
+| `adventure/trade` | `villager_trade` | done | 已补数据，复用当前完成交易语义的 `villager_trade` |
 | `adventure/trade_at_world_height` | `villager_trade` | missing-trigger | |
 | `adventure/salvage_sherd` | other | missing-trigger | |
 | `adventure/sleep_in_bed` | `slept_in_bed` | done | 已补数据，复用现有 `slept_in_bed` |
