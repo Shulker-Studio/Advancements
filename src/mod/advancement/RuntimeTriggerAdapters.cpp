@@ -122,6 +122,17 @@ void dispatchConsumeItem(MyMod& mod, Player& player, std::string const& itemId) 
     );
 }
 
+void dispatchUsedTotem(MyMod& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:used_totem",
+            ItemTriggerPayload{"minecraft:totem_of_undying", std::nullopt},
+        }
+    );
+}
+
 std::string dimensionId(DimensionType dimension) {
     if (dimension == VanillaDimensions::Overworld()) {
         return "minecraft:overworld";
@@ -254,6 +265,20 @@ LL_TYPE_INSTANCE_HOOK(
     }
 }
 
+LL_TYPE_INSTANCE_HOOK(PlayerConsumeTotemHook, HookPriority::Normal, Player, &Player::$consumeTotem, bool) {
+    auto const consumed = origin();
+    if (!consumed) {
+        return false;
+    }
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod != nullptr) {
+        dispatchUsedTotem(*mod, *this);
+    }
+
+    return true;
+}
+
 void touchPlayerInventoryChangedHookAutoCount() {
     (void)PlayerInventoryChangedHook::_AutoHookCount;
 }
@@ -264,10 +289,13 @@ void touchPlayerFireDimensionChangedEventHookAutoCount() {
     (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
 }
 
+void touchPlayerConsumeTotemHookAutoCount() { (void)PlayerConsumeTotemHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
+    ll::memory::HookRegistrar<PlayerConsumeTotemHook>               consumeTotemHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -285,6 +313,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchPlayerInventoryChangedHookAutoCount();
     touchPlayerUseItemHookAutoCount();
     touchPlayerFireDimensionChangedEventHookAutoCount();
+    touchPlayerConsumeTotemHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {

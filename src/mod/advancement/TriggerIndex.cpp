@@ -92,7 +92,7 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     if (triggerId == "minecraft:inventory_changed") {
         return compileItemCondition(conditions, true);
     }
-    if (triggerId == "minecraft:consume_item") {
+    if (triggerId == "minecraft:consume_item" || triggerId == "minecraft:used_totem") {
         return compileItemCondition(conditions, false);
     }
     if (triggerId == "minecraft:player_killed_entity") {
