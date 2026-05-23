@@ -15,8 +15,11 @@
 #include "mc/world/actor/item/ItemActor.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/gamemode/InteractionResult.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
+#include "mc/world/item/BucketItem.h"
+#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
@@ -25,6 +28,7 @@
 #include <optional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <variant>
 
 namespace my_mod::advancement {
@@ -34,6 +38,7 @@ ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gMobDieListener;
 ll::event::ListenerPtr gPlayerDieListener;
 MyMod*                  gRuntimeTriggerMod = nullptr;
+std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
 void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
     auto& logger = mod.getSelf().getLogger();
@@ -145,6 +150,17 @@ void dispatchFishingRodHooked(MyMod& mod, Player& player, std::string const& ite
     );
 }
 
+void dispatchFilledBucket(MyMod& mod, Player& player, std::string const& itemId) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:filled_bucket",
+            ItemTriggerPayload{itemId, std::nullopt},
+        }
+    );
+}
+
 std::string dimensionId(DimensionType dimension) {
     if (dimension == VanillaDimensions::Overworld()) {
         return "minecraft:overworld";
@@ -182,6 +198,25 @@ std::optional<Player*> findKillingPlayer(ll::event::MobDieEvent& event) {
         return std::nullopt;
     }
     return player;
+}
+
+std::optional<std::string> bucketItemIdForBucketedEntity(ActorType actorType) {
+    switch (actorType) {
+    case ActorType::Fish:
+        return "minecraft:cod_bucket";
+    case ActorType::Salmon:
+        return "minecraft:salmon_bucket";
+    case ActorType::Tropicalfish:
+        return "minecraft:tropical_fish_bucket";
+    case ActorType::Pufferfish:
+        return "minecraft:pufferfish_bucket";
+    case ActorType::Tadpole:
+        return "minecraft:tadpole_bucket";
+    case ActorType::Axolotl:
+        return "minecraft:axolotl_bucket";
+    default:
+        return std::nullopt;
+    }
 }
 
 std::optional<std::string> findKillerEntityTypeId(ActorDamageSource const& source) {
@@ -319,6 +354,59 @@ LL_TYPE_INSTANCE_HOOK(
     dispatchFishingRodHooked(*mod, *player, *itemId);
 }
 
+LL_TYPE_INSTANCE_HOOK(
+    BucketUseOnEntityHook,
+    HookPriority::Normal,
+    BucketItem,
+    &BucketItem::$_useOn,
+    InteractionResult,
+    ItemStack&  instance,
+    Actor&      entity,
+    BlockPos    pos,
+    uchar       face,
+    Vec3 const& clickPos
+) {
+    auto const bucketItemId = bucketItemIdForBucketedEntity(entity.getEntityTypeId());
+    if (!bucketItemId) {
+        return origin(instance, entity, pos, face, clickPos);
+    }
+
+    auto const entityId = entity.getOrCreateUniqueID().getHash();
+    auto result = origin(instance, entity, pos, face, clickPos);
+    if (result.mSwing) {
+        gPendingBucketedEntities[entityId] = *bucketItemId;
+    }
+    return result;
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    PlayerInteractEntityHook,
+    HookPriority::Normal,
+    Player,
+    &Player::interact,
+    InteractionResult,
+    Actor&      actor,
+    Vec3 const& location
+) {
+    auto const entityId = actor.getOrCreateUniqueID().getHash();
+    auto result = origin(actor, location);
+    if (!result.mSuccess) {
+        return result;
+    }
+
+    auto pending = gPendingBucketedEntities.find(entityId);
+    if (pending == gPendingBucketedEntities.end()) {
+        return result;
+    }
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod != nullptr) {
+        dispatchFilledBucket(*mod, *this, pending->second);
+    }
+    gPendingBucketedEntities.erase(pending);
+    return result;
+}
+
 void touchPlayerInventoryChangedHookAutoCount() {
     (void)PlayerInventoryChangedHook::_AutoHookCount;
 }
@@ -333,12 +421,18 @@ void touchPlayerConsumeTotemHookAutoCount() { (void)PlayerConsumeTotemHook::_Aut
 
 void touchPullFishingHookHookAutoCount() { (void)PullFishingHookHook::_AutoHookCount; }
 
+void touchBucketUseOnEntityHookAutoCount() { (void)BucketUseOnEntityHook::_AutoHookCount; }
+
+void touchPlayerInteractEntityHookAutoCount() { (void)PlayerInteractEntityHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerConsumeTotemHook>               consumeTotemHook;
     ll::memory::HookRegistrar<PullFishingHookHook>                  pullFishingHook;
+    ll::memory::HookRegistrar<BucketUseOnEntityHook>                bucketUseOnEntityHook;
+    ll::memory::HookRegistrar<PlayerInteractEntityHook>             playerInteractEntityHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -358,6 +452,8 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchPlayerFireDimensionChangedEventHookAutoCount();
     touchPlayerConsumeTotemHookAutoCount();
     touchPullFishingHookHookAutoCount();
+    touchBucketUseOnEntityHookAutoCount();
+    touchPlayerInteractEntityHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
@@ -410,6 +506,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
 
 void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
+    gPendingBucketedEntities.clear();
 
     auto& eventBus = ll::event::EventBus::getInstance();
     gRuntimeTriggerHookState.reset();

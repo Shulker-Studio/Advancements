@@ -136,7 +136,7 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
         return matchesItemCondition(binding.condition, context, true);
     }
     if (binding.triggerId == "minecraft:consume_item" || binding.triggerId == "minecraft:used_totem"
-        || binding.triggerId == "minecraft:fishing_rod_hooked") {
+        || binding.triggerId == "minecraft:fishing_rod_hooked" || binding.triggerId == "minecraft:filled_bucket") {
         return matchesItemCondition(binding.condition, context, false);
     }
     if (binding.triggerId == "minecraft:player_killed_entity") {
