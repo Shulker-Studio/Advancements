@@ -1,0 +1,46 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:husbandry/fishy_business",
+  "display": {
+    "title": {
+      "translate": "advancements.husbandry.tactical_fishing.title"
+    },
+    "description": {
+      "translate": "advancements.husbandry.tactical_fishing.description"
+    },
+    "icon": {
+      "item": "minecraft:cod_bucket"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "cod_bucket": {
+      "trigger": "minecraft:filled_bucket",
+      "conditions": {
+        "item": "minecraft:cod_bucket"
+      }
+    },
+    "salmon_bucket": {
+      "trigger": "minecraft:filled_bucket",
+      "conditions": {
+        "item": "minecraft:salmon_bucket"
+      }
+    },
+    "tropical_fish_bucket": {
+      "trigger": "minecraft:filled_bucket",
+      "conditions": {
+        "item": "minecraft:tropical_fish_bucket"
+      }
+    },
+    "pufferfish_bucket": {
+      "trigger": "minecraft:filled_bucket",
+      "conditions": {
+        "item": "minecraft:pufferfish_bucket"
+      }
+    }
+  },
+  "requirements": [["cod_bucket", "salmon_bucket", "tropical_fish_bucket", "pufferfish_bucket"]]
+}
