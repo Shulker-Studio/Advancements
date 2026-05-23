@@ -21,6 +21,7 @@
 
 - `minecraft:inventory_changed`
 - `minecraft:consume_item`
+- `minecraft:used_totem`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
 - `minecraft:changed_dimension`
@@ -90,7 +91,7 @@
 | `thrown_item_picked_up_by_player` | missing-trigger | |
 | `tick` | missing-trigger | 已不再用于现有 advancement 定义，应继续保持移除状态 |
 | `used_ender_eye` | missing-trigger | |
-| `used_totem` | missing-trigger | |
+| `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
 | `villager_trade` | missing-trigger | |
 | `voluntary_exile` | missing-trigger | |
@@ -179,7 +180,7 @@
 | `adventure/sniper_duel` | `killed_by_arrow` | missing-trigger | |
 | `adventure/bullseye` | `target_hit` | missing-trigger | |
 | `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
-| `adventure/totem_of_undying` | `used_totem` | missing-trigger | |
+| `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
 | `adventure/ol_betsy` | `shot_crossbow` | missing-trigger | |
 | `adventure/trade` | `villager_trade` | missing-trigger | |
 | `adventure/trade_at_world_height` | `villager_trade` | missing-trigger | |
