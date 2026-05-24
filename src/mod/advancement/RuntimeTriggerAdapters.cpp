@@ -1,6 +1,7 @@
 #include "mod/advancement/RuntimeTriggerAdapters.h"
 
 #include "ll/api/event/EventBus.h"
+#include "ll/api/event/entity/ActorHurtEvent.h"
 #include "ll/api/event/entity/MobDieEvent.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/event/player/PlayerDieEvent.h"
@@ -75,6 +76,7 @@ std::string normalizeLootTableId(std::string_view lootTableId) {
 ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gMobDieListener;
 ll::event::ListenerPtr gPlayerDieListener;
+ll::event::ListenerPtr gActorHurtListener;
 MyMod*                  gRuntimeTriggerMod = nullptr;
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
@@ -135,6 +137,14 @@ void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
                     context.triggerId,
                     context.player.getRealName(),
                     payload.lootTableId
+                );
+            } else if constexpr (std::is_same_v<Payload, PlayerHurtEntityPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} direct_arrow={} projectile={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.directEntityIsArrow,
+                    payload.isProjectileDamage
                 );
             }
         },
@@ -407,6 +417,39 @@ std::optional<std::string> findKillerEntityTypeId(ActorDamageSource const& sourc
         return std::nullopt;
     }
     return actor->getTypeName();
+}
+
+std::optional<Player*> findHurtingPlayer(ActorDamageSource const& source) {
+    if (!source.isEntitySource()) {
+        return std::nullopt;
+    }
+
+    auto* actor = ll::service::getLevel()->fetchEntity(source.getDamagingEntityUniqueID(), false);
+    if (actor == nullptr) {
+        return std::nullopt;
+    }
+    if (source.isChildEntitySource()) {
+        actor = actor->getOwner();
+    }
+    if (actor == nullptr) {
+        return std::nullopt;
+    }
+    if (!actor->isPlayer()) {
+        return std::nullopt;
+    }
+    return static_cast<Player*>(actor);
+}
+
+bool damageSourceDirectEntityIsArrow(ActorDamageSource const& source) {
+    if (!source.isEntitySource()) {
+        return false;
+    }
+
+    auto* directDamager = ll::service::getLevel()->fetchEntity(source.getDamagingEntityUniqueID(), false);
+    if (directDamager == nullptr) {
+        return false;
+    }
+    return directDamager->getTypeName() == "minecraft:arrow";
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -763,7 +806,7 @@ std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
 } // namespace
 
 void registerRuntimeTriggerAdapters(MyMod& mod) {
-    if (gDestroyBlockListener || gMobDieListener || gPlayerDieListener || gRuntimeTriggerMod != nullptr
+    if (gDestroyBlockListener || gMobDieListener || gPlayerDieListener || gActorHurtListener || gRuntimeTriggerMod != nullptr
         || gRuntimeTriggerHookState) {
         return;
     }
@@ -831,6 +874,26 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
         );
         return true;
     });
+
+    gActorHurtListener = eventBus.emplaceListener<ll::event::ActorHurtEvent>([&mod](auto& event) {
+        auto hurtingPlayer = findHurtingPlayer(event.source());
+        if (!hurtingPlayer) {
+            return true;
+        }
+
+        dispatchTrigger(
+            mod,
+            TriggerContext{
+                **hurtingPlayer,
+                "minecraft:player_hurt_entity",
+                PlayerHurtEntityPayload{
+                    damageSourceDirectEntityIsArrow(event.source()),
+                    event.source().isChildEntitySource(),
+                },
+            }
+        );
+        return true;
+    });
 }
 
 void unregisterRuntimeTriggerAdapters() {
@@ -851,6 +914,10 @@ void unregisterRuntimeTriggerAdapters() {
     if (gPlayerDieListener) {
         eventBus.removeListener(gPlayerDieListener);
         gPlayerDieListener.reset();
+    }
+    if (gActorHurtListener) {
+        eventBus.removeListener(gActorHurtListener);
+        gActorHurtListener.reset();
     }
 }
 
