@@ -41,6 +41,11 @@ struct LootTablePayload {
     std::string lootTableId;
 };
 
+struct PlayerHurtEntityPayload {
+    bool directEntityIsArrow;
+    bool isProjectileDamage;
+};
+
 using TriggerPayload = std::variant<
     NoTriggerPayload,
     ItemTriggerPayload,
@@ -48,7 +53,8 @@ using TriggerPayload = std::variant<
     BlockTriggerPayload,
     DimensionTriggerPayload,
     LocationStructurePayload,
-    LootTablePayload>;
+    LootTablePayload,
+    PlayerHurtEntityPayload>;
 
 struct TriggerContext {
     Player&        player;

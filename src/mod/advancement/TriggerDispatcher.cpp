@@ -83,6 +83,21 @@ bool matchesLootTableCondition(TriggerCondition const& condition, TriggerContext
     return payload->lootTableId == compiled->lootTableId;
 }
 
+bool matchesPlayerHurtEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<PlayerHurtEntityCondition>(&condition);
+    auto const* payload  = payloadAs<PlayerHurtEntityPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (compiled->requireArrowDirectEntity && !payload->directEntityIsArrow) {
+        return false;
+    }
+    if (compiled->requireProjectileDamageTag && !payload->isProjectileDamage) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
@@ -174,6 +189,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
     }
     if (binding.triggerId == "minecraft:player_generates_container_loot") {
         return matchesLootTableCondition(binding.condition, context);
+    }
+    if (binding.triggerId == "minecraft:player_hurt_entity") {
+        return matchesPlayerHurtEntityCondition(binding.condition, context);
     }
     return false;
 }

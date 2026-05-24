@@ -156,6 +156,79 @@ TriggerCondition compileLootTableCondition(nlohmann::json const& conditions) {
     return LootTableCondition{lootTableId};
 }
 
+TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"damage"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("damage") || !conditions.at("damage").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& damage = conditions.at("damage");
+    if (!hasOnlyKeys(damage, {"type"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!damage.contains("type") || !damage.at("type").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& type = damage.at("type");
+    if (!hasOnlyKeys(type, {"direct_entity", "tags"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    bool requireArrowDirectEntity   = false;
+    bool requireProjectileDamageTag = false;
+
+    if (type.contains("direct_entity")) {
+        if (!type.at("direct_entity").is_object()) {
+            return InvalidTriggerCondition{};
+        }
+        auto const& directEntity = type.at("direct_entity");
+        if (!hasOnlyKeys(directEntity, {"type"})) {
+            return InvalidTriggerCondition{};
+        }
+        if (!directEntity.contains("type") || !directEntity.at("type").is_string()) {
+            return InvalidTriggerCondition{};
+        }
+        if (directEntity.at("type").get<std::string>() != "#minecraft:arrows") {
+            return InvalidTriggerCondition{};
+        }
+        requireArrowDirectEntity = true;
+    }
+
+    if (type.contains("tags")) {
+        if (!type.at("tags").is_array()) {
+            return InvalidTriggerCondition{};
+        }
+        auto const& tags = type.at("tags");
+        if (tags.size() != 1 || !tags.at(0).is_object()) {
+            return InvalidTriggerCondition{};
+        }
+        auto const& tagEntry = tags.at(0);
+        if (!hasOnlyKeys(tagEntry, {"id", "expected"})) {
+            return InvalidTriggerCondition{};
+        }
+        if (!tagEntry.contains("id") || !tagEntry.at("id").is_string()) {
+            return InvalidTriggerCondition{};
+        }
+        if (!tagEntry.contains("expected") || !tagEntry.at("expected").is_boolean()) {
+            return InvalidTriggerCondition{};
+        }
+        if (tagEntry.at("id").get<std::string>() != "minecraft:is_projectile"
+            || !tagEntry.at("expected").get<bool>()) {
+            return InvalidTriggerCondition{};
+        }
+        requireProjectileDamageTag = true;
+    }
+
+    if (!requireArrowDirectEntity || !requireProjectileDamageTag) {
+        return InvalidTriggerCondition{};
+    }
+
+    return PlayerHurtEntityCondition{requireArrowDirectEntity, requireProjectileDamageTag};
+}
+
 TriggerCondition compileTriggerCondition(std::string_view triggerId, std::optional<nlohmann::json> const& rawConditions) {
     if (!rawConditions) {
         return NoTriggerCondition{};
@@ -196,6 +269,9 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     }
     if (triggerId == "minecraft:player_generates_container_loot") {
         return compileLootTableCondition(conditions);
+    }
+    if (triggerId == "minecraft:player_hurt_entity") {
+        return compilePlayerHurtEntityCondition(conditions);
     }
     if (triggerId == "minecraft:villager_trade" || triggerId == "minecraft:enchanted_item") {
         return InvalidTriggerCondition{};

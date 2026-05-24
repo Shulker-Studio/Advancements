@@ -42,6 +42,11 @@ struct LootTableCondition {
     std::string lootTableId;
 };
 
+struct PlayerHurtEntityCondition {
+    bool requireArrowDirectEntity;
+    bool requireProjectileDamageTag;
+};
+
 using TriggerCondition = std::variant<
     NoTriggerCondition,
     InvalidTriggerCondition,
@@ -50,7 +55,8 @@ using TriggerCondition = std::variant<
     BlockTriggerCondition,
     DimensionTriggerCondition,
     LocationStructureCondition,
-    LootTableCondition>;
+    LootTableCondition,
+    PlayerHurtEntityCondition>;
 
 struct CriterionBinding {
     std::string      advancementId;
