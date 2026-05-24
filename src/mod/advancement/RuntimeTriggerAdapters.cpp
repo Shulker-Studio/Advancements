@@ -34,6 +34,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/TargetBlock.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
@@ -41,6 +42,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -452,6 +454,47 @@ bool damageSourceDirectEntityIsArrow(ActorDamageSource const& source) {
     return directDamager->getTypeName() == "minecraft:arrow";
 }
 
+float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
+    auto const dx = lhs.x - rhs.x;
+    auto const dz = lhs.z - rhs.z;
+    return std::sqrt(dx * dx + dz * dz);
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    TargetBlockOnProjectileHitHook,
+    HookPriority::Normal,
+    TargetBlock,
+    &TargetBlock::$onProjectileHit,
+    void,
+    ::BlockSource&    region,
+    ::BlockPos const& pos,
+    ::Actor const&    projectile
+) {
+    origin(region, pos, projectile);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return;
+    }
+
+    auto* owner = projectile.getPlayerOwner();
+    if (owner == nullptr) {
+        return;
+    }
+
+    auto const projectileDistance = horizontalDistance(owner->getPosition(), projectile.getPosition());
+    auto const signalStrength     = projectileDistance >= 30.0F ? 15 : 0;
+
+    dispatchTrigger(
+        *mod,
+        TriggerContext{
+            *owner,
+            "minecraft:target_hit",
+            TargetHitPayload{signalStrength, projectileDistance},
+        }
+    );
+}
+
 LL_TYPE_INSTANCE_HOOK(
     VillagerTradeRemoveHook,
     HookPriority::Normal,
@@ -786,6 +829,8 @@ void touchVillagerTradeTransferHookAutoCount() { (void)VillagerTradeTransferHook
 
 void touchFillContainerLootTableHookAutoCount() { (void)FillContainerLootTableHook::_AutoHookCount; }
 
+void touchTargetBlockOnProjectileHitHookAutoCount() { (void)TargetBlockOnProjectileHitHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
@@ -799,6 +844,7 @@ struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInteractEntityHook>             playerInteractEntityHook;
     ll::memory::HookRegistrar<VillagerTradeTransferHook>            villagerTradeTransferHook;
     ll::memory::HookRegistrar<FillContainerLootTableHook>           fillContainerLootTableHook;
+    ll::memory::HookRegistrar<TargetBlockOnProjectileHitHook>       targetBlockOnProjectileHitHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -826,6 +872,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchVillagerTradeRemoveHookAutoCount();
     touchVillagerTradeTransferHookAutoCount();
     touchFillContainerLootTableHookAutoCount();
+    touchTargetBlockOnProjectileHitHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
