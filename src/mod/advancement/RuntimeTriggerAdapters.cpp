@@ -279,6 +279,9 @@ std::optional<std::string> currentSupportedLocationStructure(Player& player) {
     if (currentStructure == VanillaStructureFeatureType::Stronghold()) {
         return "minecraft:stronghold";
     }
+    if (currentStructure == VanillaStructureFeatureType::TrialChambers()) {
+        return "minecraft:trial_chambers";
+    }
     return std::nullopt;
 }
 
