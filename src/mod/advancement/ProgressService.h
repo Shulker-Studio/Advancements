@@ -15,6 +15,11 @@ namespace my_mod::advancement {
 
 class ProgressService {
 public:
+    [[nodiscard]] ProgressReadResult getProgressView(
+        std::filesystem::path const& worldDataDir,
+        mce::UUID const&             playerUuid
+    ) const;
+
     [[nodiscard]] ProgressLoadResult getProgress(
         std::filesystem::path const& worldDataDir,
         mce::UUID const&             playerUuid

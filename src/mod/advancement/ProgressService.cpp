@@ -50,13 +50,25 @@ ProgressLoadResult ProgressService::getProgress(
     std::filesystem::path const& worldDataDir,
     mce::UUID const&             playerUuid
 ) const {
-    if (auto loadResult = ensureCached(worldDataDir, playerUuid); loadResult) {
-        return *std::move(loadResult);
+    auto progressView = getProgressView(worldDataDir, playerUuid);
+    if (!progressView.ok()) {
+        return ProgressLoadResult{PlayerProgress{}, std::move(progressView.errors)};
     }
 
     ProgressLoadResult result;
-    result.progress = mCache.at(playerUuid.asString()).progress;
+    result.progress = *progressView.progress;
     return result;
+}
+
+ProgressReadResult ProgressService::getProgressView(
+    std::filesystem::path const& worldDataDir,
+    mce::UUID const&             playerUuid
+) const {
+    if (auto loadResult = ensureCached(worldDataDir, playerUuid); loadResult) {
+        return ProgressReadResult{nullptr, std::move(loadResult->errors)};
+    }
+
+    return ProgressReadResult{&mCache.at(playerUuid.asString()).progress, {}};
 }
 
 ProgressMutationResult ProgressService::grantAdvancement(

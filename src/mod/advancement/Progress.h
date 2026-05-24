@@ -25,6 +25,13 @@ struct ProgressLoadResult {
     [[nodiscard]] bool ok() const { return errors.empty(); }
 };
 
+struct ProgressReadResult {
+    PlayerProgress const*    progress{nullptr};
+    std::vector<std::string> errors;
+
+    [[nodiscard]] bool ok() const { return errors.empty(); }
+};
+
 struct ProgressMutationResult {
     bool                     changed{false};
     bool                     done{false};
