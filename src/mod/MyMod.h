@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ll/api/mod/NativeMod.h"
+#include "mod/advancement/AdvancementGuiIndex.h"
 #include "mod/advancement/AdvancementLoader.h"
 #include "mod/advancement/ProgressService.h"
 #include "mod/advancement/TriggerIndex.h"
@@ -29,6 +30,7 @@ public:
     bool disable() const;
 
     [[nodiscard]] advancement::LoadResult const& getAdvancementLoadResult() const { return mAdvancementLoadResult; }
+    [[nodiscard]] advancement::AdvancementGuiIndex const& getAdvancementGuiIndex() const { return mAdvancementGuiIndex; }
     [[nodiscard]] advancement::ProgressService const& getProgressService() const { return mProgressService; }
     [[nodiscard]] advancement::TriggerIndex const& getTriggerIndex() const { return mTriggerIndex; }
 
@@ -40,9 +42,10 @@ public:
 
 private:
     ll::mod::NativeMod&         mSelf;
-    advancement::LoadResult     mAdvancementLoadResult;
+    advancement::LoadResult      mAdvancementLoadResult;
+    advancement::AdvancementGuiIndex mAdvancementGuiIndex;
     advancement::ProgressService mProgressService;
-    advancement::TriggerIndex   mTriggerIndex;
+    advancement::TriggerIndex    mTriggerIndex;
 };
 
 } // namespace my_mod

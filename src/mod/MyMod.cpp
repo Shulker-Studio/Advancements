@@ -44,10 +44,12 @@ bool MyMod::disable() const {
 
 void MyMod::reloadAdvancements() {
     auto loadResult = advancement::loadAdvancements(getSelf().getModDir());
+    auto guiIndex   = advancement::buildAdvancementGuiIndex(loadResult);
     auto triggerIndex = advancement::TriggerIndex{};
     triggerIndex.rebuild(loadResult);
 
     mAdvancementLoadResult = std::move(loadResult);
+    mAdvancementGuiIndex   = std::move(guiIndex);
     mTriggerIndex = std::move(triggerIndex);
     commands::updateAdvancementCommandEnums(mAdvancementLoadResult);
     auto& logger = getSelf().getLogger();
