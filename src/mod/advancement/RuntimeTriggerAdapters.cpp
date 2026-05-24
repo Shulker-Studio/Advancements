@@ -496,6 +496,40 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 LL_TYPE_INSTANCE_HOOK(
+    PlayerBlockUsingShieldHook,
+    HookPriority::Normal,
+    Player,
+    &Player::_blockUsingShield,
+    bool,
+    ::ActorDamageSource const& source,
+    float                      damage
+) {
+    auto const blocked = origin(source, damage);
+    if (!blocked) {
+        return blocked;
+    }
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return blocked;
+    }
+
+    if (!source.isChildEntitySource()) {
+        return blocked;
+    }
+
+    dispatchTrigger(
+        *mod,
+        TriggerContext{
+            *this,
+            "minecraft:entity_hurt_player",
+            EntityHurtPlayerPayload{true, true},
+        }
+    );
+    return blocked;
+}
+
+LL_TYPE_INSTANCE_HOOK(
     VillagerTradeRemoveHook,
     HookPriority::Normal,
     ItemStackRequestActionHandler,
@@ -831,6 +865,8 @@ void touchFillContainerLootTableHookAutoCount() { (void)FillContainerLootTableHo
 
 void touchTargetBlockOnProjectileHitHookAutoCount() { (void)TargetBlockOnProjectileHitHook::_AutoHookCount; }
 
+void touchPlayerBlockUsingShieldHookAutoCount() { (void)PlayerBlockUsingShieldHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
@@ -845,6 +881,7 @@ struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<VillagerTradeTransferHook>            villagerTradeTransferHook;
     ll::memory::HookRegistrar<FillContainerLootTableHook>           fillContainerLootTableHook;
     ll::memory::HookRegistrar<TargetBlockOnProjectileHitHook>       targetBlockOnProjectileHitHook;
+    ll::memory::HookRegistrar<PlayerBlockUsingShieldHook>           playerBlockUsingShieldHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -873,6 +910,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchVillagerTradeTransferHookAutoCount();
     touchFillContainerLootTableHookAutoCount();
     touchTargetBlockOnProjectileHitHookAutoCount();
+    touchPlayerBlockUsingShieldHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
