@@ -133,14 +133,16 @@ void showDetail(MyMod& mod, Player& player, std::string const& categoryKey, std:
         return;
     }
 
-    auto progressResult = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
+    auto progressResult = mod.getProgressService().getProgressView(*worldDataDir, player.getUuid());
     if (!progressResult.ok()) {
         player.sendMessage(localizeKey("advancements.gui.error.progress_load_failed", player));
         return;
     }
 
+    auto const& progress = *progressResult.progress;
+
     auto const& advancement = found->second;
-    auto const  done        = isDone(progressResult.progress, advancement.id);
+    auto const  done        = isDone(progress, advancement.id);
     auto        content     = std::format(
         "{}\n\n{}: {}",
         descriptionFor(advancement, player),
@@ -148,7 +150,7 @@ void showDetail(MyMod& mod, Player& player, std::string const& categoryKey, std:
         done ? localizeKey("advancements.gui.status.done", player) : localizeKey("advancements.gui.status.in_progress", player)
     );
 
-    if (auto const completedAt = completionTime(advancement, progressResult.progress); done && completedAt) {
+    if (auto const completedAt = completionTime(advancement, progress); done && completedAt) {
         content += std::format(
             "\n{}: {}",
             localizeKey("advancements.gui.completed_at", player),
@@ -176,11 +178,13 @@ void showCategory(MyMod& mod, Player& player, std::string const& categoryKey) {
         return;
     }
 
-    auto progressResult = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
+    auto progressResult = mod.getProgressService().getProgressView(*worldDataDir, player.getUuid());
     if (!progressResult.ok()) {
         player.sendMessage(localizeKey("advancements.gui.error.progress_load_failed", player));
         return;
     }
+
+    auto const& progress = *progressResult.progress;
 
     auto const& definitions = mod.getAdvancementLoadResult();
     auto const& ids         = category->orderedAdvancementIds;
@@ -196,7 +200,7 @@ void showCategory(MyMod& mod, Player& player, std::string const& categoryKey) {
         auto        buttonText  = titleFor(advancement, player);
         auto const  groups      = effectiveRequirementGroups(advancement);
         if (groups.size() > 1) {
-            buttonText += std::format(" ({}/{})", satisfiedGroupCount(advancement, progressResult.progress), groups.size());
+            buttonText += std::format(" ({}/{})", satisfiedGroupCount(advancement, progress), groups.size());
         }
         form.appendButton(buttonText, [&mod, categoryKey, id](Player& callbackPlayer) {
             showDetail(mod, callbackPlayer, categoryKey, id);
@@ -216,16 +220,18 @@ void showAdvancementsGui(MyMod& mod, Player& player) {
         return;
     }
 
-    auto progressResult = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
+    auto progressResult = mod.getProgressService().getProgressView(*worldDataDir, player.getUuid());
     if (!progressResult.ok()) {
         player.sendMessage(localizeKey("advancements.gui.error.progress_load_failed", player));
         return;
     }
 
+    auto const& progress = *progressResult.progress;
+
     ll::form::SimpleForm form(localizeKey("advancements.gui.title", player), "");
 
     for (auto const& category : mod.getAdvancementGuiIndex().rootCategories) {
-        auto const completed = completedCount(progressResult.progress, category.advancementIds);
+        auto const completed = completedCount(progress, category.advancementIds);
         auto const total     = category.advancementIds.size();
         auto const key       = category.key;
         form.appendButton(
