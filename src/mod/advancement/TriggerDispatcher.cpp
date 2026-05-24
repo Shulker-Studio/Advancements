@@ -157,6 +157,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
         || binding.triggerId == "minecraft:fishing_rod_hooked" || binding.triggerId == "minecraft:filled_bucket") {
         return matchesItemCondition(binding.condition, context, false);
     }
+    if (binding.triggerId == "minecraft:shot_crossbow") {
+        return matchesItemCondition(binding.condition, context, false);
+    }
     if (binding.triggerId == "minecraft:player_killed_entity") {
         return matchesEntityCondition(binding.condition, context);
     }

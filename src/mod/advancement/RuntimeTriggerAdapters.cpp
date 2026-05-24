@@ -28,6 +28,7 @@
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
 #include "mc/world/item/BucketItem.h"
+#include "mc/world/item/CrossbowItem.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
@@ -217,6 +218,17 @@ void dispatchFilledBucket(MyMod& mod, Player& player, std::string const& itemId)
             player,
             "minecraft:filled_bucket",
             ItemTriggerPayload{itemId, std::nullopt},
+        }
+    );
+}
+
+void dispatchShotCrossbow(MyMod& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:shot_crossbow",
+            ItemTriggerPayload{"minecraft:crossbow", std::nullopt},
         }
     );
 }
@@ -536,6 +548,25 @@ LL_TYPE_INSTANCE_HOOK(
     dispatchConsumeItem(*mod, *this, itemId);
 }
 
+LL_TYPE_INSTANCE_HOOK(
+    CrossbowShootArrowHook,
+    HookPriority::Normal,
+    CrossbowItem,
+    &CrossbowItem::_shootArrow,
+    void,
+    ::ItemInstance const& crossbow,
+    ::ItemInstance const& projectileInstance,
+    ::Player&             player
+) {
+    origin(crossbow, projectileInstance, player);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return;
+    }
+    dispatchShotCrossbow(*mod, player);
+}
+
 LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
     origin(currentTick);
 
@@ -688,6 +719,8 @@ void touchPlayerInventoryChangedHookAutoCount() {
 
 void touchPlayerUseItemHookAutoCount() { (void)PlayerUseItemHook::_AutoHookCount; }
 
+void touchCrossbowShootArrowHookAutoCount() { (void)CrossbowShootArrowHook::_AutoHookCount; }
+
 void touchPlayerTickWorldHookAutoCount() { (void)PlayerTickWorldHook::_AutoHookCount; }
 
 void touchPlayerFireDimensionChangedEventHookAutoCount() {
@@ -713,6 +746,7 @@ void touchFillContainerLootTableHookAutoCount() { (void)FillContainerLootTableHo
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
+    ll::memory::HookRegistrar<CrossbowShootArrowHook>     crossbowShootArrowHook;
     ll::memory::HookRegistrar<PlayerTickWorldHook>         tickWorldHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerConsumeTotemHook>               consumeTotemHook;
@@ -738,6 +772,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     gRuntimeTriggerMod = &mod;
     touchPlayerInventoryChangedHookAutoCount();
     touchPlayerUseItemHookAutoCount();
+    touchCrossbowShootArrowHookAutoCount();
     touchPlayerTickWorldHookAutoCount();
     touchPlayerFireDimensionChangedEventHookAutoCount();
     touchPlayerConsumeTotemHookAutoCount();

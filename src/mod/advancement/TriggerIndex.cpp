@@ -81,6 +81,29 @@ TriggerCondition compileChangedDimensionCondition(nlohmann::json const& conditio
     return DimensionTriggerCondition{fromDimension, toDimension};
 }
 
+TriggerCondition compileShotCrossbowCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"item"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("item") || !conditions.at("item").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& item = conditions.at("item");
+    if (!hasOnlyKeys(item, {"items"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!item.contains("items") || !item.at("items").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const itemId = item.at("items").get<std::string>();
+    if (itemId != "minecraft:crossbow") {
+        return InvalidTriggerCondition{};
+    }
+    return ItemTriggerCondition{itemId, std::nullopt};
+}
+
 TriggerCondition compileLocationStructureCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"player"})) {
         return InvalidTriggerCondition{};
@@ -155,6 +178,9 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     if (triggerId == "minecraft:consume_item" || triggerId == "minecraft:used_totem"
         || triggerId == "minecraft:fishing_rod_hooked" || triggerId == "minecraft:filled_bucket") {
         return compileItemCondition(conditions, false);
+    }
+    if (triggerId == "minecraft:shot_crossbow") {
+        return compileShotCrossbowCondition(conditions);
     }
     if (triggerId == "minecraft:player_killed_entity") {
         return compileEntityCondition(conditions);
