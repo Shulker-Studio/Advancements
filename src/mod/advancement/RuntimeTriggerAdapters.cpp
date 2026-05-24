@@ -454,6 +454,10 @@ bool damageSourceDirectEntityIsArrow(ActorDamageSource const& source) {
     return directDamager->getTypeName() == "minecraft:arrow";
 }
 
+bool damageSourceIsSupportedProjectile(ActorDamageSource const& source) {
+    return source.isChildEntitySource() || damageSourceDirectEntityIsArrow(source);
+}
+
 float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
     auto const dx = lhs.x - rhs.x;
     auto const dz = lhs.z - rhs.z;
@@ -514,7 +518,7 @@ LL_TYPE_INSTANCE_HOOK(
         return blocked;
     }
 
-    if (!source.isChildEntitySource()) {
+    if (!damageSourceIsSupportedProjectile(source)) {
         return blocked;
     }
 
@@ -973,7 +977,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
                 "minecraft:player_hurt_entity",
                 PlayerHurtEntityPayload{
                     damageSourceDirectEntityIsArrow(event.source()),
-                    event.source().isChildEntitySource(),
+                    damageSourceIsSupportedProjectile(event.source()),
                 },
             }
         );
