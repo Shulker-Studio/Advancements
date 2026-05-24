@@ -51,6 +51,11 @@ struct TargetHitPayload {
     float projectileHorizontalDistance;
 };
 
+struct EntityHurtPlayerPayload {
+    bool blockedDamage;
+    bool isProjectileDamage;
+};
+
 using TriggerPayload = std::variant<
     NoTriggerPayload,
     ItemTriggerPayload,
@@ -60,7 +65,8 @@ using TriggerPayload = std::variant<
     LocationStructurePayload,
     LootTablePayload,
     PlayerHurtEntityPayload,
-    TargetHitPayload>;
+    TargetHitPayload,
+    EntityHurtPlayerPayload>;
 
 struct TriggerContext {
     Player&        player;

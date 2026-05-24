@@ -290,6 +290,52 @@ TriggerCondition compileTargetHitCondition(nlohmann::json const& conditions) {
     return TargetHitCondition{signalStrength, horizontalMin};
 }
 
+TriggerCondition compileEntityHurtPlayerCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"damage"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("damage") || !conditions.at("damage").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& damage = conditions.at("damage");
+    if (!hasOnlyKeys(damage, {"blocked", "type"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!damage.contains("blocked") || !damage.at("blocked").is_boolean() || !damage.at("blocked").get<bool>()) {
+        return InvalidTriggerCondition{};
+    }
+    if (!damage.contains("type") || !damage.at("type").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& type = damage.at("type");
+    if (!hasOnlyKeys(type, {"tags"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!type.contains("tags") || !type.at("tags").is_array()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& tags = type.at("tags");
+    if (tags.size() != 1 || !tags.at(0).is_object()) {
+        return InvalidTriggerCondition{};
+    }
+    auto const& tagEntry = tags.at(0);
+    if (!hasOnlyKeys(tagEntry, {"id", "expected"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!tagEntry.contains("id") || !tagEntry.at("id").is_string() || !tagEntry.contains("expected")
+        || !tagEntry.at("expected").is_boolean()) {
+        return InvalidTriggerCondition{};
+    }
+    if (tagEntry.at("id").get<std::string>() != "minecraft:is_projectile" || !tagEntry.at("expected").get<bool>()) {
+        return InvalidTriggerCondition{};
+    }
+
+    return EntityHurtPlayerCondition{true, true};
+}
+
 TriggerCondition compileTriggerCondition(std::string_view triggerId, std::optional<nlohmann::json> const& rawConditions) {
     if (!rawConditions) {
         return NoTriggerCondition{};
@@ -336,6 +382,9 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     }
     if (triggerId == "minecraft:target_hit") {
         return compileTargetHitCondition(conditions);
+    }
+    if (triggerId == "minecraft:entity_hurt_player") {
+        return compileEntityHurtPlayerCondition(conditions);
     }
     if (triggerId == "minecraft:villager_trade" || triggerId == "minecraft:enchanted_item") {
         return InvalidTriggerCondition{};
