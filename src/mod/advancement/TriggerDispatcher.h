@@ -33,8 +33,17 @@ struct DimensionTriggerPayload {
     std::string toDimension;
 };
 
-using TriggerPayload =
-    std::variant<NoTriggerPayload, ItemTriggerPayload, EntityTriggerPayload, BlockTriggerPayload, DimensionTriggerPayload>;
+struct LocationStructurePayload {
+    std::string structureId;
+};
+
+using TriggerPayload = std::variant<
+    NoTriggerPayload,
+    ItemTriggerPayload,
+    EntityTriggerPayload,
+    BlockTriggerPayload,
+    DimensionTriggerPayload,
+    LocationStructurePayload>;
 
 struct TriggerContext {
     Player&        player;

@@ -34,8 +34,18 @@ struct DimensionTriggerCondition {
     std::optional<std::string> toDimension;
 };
 
-using TriggerCondition =
-    std::variant<NoTriggerCondition, InvalidTriggerCondition, ItemTriggerCondition, EntityTriggerCondition, BlockTriggerCondition, DimensionTriggerCondition>;
+struct LocationStructureCondition {
+    std::string structureId;
+};
+
+using TriggerCondition = std::variant<
+    NoTriggerCondition,
+    InvalidTriggerCondition,
+    ItemTriggerCondition,
+    EntityTriggerCondition,
+    BlockTriggerCondition,
+    DimensionTriggerCondition,
+    LocationStructureCondition>;
 
 struct CriterionBinding {
     std::string      advancementId;

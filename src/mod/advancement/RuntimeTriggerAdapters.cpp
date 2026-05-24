@@ -55,14 +55,21 @@ ll::event::ListenerPtr gPlayerDieListener;
 MyMod*                  gRuntimeTriggerMod = nullptr;
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
-constexpr int EnderEyeCheckIntervalTicks = 40;
+constexpr int EnderEyeCheckIntervalTicks           = 20;
+constexpr int LocationStructureCheckIntervalTicks  = 20;
 
 struct EnderEyePlayerState {
     int                     ticksUntilCheck{EnderEyeCheckIntervalTicks};
     std::optional<ChunkPos> lastCheckedChunk;
 };
 
+struct LocationStructurePlayerState {
+    int                        ticksUntilCheck{LocationStructureCheckIntervalTicks};
+    std::optional<std::string> lastStructureId;
+};
+
 std::unordered_map<mce::UUID, EnderEyePlayerState> gEnderEyePlayerStates;
+std::unordered_map<mce::UUID, LocationStructurePlayerState> gLocationStructurePlayerStates;
 
 void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
     auto& logger = mod.getSelf().getLogger();
@@ -98,6 +105,13 @@ void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.fromDimension,
                     payload.toDimension
+                );
+            } else if constexpr (std::is_same_v<Payload, LocationStructurePayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} structure={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.structureId
                 );
             }
         },
@@ -207,6 +221,17 @@ void dispatchUsedEnderEye(MyMod& mod, Player& player) {
     );
 }
 
+void dispatchLocationStructure(MyMod& mod, Player& player, std::string const& structureId) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:location",
+            LocationStructurePayload{structureId},
+        }
+    );
+}
+
 void dispatchVillagerTrade(MyMod& mod, Player& player) {
     dispatchTrigger(
         mod,
@@ -252,6 +277,23 @@ void dispatchEnchantedItem(MyMod& mod, Player& player) {
     return player.getCurrentStructureFeature() == VanillaStructureFeatureType::Stronghold();
 }
 
+std::optional<std::string> currentSupportedLocationStructure(Player& player) {
+    auto const& currentStructure = player.getCurrentStructureFeature();
+    if (currentStructure == VanillaStructureFeatureType::Bastion()) {
+        return "minecraft:bastion_remnant";
+    }
+    if (currentStructure == VanillaStructureFeatureType::Fortress()) {
+        return "minecraft:fortress";
+    }
+    if (currentStructure == VanillaStructureFeatureType::EndCity()) {
+        return "minecraft:end_city";
+    }
+    if (currentStructure == VanillaStructureFeatureType::Stronghold()) {
+        return "minecraft:stronghold";
+    }
+    return std::nullopt;
+}
+
 void checkUsedEnderEye(MyMod& mod, Player& player) {
     if (player.getDimensionId() != VanillaDimensions::Overworld()) {
         gEnderEyePlayerStates.erase(player.getUuid());
@@ -279,6 +321,27 @@ void checkUsedEnderEye(MyMod& mod, Player& player) {
     if (isInsideStrongholdBounds(player)) {
         dispatchUsedEnderEye(mod, player);
     }
+}
+
+void checkLocationStructure(MyMod& mod, Player& player) {
+    auto& state = gLocationStructurePlayerStates[player.getUuid()];
+    --state.ticksUntilCheck;
+    if (state.ticksUntilCheck > 0) {
+        return;
+    }
+    state.ticksUntilCheck = LocationStructureCheckIntervalTicks;
+
+    auto const structureId = currentSupportedLocationStructure(player);
+    if (!structureId) {
+        state.lastStructureId.reset();
+        return;
+    }
+    if (state.lastStructureId && *state.lastStructureId == *structureId) {
+        return;
+    }
+
+    state.lastStructureId = structureId;
+    dispatchLocationStructure(mod, player, *structureId);
 }
 
 std::string dimensionId(DimensionType dimension) {
@@ -470,6 +533,7 @@ LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player
     auto* mod = currentRuntimeTriggerMod();
     if (mod != nullptr) {
         checkUsedEnderEye(*mod, *this);
+        checkLocationStructure(*mod, *this);
     }
 }
 
@@ -726,6 +790,7 @@ void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
     gPendingBucketedEntities.clear();
     gEnderEyePlayerStates.clear();
+    gLocationStructurePlayerStates.clear();
 
     auto& eventBus = ll::event::EventBus::getInstance();
     gRuntimeTriggerHookState.reset();

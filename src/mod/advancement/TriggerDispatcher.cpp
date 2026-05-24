@@ -65,6 +65,15 @@ bool matchesChangedDimensionCondition(TriggerCondition const& condition, Trigger
     return true;
 }
 
+bool matchesLocationStructureCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<LocationStructureCondition>(&condition);
+    auto const* payload  = payloadAs<LocationStructurePayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->structureId == compiled->structureId;
+}
+
 } // namespace
 
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
@@ -147,6 +156,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
     }
     if (binding.triggerId == "minecraft:changed_dimension") {
         return matchesChangedDimensionCondition(binding.condition, context);
+    }
+    if (binding.triggerId == "minecraft:location") {
+        return matchesLocationStructureCondition(binding.condition, context);
     }
     return false;
 }
