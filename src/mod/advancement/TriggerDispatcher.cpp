@@ -98,6 +98,18 @@ bool matchesPlayerHurtEntityCondition(TriggerCondition const& condition, Trigger
     return true;
 }
 
+bool matchesTargetHitCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<TargetHitCondition>(&condition);
+    auto const* payload  = payloadAs<TargetHitPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (payload->signalStrength != compiled->requiredSignalStrength) {
+        return false;
+    }
+    return payload->projectileHorizontalDistance >= compiled->projectileHorizontalDistanceMin;
+}
+
 } // namespace
 
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
@@ -192,6 +204,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
     }
     if (binding.triggerId == "minecraft:player_hurt_entity") {
         return matchesPlayerHurtEntityCondition(binding.condition, context);
+    }
+    if (binding.triggerId == "minecraft:target_hit") {
+        return matchesTargetHitCondition(binding.condition, context);
     }
     return false;
 }

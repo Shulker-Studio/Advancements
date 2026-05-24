@@ -47,6 +47,11 @@ struct PlayerHurtEntityCondition {
     bool requireProjectileDamageTag;
 };
 
+struct TargetHitCondition {
+    int   requiredSignalStrength;
+    float projectileHorizontalDistanceMin;
+};
+
 using TriggerCondition = std::variant<
     NoTriggerCondition,
     InvalidTriggerCondition,
@@ -56,7 +61,8 @@ using TriggerCondition = std::variant<
     DimensionTriggerCondition,
     LocationStructureCondition,
     LootTableCondition,
-    PlayerHurtEntityCondition>;
+    PlayerHurtEntityCondition,
+    TargetHitCondition>;
 
 struct CriterionBinding {
     std::string      advancementId;
