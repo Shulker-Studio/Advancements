@@ -74,6 +74,15 @@ bool matchesLocationStructureCondition(TriggerCondition const& condition, Trigge
     return payload->structureId == compiled->structureId;
 }
 
+bool matchesLootTableCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<LootTableCondition>(&condition);
+    auto const* payload  = payloadAs<LootTablePayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->lootTableId == compiled->lootTableId;
+}
+
 } // namespace
 
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
@@ -159,6 +168,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
     }
     if (binding.triggerId == "minecraft:location") {
         return matchesLocationStructureCondition(binding.condition, context);
+    }
+    if (binding.triggerId == "minecraft:player_generates_container_loot") {
+        return matchesLootTableCondition(binding.condition, context);
     }
     return false;
 }

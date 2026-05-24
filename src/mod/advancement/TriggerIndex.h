@@ -38,6 +38,10 @@ struct LocationStructureCondition {
     std::string structureId;
 };
 
+struct LootTableCondition {
+    std::string lootTableId;
+};
+
 using TriggerCondition = std::variant<
     NoTriggerCondition,
     InvalidTriggerCondition,
@@ -45,7 +49,8 @@ using TriggerCondition = std::variant<
     EntityTriggerCondition,
     BlockTriggerCondition,
     DimensionTriggerCondition,
-    LocationStructureCondition>;
+    LocationStructureCondition,
+    LootTableCondition>;
 
 struct CriterionBinding {
     std::string      advancementId;

@@ -37,13 +37,18 @@ struct LocationStructurePayload {
     std::string structureId;
 };
 
+struct LootTablePayload {
+    std::string lootTableId;
+};
+
 using TriggerPayload = std::variant<
     NoTriggerPayload,
     ItemTriggerPayload,
     EntityTriggerPayload,
     BlockTriggerPayload,
     DimensionTriggerPayload,
-    LocationStructurePayload>;
+    LocationStructurePayload,
+    LootTablePayload>;
 
 struct TriggerContext {
     Player&        player;

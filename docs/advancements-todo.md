@@ -30,6 +30,7 @@
 - `minecraft:changed_dimension`
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
+- `minecraft:player_generates_container_loot`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -76,7 +77,7 @@
 | `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
 | `nether_travel` | missing-trigger | |
 | `placed_block` | missing-trigger | |
-| `player_generates_container_loot` | missing-trigger | |
+| `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
 | `player_hurt_entity` | missing-trigger | |
 | `player_interacted_with_entity` | missing-trigger | |
 | `player_killed_entity` | done | 当前窄实现，支持 `conditions.entity` |
@@ -145,7 +146,7 @@
 | `nether/ride_strider` | ride / lava family | missing-trigger | |
 | `nether/ride_strider_in_overworld_lava` | `ride_entity_in_lava` | missing-trigger | |
 | `nether/distract_piglin` | interaction / inventory family | missing-trigger | |
-| `nether/loot_bastion` | `player_generates_container_loot` | missing-trigger | |
+| `nether/loot_bastion` | `player_generates_container_loot` | done | 已核原版 JSON：父级 `minecraft:nether/find_bastion`，四个 bastion chest loot table 条件，OR requirements；当前窄 runtime 仅覆盖这四个 loot table |
 | `nether/use_lodestone` | location / use item family | missing-trigger | |
 | `nether/obtain_crying_obsidian` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
 | `nether/charge_respawn_anchor` | interaction / block use family | missing-trigger | |

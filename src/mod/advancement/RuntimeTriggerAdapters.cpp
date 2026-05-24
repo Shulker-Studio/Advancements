@@ -35,11 +35,15 @@
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
+#include "mc/util/LootTableUtils.h"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <variant>
 
@@ -47,6 +51,25 @@ namespace my_mod::advancement {
 namespace {
 
 constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
+
+constexpr std::array<std::string_view, 4> SupportedBastionLootTables{
+    "minecraft:chests/bastion_bridge",
+    "minecraft:chests/bastion_hoglin_stable",
+    "minecraft:chests/bastion_other",
+    "minecraft:chests/bastion_treasure",
+};
+
+std::string normalizeLootTableId(std::string_view lootTableId) {
+    constexpr std::string_view BedrockPrefix = "loot_tables/";
+    constexpr std::string_view JsonSuffix    = ".json";
+
+    if (lootTableId.starts_with(BedrockPrefix) && lootTableId.ends_with(JsonSuffix)) {
+        auto const name = lootTableId.substr(BedrockPrefix.size(), lootTableId.size() - BedrockPrefix.size() - JsonSuffix.size());
+        return "minecraft:" + std::string{name};
+    }
+
+    return std::string{lootTableId};
+}
 
 ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gMobDieListener;
@@ -104,6 +127,13 @@ void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
                     context.triggerId,
                     context.player.getRealName(),
                     payload.structureId
+                );
+            } else if constexpr (std::is_same_v<Payload, LootTablePayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} loot_table={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.lootTableId
                 );
             }
         },
@@ -297,6 +327,21 @@ void dispatchChangedDimension(MyMod& mod, Player& player, DimensionType fromDime
     );
 }
 
+void dispatchGeneratedContainerLoot(MyMod& mod, Player& player, std::string const& lootTableId) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:player_generates_container_loot",
+            LootTablePayload{lootTableId},
+        }
+    );
+}
+
+bool isSupportedBastionLootTable(std::string_view lootTableId) {
+    return std::ranges::find(SupportedBastionLootTables, lootTableId) != SupportedBastionLootTables.end();
+}
+
 MyMod* currentRuntimeTriggerMod() { return gRuntimeTriggerMod; }
 
 std::optional<Player*> findKillingPlayer(ll::event::MobDieEvent& event) {
@@ -432,6 +477,46 @@ LL_TYPE_INSTANCE_HOOK(
     if (oldItemId && oldItemId != currentItemId) {
         dispatchInventoryChangedForItem(*mod, *this, *oldItemId);
     }
+}
+
+LL_TYPE_STATIC_HOOK(
+    FillContainerLootTableHook,
+    HookPriority::Normal,
+    Util::LootTableUtils,
+    &Util::LootTableUtils::fillContainer,
+    void,
+    Level&             level,
+    Container&         container,
+    Random&            random,
+    std::string const& tableName,
+    DimensionType      dimensionId,
+    Actor*             entity
+) {
+    origin(level, container, random, tableName, dimensionId, entity);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return;
+    }
+
+    auto const normalizedLootTableId = normalizeLootTableId(tableName);
+
+    mod->getSelf().getLogger().debug(
+        "Advancements debug: fillContainer table={} normalized_table={} entity_type={} is_player={}",
+        tableName,
+        normalizedLootTableId,
+        entity ? entity->getTypeName() : std::string{"<null>"},
+        entity != nullptr && entity->isPlayer()
+    );
+    if (entity == nullptr || !entity->isPlayer()) {
+        return;
+    }
+
+    if (!isSupportedBastionLootTable(normalizedLootTableId)) {
+        return;
+    }
+
+    dispatchGeneratedContainerLoot(*mod, static_cast<Player&>(*entity), normalizedLootTableId);
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -628,6 +713,8 @@ void touchVillagerTradeRemoveHookAutoCount() { (void)VillagerTradeRemoveHook::_A
 
 void touchVillagerTradeTransferHookAutoCount() { (void)VillagerTradeTransferHook::_AutoHookCount; }
 
+void touchFillContainerLootTableHookAutoCount() { (void)FillContainerLootTableHook::_AutoHookCount; }
+
 struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
@@ -639,6 +726,7 @@ struct RuntimeTriggerHookState {
     ll::memory::HookRegistrar<BucketUseOnEntityHook>                bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>             playerInteractEntityHook;
     ll::memory::HookRegistrar<VillagerTradeTransferHook>            villagerTradeTransferHook;
+    ll::memory::HookRegistrar<FillContainerLootTableHook>           fillContainerLootTableHook;
 };
 
 std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
@@ -664,6 +752,7 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
     touchPlayerInteractEntityHookAutoCount();
     touchVillagerTradeRemoveHookAutoCount();
     touchVillagerTradeTransferHookAutoCount();
+    touchFillContainerLootTableHookAutoCount();
     gRuntimeTriggerHookState = std::make_unique<RuntimeTriggerHookState>();
 
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {

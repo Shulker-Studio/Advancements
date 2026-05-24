@@ -1,9 +1,17 @@
 #include "mod/advancement/TriggerIndex.h"
 
 #include <algorithm>
+#include <array>
 
 namespace my_mod::advancement {
 namespace {
+
+constexpr std::array<std::string_view, 4> SupportedBastionLootTables{
+    "minecraft:chests/bastion_bridge",
+    "minecraft:chests/bastion_hoglin_stable",
+    "minecraft:chests/bastion_other",
+    "minecraft:chests/bastion_treasure",
+};
 
 bool hasOnlyKeys(nlohmann::json const& conditions, std::initializer_list<char const*> keys) {
     for (auto const& [key, _] : conditions.items()) {
@@ -110,6 +118,21 @@ TriggerCondition compileLocationStructureCondition(nlohmann::json const& conditi
     return LocationStructureCondition{location.at("structures").get<std::string>()};
 }
 
+TriggerCondition compileLootTableCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"loot_table"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("loot_table") || !conditions.at("loot_table").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const lootTableId = conditions.at("loot_table").get<std::string>();
+    if (std::ranges::find(SupportedBastionLootTables, lootTableId) == SupportedBastionLootTables.end()) {
+        return InvalidTriggerCondition{};
+    }
+    return LootTableCondition{lootTableId};
+}
+
 TriggerCondition compileTriggerCondition(std::string_view triggerId, std::optional<nlohmann::json> const& rawConditions) {
     if (!rawConditions) {
         return NoTriggerCondition{};
@@ -144,6 +167,9 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     }
     if (triggerId == "minecraft:location") {
         return compileLocationStructureCondition(conditions);
+    }
+    if (triggerId == "minecraft:player_generates_container_loot") {
+        return compileLootTableCondition(conditions);
     }
     if (triggerId == "minecraft:villager_trade" || triggerId == "minecraft:enchanted_item") {
         return InvalidTriggerCondition{};
