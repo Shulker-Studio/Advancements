@@ -28,7 +28,6 @@
 - `minecraft:entity_killed_player`
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
-- `minecraft:used_ender_eye`
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `bedrock:player_destroy_block`
@@ -96,7 +95,7 @@
 | `thrown_item_picked_up_by_entity` | missing-trigger | |
 | `thrown_item_picked_up_by_player` | missing-trigger | |
 | `tick` | missing-trigger | 已不再用于现有 advancement 定义，应继续保持移除状态 |
-| `used_ender_eye` | done | 当前运行时支持可暂留且仍可 dispatch，但 `story/follow_ender_eye` 已回正为 `minecraft:location` + stronghold 结构条件，不再依赖该 trigger |
+| `used_ender_eye` | missing-trigger | Java 原版存在该 trigger，但当前项目已不再保留其独立运行时路径；`story/follow_ender_eye` 已回正为 `minecraft:location` + stronghold 结构条件 |
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
 | `villager_trade` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Trade` 后触发；不依赖打开交易 UI |

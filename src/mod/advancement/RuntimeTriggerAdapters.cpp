@@ -30,7 +30,6 @@
 #include "mc/world/item/BucketItem.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
-#include "mc/world/level/ChunkPos.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -55,20 +54,13 @@ ll::event::ListenerPtr gPlayerDieListener;
 MyMod*                  gRuntimeTriggerMod = nullptr;
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
-constexpr int EnderEyeCheckIntervalTicks           = 20;
 constexpr int LocationStructureCheckIntervalTicks  = 20;
-
-struct EnderEyePlayerState {
-    int                     ticksUntilCheck{EnderEyeCheckIntervalTicks};
-    std::optional<ChunkPos> lastCheckedChunk;
-};
 
 struct LocationStructurePlayerState {
     int                        ticksUntilCheck{LocationStructureCheckIntervalTicks};
     std::optional<std::string> lastStructureId;
 };
 
-std::unordered_map<mce::UUID, EnderEyePlayerState> gEnderEyePlayerStates;
 std::unordered_map<mce::UUID, LocationStructurePlayerState> gLocationStructurePlayerStates;
 
 void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
@@ -210,17 +202,6 @@ void dispatchSleptInBed(MyMod& mod, Player& player) {
     );
 }
 
-void dispatchUsedEnderEye(MyMod& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:used_ender_eye",
-            NoTriggerPayload{},
-        }
-    );
-}
-
 void dispatchLocationStructure(MyMod& mod, Player& player, std::string const& structureId) {
     dispatchTrigger(
         mod,
@@ -254,29 +235,6 @@ void dispatchEnchantedItem(MyMod& mod, Player& player) {
     );
 }
 
-[[nodiscard]] bool hasCompletedAdvancement(MyMod& mod, Player& player, std::string const& advancementId) {
-    auto worldDataDir = mod.getSelf().getWorldDataDir();
-    if (!worldDataDir) {
-        return false;
-    }
-
-    auto progress = mod.getProgressService().getProgress(*worldDataDir, player.getUuid());
-    if (!progress.ok()) {
-        return false;
-    }
-
-    auto const found = progress.progress.advancements.find(advancementId);
-    return found != progress.progress.advancements.end() && found->second.done;
-}
-
-[[nodiscard]] bool isInsideStrongholdBounds(Player& player) {
-    if (player.getDimensionId() != VanillaDimensions::Overworld()) {
-        return false;
-    }
-
-    return player.getCurrentStructureFeature() == VanillaStructureFeatureType::Stronghold();
-}
-
 std::optional<std::string> currentSupportedLocationStructure(Player& player) {
     auto const& currentStructure = player.getCurrentStructureFeature();
     if (currentStructure == VanillaStructureFeatureType::Bastion()) {
@@ -292,35 +250,6 @@ std::optional<std::string> currentSupportedLocationStructure(Player& player) {
         return "minecraft:stronghold";
     }
     return std::nullopt;
-}
-
-void checkUsedEnderEye(MyMod& mod, Player& player) {
-    if (player.getDimensionId() != VanillaDimensions::Overworld()) {
-        gEnderEyePlayerStates.erase(player.getUuid());
-        return;
-    }
-
-    if (hasCompletedAdvancement(mod, player, "minecraft:story/follow_ender_eye")) {
-        gEnderEyePlayerStates.erase(player.getUuid());
-        return;
-    }
-
-    auto& state = gEnderEyePlayerStates[player.getUuid()];
-    --state.ticksUntilCheck;
-    if (state.ticksUntilCheck > 0) {
-        return;
-    }
-    state.ticksUntilCheck = EnderEyeCheckIntervalTicks;
-
-    auto const playerChunk = ChunkPos{player.getFeetPos()};
-    if (state.lastCheckedChunk && *state.lastCheckedChunk == playerChunk) {
-        return;
-    }
-    state.lastCheckedChunk = playerChunk;
-
-    if (isInsideStrongholdBounds(player)) {
-        dispatchUsedEnderEye(mod, player);
-    }
 }
 
 void checkLocationStructure(MyMod& mod, Player& player) {
@@ -532,7 +461,6 @@ LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player
 
     auto* mod = currentRuntimeTriggerMod();
     if (mod != nullptr) {
-        checkUsedEnderEye(*mod, *this);
         checkLocationStructure(*mod, *this);
     }
 }
@@ -789,7 +717,6 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
 void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
     gPendingBucketedEntities.clear();
-    gEnderEyePlayerStates.clear();
     gLocationStructurePlayerStates.clear();
 
     auto& eventBus = ll::event::EventBus::getInstance();
