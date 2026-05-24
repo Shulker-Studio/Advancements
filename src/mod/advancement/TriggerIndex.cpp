@@ -336,6 +336,94 @@ TriggerCondition compileEntityHurtPlayerCondition(nlohmann::json const& conditio
     return EntityHurtPlayerCondition{true, true};
 }
 
+TriggerCondition compilePlayerKilledEntitySniperDuelCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"entity", "killing_blow"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("entity") || !conditions.at("entity").is_array()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entity = conditions.at("entity");
+    if (entity.size() != 1 || !entity.at(0).is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityEntry = entity.at(0);
+    if (!hasOnlyKeys(entityEntry, {"condition", "entity", "predicate"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityEntry.contains("condition") || !entityEntry.at("condition").is_string()
+        || entityEntry.at("condition").get<std::string>() != "minecraft:entity_properties") {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityEntry.contains("entity") || !entityEntry.at("entity").is_string()
+        || entityEntry.at("entity").get<std::string>() != "this") {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityEntry.contains("predicate") || !entityEntry.at("predicate").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& predicate = entityEntry.at("predicate");
+    if (!hasOnlyKeys(predicate, {"type", "distance"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!predicate.contains("type") || !predicate.at("type").is_string()
+        || predicate.at("type").get<std::string>() != "minecraft:skeleton") {
+        return InvalidTriggerCondition{};
+    }
+    if (!predicate.contains("distance") || !predicate.at("distance").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& distance = predicate.at("distance");
+    if (!hasOnlyKeys(distance, {"horizontal"}) || !distance.contains("horizontal")
+        || !distance.at("horizontal").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& horizontal = distance.at("horizontal");
+    if (!hasOnlyKeys(horizontal, {"min"}) || !horizontal.contains("min") || !horizontal.at("min").is_number()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const horizontalMin = horizontal.at("min").get<float>();
+    if (horizontalMin != 50.0F) {
+        return InvalidTriggerCondition{};
+    }
+
+    if (!conditions.contains("killing_blow") || !conditions.at("killing_blow").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& killingBlow = conditions.at("killing_blow");
+    if (!hasOnlyKeys(killingBlow, {"tags"}) || !killingBlow.contains("tags") || !killingBlow.at("tags").is_array()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& tags = killingBlow.at("tags");
+    if (tags.size() != 1 || !tags.at(0).is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& tagEntry = tags.at(0);
+    if (!hasOnlyKeys(tagEntry, {"id", "expected"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!tagEntry.contains("id") || !tagEntry.at("id").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+    if (!tagEntry.contains("expected") || !tagEntry.at("expected").is_boolean()) {
+        return InvalidTriggerCondition{};
+    }
+    if (tagEntry.at("id").get<std::string>() != "minecraft:is_projectile" || !tagEntry.at("expected").get<bool>()) {
+        return InvalidTriggerCondition{};
+    }
+
+    return PlayerKilledEntitySniperDuelCondition{"minecraft:skeleton", horizontalMin, true};
+}
+
 TriggerCondition compileTriggerCondition(std::string_view triggerId, std::optional<nlohmann::json> const& rawConditions) {
     if (!rawConditions) {
         return NoTriggerCondition{};
@@ -363,6 +451,10 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
         return compileShotCrossbowCondition(conditions);
     }
     if (triggerId == "minecraft:player_killed_entity") {
+        auto const compiled = compilePlayerKilledEntitySniperDuelCondition(conditions);
+        if (!std::holds_alternative<InvalidTriggerCondition>(compiled)) {
+            return compiled;
+        }
         return compileEntityCondition(conditions);
     }
     if (triggerId == "minecraft:entity_killed_player") {

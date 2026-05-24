@@ -125,6 +125,24 @@ bool matchesEntityHurtPlayerCondition(TriggerCondition const& condition, Trigger
     return true;
 }
 
+bool matchesPlayerKilledEntitySniperDuelCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<PlayerKilledEntitySniperDuelCondition>(&condition);
+    auto const* payload  = payloadAs<PlayerKilledEntitySniperDuelPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (payload->killedEntityTypeId != compiled->targetEntityTypeId) {
+        return false;
+    }
+    if (payload->horizontalDistance < compiled->horizontalDistanceMin) {
+        return false;
+    }
+    if (compiled->requireProjectileKillingBlow && !payload->killingBlowIsProjectile) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
@@ -203,6 +221,9 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
         return matchesItemCondition(binding.condition, context, false);
     }
     if (binding.triggerId == "minecraft:player_killed_entity") {
+        if (std::holds_alternative<PlayerKilledEntitySniperDuelCondition>(binding.condition)) {
+            return matchesPlayerKilledEntitySniperDuelCondition(binding.condition, context);
+        }
         return matchesEntityCondition(binding.condition, context);
     }
     if (binding.triggerId == "minecraft:entity_killed_player") {
