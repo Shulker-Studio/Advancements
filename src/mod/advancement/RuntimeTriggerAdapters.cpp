@@ -432,18 +432,10 @@ LL_TYPE_INSTANCE_HOOK(
     }
 
     if (screenType == SharedTypes::Legacy::ContainerType::Trade) {
-        mod->getSelf().getLogger().info(
-            "Advancements debug: villager_trade dispatch player={}",
-            mPlayer.getRealName()
-        );
         dispatchVillagerTrade(*mod, mPlayer);
     }
 
     if (screenType == SharedTypes::Legacy::ContainerType::Enchantment) {
-        mod->getSelf().getLogger().info(
-            "Advancements debug: enchanted_item dispatch player={}",
-            mPlayer.getRealName()
-        );
         dispatchEnchantedItem(*mod, mPlayer);
     }
 
