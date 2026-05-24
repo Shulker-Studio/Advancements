@@ -145,7 +145,7 @@ bool matchesPlayerKilledEntitySniperDuelCondition(TriggerCondition const& condit
 
 } // namespace
 
-TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService)
+TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService& progressService)
 : mIndex(index),
   mProgressService(progressService) {}
 

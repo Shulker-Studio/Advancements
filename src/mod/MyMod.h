@@ -27,8 +27,9 @@ public:
 
     /// @return True if the mod is disabled successfully.
     [[nodiscard]]
-    bool disable() const;
+    bool disable();
 
+    [[nodiscard]] advancement::ProgressService& getProgressService() { return mProgressService; }
     [[nodiscard]] advancement::LoadResult const& getAdvancementLoadResult() const { return mAdvancementLoadResult; }
     [[nodiscard]] advancement::AdvancementGuiIndex const& getAdvancementGuiIndex() const { return mAdvancementGuiIndex; }
     [[nodiscard]] advancement::ProgressService const& getProgressService() const { return mProgressService; }

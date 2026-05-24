@@ -83,7 +83,7 @@ struct TriggerContext {
 
 class TriggerDispatcher {
 public:
-    TriggerDispatcher(TriggerIndex const& index, ProgressService const& progressService);
+    TriggerDispatcher(TriggerIndex const& index, ProgressService& progressService);
 
     void dispatch(
         std::filesystem::path const& worldDataDir,
@@ -94,8 +94,8 @@ public:
 private:
     [[nodiscard]] bool matches(CriterionBinding const& binding, TriggerContext const& context) const;
 
-    TriggerIndex const&     mIndex;
-    ProgressService const&  mProgressService;
+    TriggerIndex const& mIndex;
+    ProgressService&    mProgressService;
 };
 
 } // namespace my_mod::advancement

@@ -29,7 +29,7 @@ bool MyMod::enable() {
     return true;
 }
 
-bool MyMod::disable() const {
+bool MyMod::disable() {
     getSelf().getLogger().debug("Disabling...");
     if (auto worldDataDir = getSelf().getWorldDataDir(); worldDataDir) {
         auto const flushErrors = mProgressService.flushAll(*worldDataDir);

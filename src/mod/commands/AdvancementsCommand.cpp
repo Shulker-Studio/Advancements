@@ -257,8 +257,8 @@ void executeProgressCommand(
         if (!player) {
             continue;
         }
-        auto const& playerUuid       = player->getUuid();
-        auto const& progressService = mod.getProgressService();
+        auto const& playerUuid = player->getUuid();
+        auto&       progressService = mod.getProgressService();
         for (auto const* advancement : advancements) {
             auto result = grant
                         ? (criterion ? progressService.grantCriterion(*worldDataDir, playerUuid, *advancement, *criterion)
