@@ -74,7 +74,7 @@
 | `killed_by_arrow` | missing-trigger | |
 | `levitation` | missing-trigger | |
 | `lightning_strike` | missing-trigger | |
-| `location` | missing-trigger | |
+| `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
 | `nether_travel` | missing-trigger | |
 | `placed_block` | missing-trigger | |
 | `player_generates_container_loot` | missing-trigger | |
@@ -96,7 +96,7 @@
 | `thrown_item_picked_up_by_entity` | missing-trigger | |
 | `thrown_item_picked_up_by_player` | missing-trigger | |
 | `tick` | missing-trigger | 已不再用于现有 advancement 定义，应继续保持移除状态 |
-| `used_ender_eye` | done | 当前窄实现：周期性检查玩家所在结构，主世界内且未完成 `story/follow_ender_eye` 的玩家进入 Stronghold 结构范围时触发；保留区块变化去抖，不依赖物品使用 hook |
+| `used_ender_eye` | done | 当前运行时支持可暂留且仍可 dispatch，但 `story/follow_ender_eye` 已回正为 `minecraft:location` + stronghold 结构条件，不再依赖该 trigger |
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
 | `villager_trade` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Trade` 后触发；不依赖打开交易 UI |
@@ -120,7 +120,7 @@
 | `story/shiny_gear` | `inventory_changed` | done | |
 | `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `story/cure_zombie_villager` | `cured_zombie_villager` | missing-trigger | |
-| `story/follow_ender_eye` | `used_ender_eye` | done | 已补数据，复用当前 `used_ender_eye`：周期性检查玩家是否位于 Stronghold 结构范围内，不再依赖物品使用 hook |
+| `story/follow_ender_eye` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:stronghold`；当前窄实现基于玩家所在 Stronghold 结构触发，按 location 语义每 20 tick 轮询，不再依赖 `used_ender_eye` |
 | `story/enter_the_end` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension`；父节点已回正为 `story/follow_ender_eye` |
 
 ## Nether Vanilla Inventory
@@ -129,10 +129,10 @@
 | --- | --- | --- | --- |
 | `nether/root` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
 | `nether/return_to_sender` | projectile / ghast fireball family | missing-trigger | |
-| `nether/find_bastion` | `location` / structure entry family | missing-trigger | |
+| `nether/find_bastion` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:bastion_remnant`；当前窄实现基于玩家所在结构触发 |
 | `nether/obtain_ancient_debris` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/fast_travel` | `nether_travel` | missing-trigger | |
-| `nether/find_fortress` | `location` / structure entry family | missing-trigger | |
+| `nether/find_fortress` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:fortress`；当前窄实现基于玩家所在结构触发 |
 | `nether/uneasy_alliance` | complex entity transport / kill family | missing-trigger | |
 | `nether/get_wither_skull` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/summon_wither` | `summoned_entity` | missing-trigger | |
@@ -142,7 +142,7 @@
 | `nether/all_potions` | `effects_changed` | missing-trigger | |
 | `nether/create_full_beacon` | `construct_beacon` | missing-trigger | |
 | `nether/all_effects` | `effects_changed` | missing-trigger | |
-| `nether/explore_nether` | `location` | missing-trigger | |
+| `nether/explore_nether` | `location` | missing-trigger | 已核原版 JSON：使用 biome location 条件并要求遍历多个 Nether biome；超出本轮 structure-entry 窄实现 |
 | `nether/ride_strider` | ride / lava family | missing-trigger | |
 | `nether/ride_strider_in_overworld_lava` | `ride_entity_in_lava` | missing-trigger | |
 | `nether/distract_piglin` | interaction / inventory family | missing-trigger | |
@@ -164,7 +164,7 @@
 | `end/elytra` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `end/levitate` | `levitation` | missing-trigger | |
 | `end/respawn_dragon` | summon / boss event family | missing-trigger | |
-| `end/find_end_city` | `location` | missing-trigger | |
+| `end/find_end_city` | `location` | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:end_city`；当前窄实现基于玩家所在结构触发 |
 | `end/dragon_breath` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 
 当前总评：`end/*` 仍主要卡在 `location / levitation / boss` 这些未实现 trigger；root 与少量物品获得型条目已具备基础数据。
