@@ -81,7 +81,7 @@
 | `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
 | `player_hurt_entity` | done | 当前窄实现：基于 `ll::event::ActorHurtEvent`，仅支持 `damage.type.direct_entity.type = #minecraft:arrows` + `damage.type.tags` 含 `minecraft:is_projectile` 这一已核 condition surface |
 | `player_interacted_with_entity` | missing-trigger | |
-| `player_killed_entity` | done | 当前窄实现，支持 `conditions.entity` |
+| `player_killed_entity` | done | 当前窄实现：保留 `conditions.entity`，并额外支持 `adventure/sniper_duel` 已核窄形状（`entity[0].predicate.type = minecraft:skeleton` + `entity[0].predicate.distance.horizontal.min = 50.0` + `killing_blow.tags` 含 `minecraft:is_projectile`）；不泛化其他 nested predicates |
 | `player_sheared_equipment` | missing-trigger | |
 | `recipe_crafted` | missing-trigger | |
 | `recipe_unlocked` | missing-trigger | |
@@ -184,7 +184,7 @@
 | `adventure/very_very_frightening` | other | missing-trigger | |
 | `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
 | `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
-| `adventure/sniper_duel` | `player_killed_entity` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:player_killed_entity`，需 `entity` 谓词锁定 `minecraft:skeleton` 且水平距离 `>= 50`，并要求 `killing_blow.tags` 含 `minecraft:is_projectile`；不是 `killed_by_arrow` |
+| `adventure/sniper_duel` | `player_killed_entity` | done | 已补本地 JSON + lang，并接入已核窄实现：仅支持 skeleton + 水平距离 `>= 50.0` + projectile killing_blow tags；保持非泛化 |
 | `adventure/bullseye` | `target_hit` | done | 已落地本地 JSON + lang；runtime/条件解析仅支持该行已核窄形状（`signal_strength = 15` 与 projectile 水平距离 `>= 30`） |
 | `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
 | `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
