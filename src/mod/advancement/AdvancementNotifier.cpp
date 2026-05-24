@@ -45,6 +45,17 @@ std::string_view chatNotificationKey(AdvancementDefinition const& advancement) {
     return "advancements.notification.chat.task";
 }
 
+std::string_view toastTitleKey(AdvancementDefinition const& advancement) {
+    if (!advancement.display || !advancement.display->frame) {
+        return "advancements.notification.toast_title.task";
+    }
+
+    if (*advancement.display->frame == "challenge") {
+        return "advancements.notification.toast_title.challenge";
+    }
+    return "advancements.notification.toast_title.goal";
+}
+
 } // namespace
 
 void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinition const& advancement) {
@@ -52,7 +63,7 @@ void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinitio
 
     if (shouldShowToast(advancement)) {
         ToastRequestPacket packet;
-        packet.mTitle   = localizeKey("advancements.notification.toast_title", player);
+        packet.mTitle   = localizeKey(toastTitleKey(advancement), player);
         packet.mContent = title;
         player.sendNetworkPacket(packet);
     }
