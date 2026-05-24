@@ -31,7 +31,7 @@ ProgressMutationResult ProgressService::mutate(
     AdvancementDefinition const&      advancement,
     std::optional<std::string> const& criterion,
     bool                              grant
-) const {
+) {
     if (auto loadResult = ensureCached(worldDataDir, playerUuid); loadResult) {
         return ProgressMutationResult{false, false, false, std::move(loadResult->errors)};
     }
@@ -75,7 +75,7 @@ ProgressMutationResult ProgressService::grantAdvancement(
     std::filesystem::path const& worldDataDir,
     mce::UUID const&             playerUuid,
     AdvancementDefinition const& advancement
-) const {
+) {
     return mutate(worldDataDir, playerUuid, advancement, std::nullopt, true);
 }
 
@@ -84,7 +84,7 @@ ProgressMutationResult ProgressService::grantCriterion(
     mce::UUID const&             playerUuid,
     AdvancementDefinition const& advancement,
     std::string const&           criterionName
-) const {
+) {
     return mutate(worldDataDir, playerUuid, advancement, criterionName, true);
 }
 
@@ -92,7 +92,7 @@ ProgressMutationResult ProgressService::revokeAdvancement(
     std::filesystem::path const& worldDataDir,
     mce::UUID const&             playerUuid,
     AdvancementDefinition const& advancement
-) const {
+) {
     return mutate(worldDataDir, playerUuid, advancement, std::nullopt, false);
 }
 
@@ -101,11 +101,11 @@ ProgressMutationResult ProgressService::revokeCriterion(
     mce::UUID const&             playerUuid,
     AdvancementDefinition const& advancement,
     std::string const&           criterionName
-) const {
+) {
     return mutate(worldDataDir, playerUuid, advancement, criterionName, false);
 }
 
-std::vector<std::string> ProgressService::flushAll(std::filesystem::path const& worldDataDir) const {
+std::vector<std::string> ProgressService::flushAll(std::filesystem::path const& worldDataDir) {
     std::vector<std::string> flushErrors;
 
     for (auto& [_, cachedProgress] : mCache) {

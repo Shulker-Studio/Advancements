@@ -29,29 +29,29 @@ public:
         std::filesystem::path const& worldDataDir,
         mce::UUID const&             playerUuid,
         AdvancementDefinition const& advancement
-    ) const;
+    );
 
     [[nodiscard]] ProgressMutationResult grantCriterion(
         std::filesystem::path const& worldDataDir,
         mce::UUID const&             playerUuid,
         AdvancementDefinition const& advancement,
         std::string const&           criterionName
-    ) const;
+    );
 
     [[nodiscard]] ProgressMutationResult revokeAdvancement(
         std::filesystem::path const& worldDataDir,
         mce::UUID const&             playerUuid,
         AdvancementDefinition const& advancement
-    ) const;
+    );
 
     [[nodiscard]] ProgressMutationResult revokeCriterion(
         std::filesystem::path const& worldDataDir,
         mce::UUID const&             playerUuid,
         AdvancementDefinition const& advancement,
         std::string const&           criterionName
-    ) const;
+    );
 
-    [[nodiscard]] std::vector<std::string> flushAll(std::filesystem::path const& worldDataDir) const;
+    [[nodiscard]] std::vector<std::string> flushAll(std::filesystem::path const& worldDataDir);
 
 private:
     struct CachedProgress {
@@ -71,7 +71,7 @@ private:
         AdvancementDefinition const&      advancement,
         std::optional<std::string> const& criterion,
         bool                              grant
-    ) const;
+    );
 
     mutable std::map<std::string, CachedProgress> mCache;
 };
