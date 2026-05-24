@@ -5,18 +5,20 @@ Verified against raw vanilla JSON from MCAsset Cloud (`1.21.5-pre2`) for the fiv
 | Vanilla ID | Parent | Criterion | Trigger ID | Exact condition keys | Requirements | Local data row | Local lang keys | Phase 0 notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `adventure/ol_betsy` | `minecraft:adventure/root` | `shot_crossbow` | `minecraft:shot_crossbow` | `item.items` | `[["shot_crossbow"]]` | missing | missing | Verified shape is narrow but not zero-condition: `item.items = "minecraft:crossbow"`. Current parser does not support `shot_crossbow` or nested item predicates. |
-| `adventure/shoot_arrow` | `minecraft:adventure/kill_a_mob` | `shot_arrow` | `minecraft:player_hurt_entity` | `damage.type.direct_entity.type`, `damage.type.tags[]` | `[["shot_arrow"]]` | missing | missing | Not `target_hit`. Uses damage predicate shape with arrow tag/type checks; outside current narrow parser surface. |
+| `adventure/shoot_arrow` | `minecraft:adventure/kill_a_mob` | `shot_arrow` | `minecraft:player_hurt_entity` | `damage.type.direct_entity.type`, `damage.type.tags[]` | `[["shot_arrow"]]` | done | done | Not `target_hit`. 已落地窄实现：仅支持 `#minecraft:arrows` + `minecraft:is_projectile` 这组已核 surface。 |
 | `adventure/bullseye` | `minecraft:adventure/shoot_arrow` | `bullseye` | `minecraft:target_hit` | `projectile[]`, `projectile[].condition`, `projectile[].entity`, `projectile[].predicate.distance.horizontal.min`, `signal_strength` | `[["bullseye"]]` | missing | missing | Requires `signal_strength = 15` plus projectile entity-predicate list with horizontal distance min `30.0`. |
 | `story/deflect_arrow` | `minecraft:story/obtain_armor` | `deflected_projectile` | `minecraft:entity_hurt_player` | `damage.type.tags[]`, `damage.blocked` | `[["deflected_projectile"]]` | missing | missing | Not `killed_by_arrow`. Raw semantics are any blocked projectile hit, not arrow-only. |
 | `adventure/sniper_duel` | `minecraft:adventure/shoot_arrow` | `killed_skeleton` | `minecraft:player_killed_entity` | `entity[]`, `entity[].condition`, `entity[].entity`, `entity[].predicate.type`, `entity[].predicate.distance.horizontal.min`, `killing_blow.tags[]` | `[["killed_skeleton"]]` | missing | missing | Not `killed_by_arrow`. Raw semantics are kill skeleton with projectile killing blow and horizontal distance min `50.0`. |
 
 ## Current local support delta
 
-- Existing local todo rows already mark all five as `missing-trigger`.
-- No local advancement JSON files exist yet for these five rows under `data/minecraft/advancements/...`.
-- No local localization keys exist yet in `lang/en_US.json` or `lang/zh_CN.json` for these five rows.
-- Current compiled trigger-condition support is limited to block, item, entity, dimension, location structure, and loot table surfaces in `src/mod/advancement/TriggerIndex.cpp`.
-- Of the verified trigger IDs in this wave, only `minecraft:player_killed_entity` is currently wired at runtime in `src/mod/advancement/RuntimeTriggerAdapters.cpp`; the verified condition shape needed by `adventure/sniper_duel` is still unsupported.
+- `adventure/ol_betsy` is now shipped locally with JSON and both language keys.
+- `adventure/shoot_arrow` is now shipped locally with JSON and both language keys.
+- `adventure/bullseye`, `story/deflect_arrow`, and `adventure/sniper_duel` still have no local advancement JSON rows.
+- Current compiled trigger-condition support now includes the shipped narrow surfaces for:
+  - `minecraft:shot_crossbow` via `item.items = minecraft:crossbow`
+  - `minecraft:player_hurt_entity` via `#minecraft:arrows` + `minecraft:is_projectile`
+- Of the verified trigger IDs in this wave, `minecraft:shot_crossbow`, `minecraft:player_hurt_entity`, and `minecraft:player_killed_entity` are now wired at runtime; `minecraft:target_hit` and `minecraft:entity_hurt_player` remain unsupported.
 
 ## Phase 0 guardrails from verified raw semantics
 

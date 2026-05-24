@@ -26,6 +26,7 @@
 - `minecraft:fishing_rod_hooked`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
+- `minecraft:player_hurt_entity`
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
 - `minecraft:villager_trade`
@@ -78,14 +79,14 @@
 | `nether_travel` | missing-trigger | |
 | `placed_block` | missing-trigger | |
 | `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
-| `player_hurt_entity` | missing-trigger | |
+| `player_hurt_entity` | done | 当前窄实现：基于 `ll::event::ActorHurtEvent`，仅支持 `damage.type.direct_entity.type = #minecraft:arrows` + `damage.type.tags` 含 `minecraft:is_projectile` 这一已核 condition surface |
 | `player_interacted_with_entity` | missing-trigger | |
 | `player_killed_entity` | done | 当前窄实现，支持 `conditions.entity` |
 | `player_sheared_equipment` | missing-trigger | |
 | `recipe_crafted` | missing-trigger | |
 | `recipe_unlocked` | missing-trigger | |
 | `ride_entity_in_lava` | missing-trigger | |
-| `shot_crossbow` | missing-trigger | |
+| `shot_crossbow` | done | 当前窄实现：仅支持 `conditions.item.items = minecraft:crossbow`（`adventure/ol_betsy` 需求形状） |
 | `slept_in_bed` | done | 当前窄实现，Hook `Player::$startSleepInBed` 且仅在 `BedSleepingResult::Ok` 后触发 |
 | `slide_down_block` | missing-trigger | |
 | `started_riding` | missing-trigger | |
@@ -182,7 +183,7 @@
 | `adventure/throw_trident` | other | missing-trigger | |
 | `adventure/very_very_frightening` | other | missing-trigger | |
 | `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
-| `adventure/shoot_arrow` | `player_hurt_entity` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:player_hurt_entity`，条件为 `damage.type.direct_entity.type = #minecraft:arrows` 且 `damage.type.tags` 含 `minecraft:is_projectile`；不是 `target_hit` |
+| `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
 | `adventure/sniper_duel` | `player_killed_entity` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:player_killed_entity`，需 `entity` 谓词锁定 `minecraft:skeleton` 且水平距离 `>= 50`，并要求 `killing_blow.tags` 含 `minecraft:is_projectile`；不是 `killed_by_arrow` |
 | `adventure/bullseye` | `target_hit` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:target_hit`，需 `signal_strength = 15`，并带 projectile 实体谓词列表，要求水平距离 `>= 30` |
 | `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
