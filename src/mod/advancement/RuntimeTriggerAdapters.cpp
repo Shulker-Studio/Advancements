@@ -148,6 +148,15 @@ void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
                     payload.directEntityIsArrow,
                     payload.isProjectileDamage
                 );
+            } else if constexpr (std::is_same_v<Payload, PlayerKilledEntitySniperDuelPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} killed_entity={} horizontal_distance={} killing_blow_projectile={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.killedEntityTypeId,
+                    payload.horizontalDistance,
+                    payload.killingBlowIsProjectile
+                );
             }
         },
         context.payload
@@ -941,7 +950,11 @@ void registerRuntimeTriggerAdapters(MyMod& mod) {
             TriggerContext{
                 **player,
                 "minecraft:player_killed_entity",
-                EntityTriggerPayload{event.self().getTypeName()},
+                PlayerKilledEntitySniperDuelPayload{
+                    event.self().getTypeName(),
+                    horizontalDistance((**player).getPosition(), event.self().getPosition()),
+                    damageSourceIsSupportedProjectile(event.source()),
+                },
             }
         );
         return true;
