@@ -31,6 +31,20 @@ bool shouldAnnounceToChat(AdvancementDefinition const& advancement) {
     return advancement.display && advancement.display->announceToChat.value_or(true);
 }
 
+std::string_view chatNotificationKey(AdvancementDefinition const& advancement) {
+    if (!advancement.display || !advancement.display->frame) {
+        return "advancements.notification.chat.task";
+    }
+
+    if (*advancement.display->frame == "goal") {
+        return "advancements.notification.chat.goal";
+    }
+    if (*advancement.display->frame == "challenge") {
+        return "advancements.notification.chat.challenge";
+    }
+    return "advancements.notification.chat.task";
+}
+
 } // namespace
 
 void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinition const& advancement) {
@@ -46,7 +60,7 @@ void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinitio
     if (shouldAnnounceToChat(advancement)) {
         auto const playerName = player.getRealName();
         auto packet = TextPacket::createRawMessage(
-            std::vformat(localizeKey("advancements.notification.chat", player), std::make_format_args(playerName, title))
+            std::vformat(localizeKey(chatNotificationKey(advancement), player), std::make_format_args(playerName, title))
         );
         packet.sendToClients();
     }
