@@ -115,7 +115,7 @@
 | `story/obtain_armor` | `inventory_changed` | done | |
 | `story/mine_diamond` | `inventory_changed` | done | |
 | `story/form_obsidian` | `inventory_changed` | done | |
-| `story/deflect_arrow` | `killed_by_arrow` | missing-trigger | |
+| `story/deflect_arrow` | `entity_hurt_player` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:entity_hurt_player` + `damage.blocked = true` + `damage.type.tags = minecraft:is_projectile`；不是 `killed_by_arrow` |
 | `story/enchant_item` | `enchanted_item` | done | 已补数据，复用当前完成附魔结果转移语义的 `enchanted_item` |
 | `story/shiny_gear` | `inventory_changed` | done | |
 | `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
@@ -182,9 +182,9 @@
 | `adventure/throw_trident` | other | missing-trigger | |
 | `adventure/very_very_frightening` | other | missing-trigger | |
 | `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
-| `adventure/shoot_arrow` | `target_hit` / arrow-hit family | missing-trigger | |
-| `adventure/sniper_duel` | `killed_by_arrow` | missing-trigger | |
-| `adventure/bullseye` | `target_hit` | missing-trigger | |
+| `adventure/shoot_arrow` | `player_hurt_entity` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:player_hurt_entity`，条件为 `damage.type.direct_entity.type = #minecraft:arrows` 且 `damage.type.tags` 含 `minecraft:is_projectile`；不是 `target_hit` |
+| `adventure/sniper_duel` | `player_killed_entity` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:player_killed_entity`，需 `entity` 谓词锁定 `minecraft:skeleton` 且水平距离 `>= 50`，并要求 `killing_blow.tags` 含 `minecraft:is_projectile`；不是 `killed_by_arrow` |
+| `adventure/bullseye` | `target_hit` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:target_hit`，需 `signal_strength = 15`，并带 projectile 实体谓词列表，要求水平距离 `>= 30` |
 | `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
 | `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
 | `adventure/ol_betsy` | `shot_crossbow` | missing-trigger | |
