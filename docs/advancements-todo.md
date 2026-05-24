@@ -60,7 +60,7 @@
 | `effects_changed` | missing-trigger | |
 | `enchanted_item` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Enchantment` 后触发；不依赖打开附魔 UI |
 | `enter_block` | missing-trigger | |
-| `entity_hurt_player` | missing-trigger | |
+| `entity_hurt_player` | done | 当前仅支持 `story/deflect_arrow` 已核窄形状：`damage.blocked = true` + `damage.type.tags` 含 `minecraft:is_projectile`；runtime 使用 `Player::_blockUsingShield` 成功路径派发 |
 | `entity_killed_player` | done | 当前窄实现，支持 `conditions.entity` |
 | `fall_after_explosion` | missing-trigger | |
 | `fall_from_height` | missing-trigger | |
@@ -116,7 +116,7 @@
 | `story/obtain_armor` | `inventory_changed` | done | |
 | `story/mine_diamond` | `inventory_changed` | done | |
 | `story/form_obsidian` | `inventory_changed` | done | |
-| `story/deflect_arrow` | `entity_hurt_player` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:entity_hurt_player` + `damage.blocked = true` + `damage.type.tags = minecraft:is_projectile`；不是 `killed_by_arrow` |
+| `story/deflect_arrow` | `entity_hurt_player` | done | 已补数据并接入窄实现：仅支持已核 shape（`damage.blocked = true` + `damage.type.tags` 含 `minecraft:is_projectile`），保持非泛化 |
 | `story/enchant_item` | `enchanted_item` | done | 已补数据，复用当前完成附魔结果转移语义的 `enchanted_item` |
 | `story/shiny_gear` | `inventory_changed` | done | |
 | `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
