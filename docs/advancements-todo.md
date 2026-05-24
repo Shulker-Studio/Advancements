@@ -74,7 +74,7 @@
 | `killed_by_arrow` | missing-trigger | |
 | `levitation` | missing-trigger | |
 | `lightning_strike` | missing-trigger | |
-| `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
+| `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold、trial_chambers；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
 | `nether_travel` | missing-trigger | |
 | `placed_block` | missing-trigger | |
 | `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
@@ -201,7 +201,7 @@
 | `adventure/caves_and_cliffs` | `fall_from_height` / location family | missing-trigger | |
 | `adventure/trim_with_all_exclusive_armor_patterns` | other | missing-trigger | |
 | `adventure/who_needs_rockets` | other | missing-trigger | |
-| `adventure/minecraft_trials_edition` | other | missing-trigger | |
+| `adventure/minecraft_trials_edition` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:trial_chambers`；当前窄实现基于玩家所在 Trial Chambers 结构触发，按 location 语义每 20 tick 轮询 |
 | `adventure/lighten_up` | other | missing-trigger | |
 | `adventure/blowback` | other | missing-trigger | |
 | `adventure/under_lock_and_key` | other | missing-trigger | |

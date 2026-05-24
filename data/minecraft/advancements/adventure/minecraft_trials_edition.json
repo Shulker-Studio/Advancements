@@ -1,0 +1,38 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:adventure/root",
+  "display": {
+    "title": {
+      "translate": "advancements.adventure.minecraft_trials_edition.title"
+    },
+    "description": {
+      "translate": "advancements.adventure.minecraft_trials_edition.description"
+    },
+    "icon": {
+      "item": "minecraft:copper_bulb"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "in_trial_chambers": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "minecraft:trial_chambers"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [["in_trial_chambers"]]
+}
