@@ -93,7 +93,7 @@
 | `summoned_entity` | missing-trigger | |
 | `spear_mobs` | missing-trigger | |
 | `tame_animal` | missing-trigger | |
-| `target_hit` | missing-trigger | |
+| `target_hit` | partial | 当前仅支持 `adventure/bullseye` 已核窄形状：`signal_strength = 15` + `projectile[0].condition = minecraft:entity_properties` + `projectile[0].entity = this` + `projectile[0].predicate.distance.horizontal.min = 30.0` |
 | `thrown_item_picked_up_by_entity` | missing-trigger | |
 | `thrown_item_picked_up_by_player` | missing-trigger | |
 | `tick` | missing-trigger | 已不再用于现有 advancement 定义，应继续保持移除状态 |
@@ -185,7 +185,7 @@
 | `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
 | `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
 | `adventure/sniper_duel` | `player_killed_entity` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:player_killed_entity`，需 `entity` 谓词锁定 `minecraft:skeleton` 且水平距离 `>= 50`，并要求 `killing_blow.tags` 含 `minecraft:is_projectile`；不是 `killed_by_arrow` |
-| `adventure/bullseye` | `target_hit` | missing-trigger | Phase 0 已核原版 JSON：`minecraft:target_hit`，需 `signal_strength = 15`，并带 projectile 实体谓词列表，要求水平距离 `>= 30` |
+| `adventure/bullseye` | `target_hit` | done | 已落地本地 JSON + lang；runtime/条件解析仅支持该行已核窄形状（`signal_strength = 15` 与 projectile 水平距离 `>= 30`） |
 | `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
 | `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
 | `adventure/ol_betsy` | `shot_crossbow` | missing-trigger | |
