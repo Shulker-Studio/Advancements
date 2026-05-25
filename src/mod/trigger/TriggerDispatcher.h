@@ -2,7 +2,7 @@
 
 #include "mod/advancement/AdvancementLoader.h"
 #include "mod/advancement/ProgressService.h"
-#include "mod/advancement/TriggerIndex.h"
+#include "mod/trigger/TriggerIndex.h"
 
 #include <filesystem>
 

@@ -2,7 +2,7 @@
 
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/mod/RegisterHelper.h"
-#include "mod/advancement/RuntimeTriggerAdapters.h"
+#include "mod/trigger/RuntimeTriggerAdapters.h"
 #include "mod/commands/AdvancementsCommand.h"
 
 namespace advancements {

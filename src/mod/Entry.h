@@ -3,7 +3,7 @@
 #include "ll/api/mod/NativeMod.h"
 #include "mod/advancement/AdvancementLoader.h"
 #include "mod/advancement/ProgressService.h"
-#include "mod/advancement/TriggerIndex.h"
+#include "mod/trigger/TriggerIndex.h"
 #include "mod/commands/AdvancementCommandIndex.h"
 #include "mod/gui/AdvancementGuiIndex.h"
 
