@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 struct GuiCategorySnapshot {
     std::string              key;
@@ -23,4 +23,4 @@ struct AdvancementGuiIndex {
 
 [[nodiscard]] AdvancementGuiIndex buildAdvancementGuiIndex(LoadResult const& definitions);
 
-} // namespace my_mod::advancement
+} // namespace advancements

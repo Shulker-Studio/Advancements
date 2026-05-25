@@ -10,7 +10,7 @@
 #include <variant>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 struct NoTriggerCondition {};
 
@@ -97,4 +97,4 @@ private:
     size_t                                                           mBindingCount{0};
 };
 
-} // namespace my_mod::advancement
+} // namespace advancements

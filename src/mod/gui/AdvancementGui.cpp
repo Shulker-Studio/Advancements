@@ -1,8 +1,8 @@
-#include "mod/advancement/AdvancementGui.h"
+#include "mod/gui/AdvancementGui.h"
 
 #include "ll/api/form/SimpleForm.h"
-#include "mod/MyMod.h"
-#include "mod/advancement/AdvancementGuiIndex.h"
+#include "mod/Entry.h"
+#include "mod/gui/AdvancementGuiIndex.h"
 #include "mod/advancement/Localization.h"
 
 #include "mc/world/actor/player/Player.h"
@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 std::string titleFor(AdvancementDefinition const& advancement, Player const& player) {
@@ -116,9 +116,9 @@ std::optional<std::string> completionTime(AdvancementDefinition const& advanceme
     return latest;
 }
 
-void showCategory(MyMod& mod, Player& player, std::string const& categoryKey);
+void showCategory(Entry& mod, Player& player, std::string const& categoryKey);
 
-void showDetail(MyMod& mod, Player& player, std::string const& categoryKey, std::string const& advancementId) {
+void showDetail(Entry& mod, Player& player, std::string const& categoryKey, std::string const& advancementId) {
     auto worldDataDir = mod.getSelf().getWorldDataDir();
     if (!worldDataDir) {
         player.sendMessage(localizeKey("advancements.gui.error.world_data_unavailable", player));
@@ -165,7 +165,7 @@ void showDetail(MyMod& mod, Player& player, std::string const& categoryKey, std:
     form.sendTo(player);
 }
 
-void showCategory(MyMod& mod, Player& player, std::string const& categoryKey) {
+void showCategory(Entry& mod, Player& player, std::string const& categoryKey) {
     auto const* category = mod.getAdvancementGuiIndex().findCategory(categoryKey);
     if (category == nullptr) {
         showAdvancementsGui(mod, player);
@@ -213,7 +213,7 @@ void showCategory(MyMod& mod, Player& player, std::string const& categoryKey) {
 
 } // namespace
 
-void showAdvancementsGui(MyMod& mod, Player& player) {
+void showAdvancementsGui(Entry& mod, Player& player) {
     auto worldDataDir = mod.getSelf().getWorldDataDir();
     if (!worldDataDir) {
         player.sendMessage(localizeKey("advancements.gui.error.world_data_unavailable", player));
@@ -243,4 +243,4 @@ void showAdvancementsGui(MyMod& mod, Player& player) {
     form.sendTo(player);
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 inline constexpr int PlayerProgressDataVersion = 1;
 
@@ -41,4 +41,4 @@ struct ProgressMutationResult {
     [[nodiscard]] bool ok() const { return errors.empty(); }
 };
 
-} // namespace my_mod::advancement
+} // namespace advancements

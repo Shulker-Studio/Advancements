@@ -5,9 +5,9 @@
 #include "ll/api/command/SoftEnum.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/command/ServerCommandRegisterEvent.h"
-#include "mod/MyMod.h"
+#include "mod/Entry.h"
 #include "mod/advancement/AdvancementNotifier.h"
-#include "mod/advancement/AdvancementGui.h"
+#include "mod/gui/AdvancementGui.h"
 
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-namespace my_mod::commands {
+namespace advancements::commands {
 
 enum class AdvancementIds {};
 enum class CriterionNames {};
@@ -75,29 +75,6 @@ void ensureCriterionEnumRegistered() {
     registrar.tryRegisterSoftEnum(std::string{CriterionNamesEnumName}, {});
 }
 
-std::vector<std::string> collectAdvancementIds(advancement::LoadResult const& result) {
-    std::vector<std::string> ids;
-    ids.reserve(result.advancements.size());
-    for (auto const& [id, _] : result.advancements) {
-        ids.emplace_back(id);
-    }
-    std::ranges::sort(ids);
-    return ids;
-}
-
-std::vector<std::string> collectCriterionNames(advancement::LoadResult const& result) {
-    std::vector<std::string> names;
-    for (auto const& advancementEntry : result.advancements) {
-        for (auto const& criterionEntry : advancementEntry.second.criteria) {
-            names.emplace_back(criterionEntry.first);
-        }
-    }
-    std::ranges::sort(names);
-    auto const last = std::ranges::unique(names).begin();
-    names.erase(last, names.end());
-    return names;
-}
-
 void applyAdvancementEnumValues(std::vector<std::string> ids) {
     ensureAdvancementEnumRegistered();
     ll::command::CommandRegistrar::getServerInstance().setSoftEnumValues(std::string{AdvancementIdsEnumName}, std::move(ids));
@@ -110,7 +87,7 @@ void applyCriterionEnumValues(std::vector<std::string> names) {
 
 void outputProgressResult(
     CommandOutput&                              output,
-    advancement::ProgressMutationResult const& result,
+    ProgressMutationResult const& result,
     std::string_view                            action,
     Player const&                               player
 ) {
@@ -127,8 +104,8 @@ void outputProgressResult(
     output.success("{} progress already matched the requested state. Advancement done: {}.", player.getRealName(), result.done);
 }
 
-advancement::AdvancementDefinition const* findAdvancement(
-    MyMod const&       mod,
+AdvancementDefinition const* findAdvancement(
+    Entry const&       mod,
     std::string const& advancementId,
     CommandOutput&     output
 ) {
@@ -141,7 +118,7 @@ advancement::AdvancementDefinition const* findAdvancement(
     return &found->second;
 }
 
-std::optional<std::filesystem::path> getWorldDataDir(MyMod& mod, CommandOutput& output) {
+std::optional<std::filesystem::path> getWorldDataDir(Entry& mod, CommandOutput& output) {
     auto worldDataDir = mod.getSelf().getWorldDataDir();
     if (!worldDataDir) {
         output.error("World data directory is unavailable.");
@@ -149,8 +126,8 @@ std::optional<std::filesystem::path> getWorldDataDir(MyMod& mod, CommandOutput& 
     return worldDataDir;
 }
 
-std::vector<advancement::AdvancementDefinition const*> collectEverything(MyMod const& mod) {
-    std::vector<advancement::AdvancementDefinition const*> advancements;
+std::vector<AdvancementDefinition const*> collectEverything(Entry const& mod) {
+    std::vector<AdvancementDefinition const*> advancements;
     auto const& definitions = mod.getAdvancementLoadResult().advancements;
     advancements.reserve(definitions.size());
     for (auto const& entry : definitions) {
@@ -160,8 +137,8 @@ std::vector<advancement::AdvancementDefinition const*> collectEverything(MyMod c
 }
 
 bool isDescendantOf(
-    std::map<std::string, advancement::AdvancementDefinition> const& definitions,
-    advancement::AdvancementDefinition const&                       advancement,
+    std::map<std::string, AdvancementDefinition> const& definitions,
+    AdvancementDefinition const&                       advancement,
     std::string const&                                               ancestorId
 ) {
     if (advancement.id == ancestorId) {
@@ -187,8 +164,8 @@ bool isDescendantOf(
     return false;
 }
 
-std::vector<advancement::AdvancementDefinition const*> collectFrom(MyMod const& mod, std::string const& advancementId) {
-    std::vector<advancement::AdvancementDefinition const*> advancements;
+std::vector<AdvancementDefinition const*> collectFrom(Entry const& mod, std::string const& advancementId) {
+    std::vector<AdvancementDefinition const*> advancements;
     auto const& definitions = mod.getAdvancementLoadResult().advancements;
     for (auto const& entry : definitions) {
         if (isDescendantOf(definitions, entry.second, advancementId)) {
@@ -198,8 +175,8 @@ std::vector<advancement::AdvancementDefinition const*> collectFrom(MyMod const& 
     return advancements;
 }
 
-std::vector<advancement::AdvancementDefinition const*> collectUntil(MyMod const& mod, std::string const& advancementId) {
-    std::vector<advancement::AdvancementDefinition const*> advancements;
+std::vector<AdvancementDefinition const*> collectUntil(Entry const& mod, std::string const& advancementId) {
+    std::vector<AdvancementDefinition const*> advancements;
     auto const& definitions = mod.getAdvancementLoadResult().advancements;
     auto        currentId   = advancementId;
     std::set<std::string> visited;
@@ -218,7 +195,7 @@ std::vector<advancement::AdvancementDefinition const*> collectUntil(MyMod const&
     return advancements;
 }
 
-std::vector<advancement::AdvancementDefinition const*> collectThrough(MyMod const& mod, std::string const& advancementId) {
+std::vector<AdvancementDefinition const*> collectThrough(Entry const& mod, std::string const& advancementId) {
     auto advancements = collectUntil(mod, advancementId);
     std::set<std::string> included;
     for (auto const* advancement : advancements) {
@@ -234,11 +211,11 @@ std::vector<advancement::AdvancementDefinition const*> collectThrough(MyMod cons
 }
 
 void executeProgressCommand(
-    MyMod&                                                        mod,
+    Entry&                                                        mod,
     CommandOrigin const&                                          origin,
     CommandOutput&                                                output,
     CommandSelector<Player> const&                                target,
-    std::vector<advancement::AdvancementDefinition const*> const& advancements,
+std::vector<AdvancementDefinition const*> const& advancements,
     std::optional<std::string> const&                             criterion,
     bool                                                          grant
 ) {
@@ -267,14 +244,14 @@ void executeProgressCommand(
                                      : progressService.revokeAdvancement(*worldDataDir, playerUuid, *advancement));
             outputProgressResult(output, result, grant ? "Granted" : "Revoked", *player);
             if (grant && result.becameDone) {
-                advancement::notifyAdvancementCompleted(mod, *player, *advancement);
+                notifyAdvancementCompleted(mod, *player, *advancement);
             }
         }
     }
 }
 
 void executeProgressCommand(
-    MyMod&                         mod,
+    Entry&                         mod,
     CommandOrigin const&           origin,
     CommandOutput&                 output,
     CommandSelector<Player> const& target,
@@ -289,7 +266,7 @@ void executeProgressCommand(
     executeProgressCommand(mod, origin, output, target, std::vector{advancement}, criterion, grant);
 }
 
-void executeGuiCommand(MyMod& mod, CommandOrigin const& origin, CommandOutput& output) {
+void executeGuiCommand(Entry& mod, CommandOrigin const& origin, CommandOutput& output) {
     auto& logger = mod.getSelf().getLogger();
     logger.debug(
         "Advancements debug: executeGuiCommand entered origin_type={} has_entity={}",
@@ -334,14 +311,14 @@ void executeGuiCommand(MyMod& mod, CommandOrigin const& origin, CommandOutput& o
         "Advancements debug: executeGuiCommand opening GUI player={}",
         player->getRealName()
     );
-    advancement::showAdvancementsGui(mod, *player);
+    showAdvancementsGui(mod, *player);
 }
 
 } // namespace
 
-void updateAdvancementCommandEnums(advancement::LoadResult const& result) {
-    auto ids   = collectAdvancementIds(result);
-    auto names = collectCriterionNames(result);
+void updateAdvancementCommandEnums(AdvancementCommandIndex const& index) {
+    auto ids   = index.advancementIds;
+    auto names = index.criterionNames;
     if (!gCommandRegistered) {
         gPendingAdvancementIds = std::move(ids);
         gPendingCriterionNames = std::move(names);
@@ -351,7 +328,7 @@ void updateAdvancementCommandEnums(advancement::LoadResult const& result) {
     applyCriterionEnumValues(std::move(names));
 }
 
-void registerAdvancementsCommandNow(MyMod& mod) {
+void registerAdvancementsCommandNow(Entry& mod) {
     gCommandRegistered = true;
     auto& logger = mod.getSelf().getLogger();
     ensureAdvancementEnumRegistered();
@@ -548,7 +525,7 @@ void registerAdvancementsCommandNow(MyMod& mod) {
         });
 }
 
-void registerAdvancementsCommand(MyMod& mod) {
+void registerAdvancementsCommand(Entry& mod) {
     if (gCommandRegisterListener) {
         mod.getSelf().getLogger().debug("Advancements debug: registerAdvancementsCommand skipped existing listener");
         return;
@@ -570,4 +547,4 @@ void unregisterAdvancementsCommand() {
     }
 }
 
-} // namespace my_mod::commands
+} // namespace advancements::commands

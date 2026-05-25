@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <format>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 std::string pathToUtf8(std::filesystem::path const& path) {
@@ -124,4 +124,4 @@ LoadResult loadAdvancements(std::filesystem::path const& modDir) {
     return result;
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

@@ -1,16 +1,16 @@
 #pragma once
 
-#include "mod/advancement/AdvancementLoader.h"
+#include "mod/commands/AdvancementCommandIndex.h"
 
-namespace my_mod {
+namespace advancements {
 
-class MyMod;
+class Entry;
 
 namespace commands {
 
-void registerAdvancementsCommand(MyMod& mod);
+void registerAdvancementsCommand(Entry& mod);
 void unregisterAdvancementsCommand();
-void updateAdvancementCommandEnums(advancement::LoadResult const& result);
+void updateAdvancementCommandEnums(AdvancementCommandIndex const& index);
 
 } // namespace commands
-} // namespace my_mod
+} // namespace advancements

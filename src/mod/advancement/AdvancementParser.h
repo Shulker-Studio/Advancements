@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 struct ParseResult {
     std::optional<AdvancementDefinition> advancement;
@@ -17,4 +17,4 @@ struct ParseResult {
 
 ParseResult parseAdvancement(nlohmann::json const& json, std::string id, std::filesystem::path sourcePath);
 
-} // namespace my_mod::advancement
+} // namespace advancements

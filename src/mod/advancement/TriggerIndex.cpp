@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <array>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 constexpr std::array<std::string_view, 4> SupportedBastionLootTables{
@@ -515,4 +515,4 @@ std::span<CriterionBinding const> TriggerIndex::find(std::string_view triggerId)
     return found->second;
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

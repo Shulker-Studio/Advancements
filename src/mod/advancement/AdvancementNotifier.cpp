@@ -1,6 +1,6 @@
 #include "mod/advancement/AdvancementNotifier.h"
 
-#include "mod/MyMod.h"
+#include "mod/Entry.h"
 #include "mod/advancement/Localization.h"
 
 #include "mc/network/packet/TextPacket.h"
@@ -13,7 +13,7 @@
 ToastRequestPacket::ToastRequestPacket() { mSerializationMode = SerializationMode::ManualOnly; }
 ToastRequestPacketPayload::ToastRequestPacketPayload() = default;
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 std::string advancementTitle(AdvancementDefinition const& advancement, Player const& player) {
@@ -58,7 +58,7 @@ std::string_view toastTitleKey(AdvancementDefinition const& advancement) {
 
 } // namespace
 
-void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinition const& advancement) {
+void notifyAdvancementCompleted(Entry& mod, Player& player, AdvancementDefinition const& advancement) {
     auto const title = advancementTitle(advancement, player);
 
     if (shouldShowToast(advancement)) {
@@ -79,4 +79,4 @@ void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinitio
     mod.getSelf().getLogger().debug("Advancements debug: notified completion advancement={} player={}", advancement.id, player.getRealName());
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

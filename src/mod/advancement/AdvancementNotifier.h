@@ -4,12 +4,12 @@
 
 class Player;
 
-namespace my_mod {
-class MyMod;
+namespace advancements {
+class Entry;
 }
 
-namespace my_mod::advancement {
+namespace advancements {
 
-void notifyAdvancementCompleted(MyMod& mod, Player& player, AdvancementDefinition const& advancement);
+void notifyAdvancementCompleted(Entry& mod, Player& player, AdvancementDefinition const& advancement);
 
-} // namespace my_mod::advancement
+} // namespace advancements

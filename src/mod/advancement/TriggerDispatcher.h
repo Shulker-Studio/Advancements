@@ -11,7 +11,7 @@
 
 class Player;
 
-namespace my_mod::advancement {
+namespace advancements {
 
 struct NoTriggerPayload {};
 
@@ -98,4 +98,4 @@ private:
     ProgressService&    mProgressService;
 };
 
-} // namespace my_mod::advancement
+} // namespace advancements

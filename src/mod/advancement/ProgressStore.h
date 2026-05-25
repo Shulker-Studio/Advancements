@@ -9,7 +9,7 @@
 #include <optional>
 #include <string>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 [[nodiscard]] std::filesystem::path progressFilePath(
     std::filesystem::path const& worldDataDir,
@@ -40,4 +40,4 @@ namespace my_mod::advancement {
     std::optional<std::string> const&     criterion
 );
 
-} // namespace my_mod::advancement
+} // namespace advancements

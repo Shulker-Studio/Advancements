@@ -1,11 +1,11 @@
-#include "mod/advancement/AdvancementGuiIndex.h"
+#include "mod/gui/AdvancementGuiIndex.h"
 
 #include <algorithm>
 #include <array>
 #include <map>
 #include <string_view>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 struct CategoryDefinition {
@@ -102,4 +102,4 @@ AdvancementGuiIndex buildAdvancementGuiIndex(LoadResult const& definitions) {
     return index;
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

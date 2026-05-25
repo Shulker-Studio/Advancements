@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 struct LoadIssue {
     std::filesystem::path path;
@@ -24,4 +24,4 @@ struct LoadResult {
 
 LoadResult loadAdvancements(std::filesystem::path const& modDir);
 
-} // namespace my_mod::advancement
+} // namespace advancements

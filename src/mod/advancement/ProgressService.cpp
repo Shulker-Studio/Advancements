@@ -5,7 +5,7 @@
 #include <format>
 #include <optional>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 std::optional<ProgressLoadResult> ProgressService::ensureCached(
     std::filesystem::path const& worldDataDir,
@@ -132,4 +132,4 @@ std::vector<std::string> ProgressService::flushAll(std::filesystem::path const& 
     return flushErrors;
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

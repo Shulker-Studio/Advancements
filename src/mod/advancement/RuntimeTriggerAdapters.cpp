@@ -7,7 +7,7 @@
 #include "ll/api/event/player/PlayerDieEvent.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
-#include "mod/MyMod.h"
+#include "mod/Entry.h"
 #include "mod/advancement/TriggerDispatcher.h"
 
 #include "mc/deps/shared_types/legacy/ContainerType.h"
@@ -51,7 +51,7 @@
 #include <unordered_map>
 #include <variant>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
@@ -79,7 +79,7 @@ ll::event::ListenerPtr gDestroyBlockListener;
 ll::event::ListenerPtr gMobDieListener;
 ll::event::ListenerPtr gPlayerDieListener;
 ll::event::ListenerPtr gActorHurtListener;
-MyMod*                  gRuntimeTriggerMod = nullptr;
+Entry*                  gRuntimeTriggerMod = nullptr;
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
 constexpr int LocationStructureCheckIntervalTicks  = 20;
@@ -91,7 +91,7 @@ struct LocationStructurePlayerState {
 
 std::unordered_map<mce::UUID, LocationStructurePlayerState> gLocationStructurePlayerStates;
 
-void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
+void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
     auto& logger = mod.getSelf().getLogger();
     std::visit(
         [&](auto const& payload) {
@@ -163,7 +163,7 @@ void logTriggerDispatch(MyMod& mod, TriggerContext const& context) {
     );
 }
 
-void dispatchTrigger(MyMod& mod, TriggerContext const& context) {
+void dispatchTrigger(Entry& mod, TriggerContext const& context) {
     auto worldDataDir = mod.getSelf().getWorldDataDir();
     if (!worldDataDir) {
         return;
@@ -188,7 +188,7 @@ int countMatchingItems(Player const& player, std::string const& itemId) {
     return total;
 }
 
-void dispatchInventoryChangedForItem(MyMod& mod, Player& player, std::string const& itemId) {
+void dispatchInventoryChangedForItem(Entry& mod, Player& player, std::string const& itemId) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -199,7 +199,7 @@ void dispatchInventoryChangedForItem(MyMod& mod, Player& player, std::string con
     );
 }
 
-void dispatchConsumeItem(MyMod& mod, Player& player, std::string const& itemId) {
+void dispatchConsumeItem(Entry& mod, Player& player, std::string const& itemId) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -210,7 +210,7 @@ void dispatchConsumeItem(MyMod& mod, Player& player, std::string const& itemId) 
     );
 }
 
-void dispatchUsedTotem(MyMod& mod, Player& player) {
+void dispatchUsedTotem(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -221,7 +221,7 @@ void dispatchUsedTotem(MyMod& mod, Player& player) {
     );
 }
 
-void dispatchFishingRodHooked(MyMod& mod, Player& player, std::string const& itemId) {
+void dispatchFishingRodHooked(Entry& mod, Player& player, std::string const& itemId) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -232,7 +232,7 @@ void dispatchFishingRodHooked(MyMod& mod, Player& player, std::string const& ite
     );
 }
 
-void dispatchFilledBucket(MyMod& mod, Player& player, std::string const& itemId) {
+void dispatchFilledBucket(Entry& mod, Player& player, std::string const& itemId) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -243,7 +243,7 @@ void dispatchFilledBucket(MyMod& mod, Player& player, std::string const& itemId)
     );
 }
 
-void dispatchShotCrossbow(MyMod& mod, Player& player) {
+void dispatchShotCrossbow(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -254,7 +254,7 @@ void dispatchShotCrossbow(MyMod& mod, Player& player) {
     );
 }
 
-void dispatchSleptInBed(MyMod& mod, Player& player) {
+void dispatchSleptInBed(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -265,7 +265,7 @@ void dispatchSleptInBed(MyMod& mod, Player& player) {
     );
 }
 
-void dispatchLocationStructure(MyMod& mod, Player& player, std::string const& structureId) {
+void dispatchLocationStructure(Entry& mod, Player& player, std::string const& structureId) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -276,7 +276,7 @@ void dispatchLocationStructure(MyMod& mod, Player& player, std::string const& st
     );
 }
 
-void dispatchVillagerTrade(MyMod& mod, Player& player) {
+void dispatchVillagerTrade(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -287,7 +287,7 @@ void dispatchVillagerTrade(MyMod& mod, Player& player) {
     );
 }
 
-void dispatchEnchantedItem(MyMod& mod, Player& player) {
+void dispatchEnchantedItem(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -318,7 +318,7 @@ std::optional<std::string> currentSupportedLocationStructure(Player& player) {
     return std::nullopt;
 }
 
-void checkLocationStructure(MyMod& mod, Player& player) {
+void checkLocationStructure(Entry& mod, Player& player) {
     auto& state = gLocationStructurePlayerStates[player.getUuid()];
     --state.ticksUntilCheck;
     if (state.ticksUntilCheck > 0) {
@@ -352,7 +352,7 @@ std::string dimensionId(DimensionType dimension) {
     return std::to_string(static_cast<int>(dimension));
 }
 
-void dispatchChangedDimension(MyMod& mod, Player& player, DimensionType fromDimension, DimensionType toDimension) {
+void dispatchChangedDimension(Entry& mod, Player& player, DimensionType fromDimension, DimensionType toDimension) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -363,7 +363,7 @@ void dispatchChangedDimension(MyMod& mod, Player& player, DimensionType fromDime
     );
 }
 
-void dispatchGeneratedContainerLoot(MyMod& mod, Player& player, std::string const& lootTableId) {
+void dispatchGeneratedContainerLoot(Entry& mod, Player& player, std::string const& lootTableId) {
     dispatchTrigger(
         mod,
         TriggerContext{
@@ -378,7 +378,7 @@ bool isSupportedBastionLootTable(std::string_view lootTableId) {
     return std::ranges::find(SupportedBastionLootTables, lootTableId) != SupportedBastionLootTables.end();
 }
 
-MyMod* currentRuntimeTriggerMod() { return gRuntimeTriggerMod; }
+Entry* currentRuntimeTriggerMod() { return gRuntimeTriggerMod; }
 
 std::optional<Player*> findKillingPlayer(ll::event::MobDieEvent& event) {
     auto const& source = event.source();
@@ -901,7 +901,7 @@ std::unique_ptr<RuntimeTriggerHookState> gRuntimeTriggerHookState;
 
 } // namespace
 
-void registerRuntimeTriggerAdapters(MyMod& mod) {
+void registerRuntimeTriggerAdapters(Entry& mod) {
     if (gDestroyBlockListener || gMobDieListener || gPlayerDieListener || gActorHurtListener || gRuntimeTriggerMod != nullptr
         || gRuntimeTriggerHookState) {
         return;
@@ -1023,4 +1023,4 @@ void unregisterRuntimeTriggerAdapters() {
     }
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

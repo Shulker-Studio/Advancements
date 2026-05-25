@@ -2,7 +2,7 @@
 
 #include <format>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 void addTypeError(std::vector<std::string>& errors, std::string_view field, std::string_view expected) {
@@ -298,4 +298,4 @@ ParseResult parseAdvancement(nlohmann::json const& json, std::string id, std::fi
     return result;
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

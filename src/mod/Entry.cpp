@@ -1,18 +1,18 @@
-#include "mod/MyMod.h"
+#include "mod/Entry.h"
 
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "mod/advancement/RuntimeTriggerAdapters.h"
 #include "mod/commands/AdvancementsCommand.h"
 
-namespace my_mod {
+namespace advancements {
 
-MyMod& MyMod::getInstance() {
-    static MyMod instance;
+Entry& Entry::getInstance() {
+    static Entry instance;
     return instance;
 }
 
-bool MyMod::load() {
+bool Entry::load() {
     getSelf().getLogger().debug("Loading...");
     if (auto result = ll::i18n::getInstance().load(getSelf().getLangDir()); !result) {
         getSelf().getLogger().error("Failed to load advancement translations.");
@@ -22,14 +22,14 @@ bool MyMod::load() {
     return true;
 }
 
-bool MyMod::enable() {
+bool Entry::enable() {
     getSelf().getLogger().debug("Enabling...");
     reloadAdvancements();
-    advancement::registerRuntimeTriggerAdapters(*this);
+    registerRuntimeTriggerAdapters(*this);
     return true;
 }
 
-bool MyMod::disable() {
+bool Entry::disable() {
     getSelf().getLogger().debug("Disabling...");
     if (auto worldDataDir = getSelf().getWorldDataDir(); worldDataDir) {
         auto const flushErrors = mProgressService.flushAll(*worldDataDir);
@@ -37,21 +37,23 @@ bool MyMod::disable() {
             getSelf().getLogger().error("{}", error);
         }
     }
-    advancement::unregisterRuntimeTriggerAdapters();
+    unregisterRuntimeTriggerAdapters();
     commands::unregisterAdvancementsCommand();
     return true;
 }
 
-void MyMod::reloadAdvancements() {
-    auto loadResult = advancement::loadAdvancements(getSelf().getModDir());
-    auto guiIndex   = advancement::buildAdvancementGuiIndex(loadResult);
-    auto triggerIndex = advancement::TriggerIndex{};
+void Entry::reloadAdvancements() {
+    auto loadResult   = loadAdvancements(getSelf().getModDir());
+    auto guiIndex     = buildAdvancementGuiIndex(loadResult);
+    auto commandIndex = commands::buildAdvancementCommandIndex(loadResult);
+    auto triggerIndex = TriggerIndex{};
     triggerIndex.rebuild(loadResult);
 
-    mAdvancementLoadResult = std::move(loadResult);
-    mAdvancementGuiIndex   = std::move(guiIndex);
-    mTriggerIndex = std::move(triggerIndex);
-    commands::updateAdvancementCommandEnums(mAdvancementLoadResult);
+    mAdvancementLoadResult   = std::move(loadResult);
+    mAdvancementGuiIndex     = std::move(guiIndex);
+    mAdvancementCommandIndex = std::move(commandIndex);
+    mTriggerIndex            = std::move(triggerIndex);
+    commands::updateAdvancementCommandEnums(mAdvancementCommandIndex);
     auto& logger = getSelf().getLogger();
     logger.info(
         "Loaded {} advancement definitions with {} errors, {} triggers, and {} trigger bindings.",
@@ -66,6 +68,6 @@ void MyMod::reloadAdvancements() {
     }
 }
 
-} // namespace my_mod
+} // namespace advancements
 
-LL_REGISTER_MOD(my_mod::MyMod, my_mod::MyMod::getInstance());
+LL_REGISTER_MOD(advancements::Entry, advancements::Entry::getInstance());

@@ -1,10 +1,10 @@
 #include "mod/advancement/TriggerDispatcher.h"
 
 #include "mod/advancement/AdvancementNotifier.h"
-#include "mod/MyMod.h"
+#include "mod/Entry.h"
 #include "mc/world/actor/player/Player.h"
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 void ignoreResult(ProgressMutationResult const&) {}
@@ -168,7 +168,7 @@ void TriggerDispatcher::dispatch(
         auto const result =
             mProgressService.grantCriterion(worldDataDir, context.player.getUuid(), advancement->second, binding.criterionName);
 
-        auto& mod    = my_mod::MyMod::getInstance();
+        auto& mod    = advancements::Entry::getInstance();
         auto& logger = mod.getSelf().getLogger();
         if (!result.ok()) {
             logger.debug(
@@ -250,4 +250,4 @@ bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext 
     return false;
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

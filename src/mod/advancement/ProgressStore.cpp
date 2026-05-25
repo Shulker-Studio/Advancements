@@ -8,7 +8,7 @@
 #include <ctime>
 #include <format>
 
-namespace my_mod::advancement {
+namespace advancements {
 namespace {
 
 std::string currentTimestamp() {
@@ -215,4 +215,4 @@ ProgressMutationResult revokeProgress(
     return mutateProgress(advancement, playerProgress, criterion, false);
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements

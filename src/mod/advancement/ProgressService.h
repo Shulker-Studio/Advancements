@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 class ProgressService {
 public:
@@ -76,4 +76,4 @@ private:
     mutable std::map<std::string, CachedProgress> mCache;
 };
 
-} // namespace my_mod::advancement
+} // namespace advancements

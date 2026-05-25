@@ -8,7 +8,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace my_mod::advancement {
+namespace advancements {
 
 enum class TextComponentKind {
     Text,
@@ -56,4 +56,4 @@ struct AdvancementDefinition {
     std::optional<Rewards>                rewards;
 };
 
-} // namespace my_mod::advancement
+} // namespace advancements

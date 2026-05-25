@@ -4,7 +4,7 @@
 
 #include "mc/world/actor/player/Player.h"
 
-namespace my_mod::advancement {
+namespace advancements {
 
 std::string localizeKey(std::string_view key, Player const& player) {
     auto const localized = ll::i18n::getInstance().get(key, player.getLocaleCode());
@@ -22,4 +22,4 @@ std::string localizeText(TextComponent const& component, Player const& player) {
     return localizeKey(component.value, player);
 }
 
-} // namespace my_mod::advancement
+} // namespace advancements
