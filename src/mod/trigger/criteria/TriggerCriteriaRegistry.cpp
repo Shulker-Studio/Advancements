@@ -19,6 +19,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"bedrock:player_destroy_block", compileBlockCondition, matchesBlockCondition},
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
     {"minecraft:consume_item", compileSimpleItemCondition, matchesSimpleItemCondition},
+    {"minecraft:cured_zombie_villager", compileNoCondition, matchesNoCondition},
     {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},
     {"minecraft:entity_hurt_player", compileEntityHurtPlayerCondition, matchesEntityHurtPlayerCondition},
     {"minecraft:filled_bucket", compileSimpleItemCondition, matchesSimpleItemCondition},

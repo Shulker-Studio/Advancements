@@ -1,12 +1,16 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
+#include "mod/Entry.h"
 
 #include "ll/api/memory/Hook.h"
+#include "ll/api/service/Bedrock.h"
 
+#include "mc/entity/components_json_legacy/TransformationComponent.h"
 #include "mc/deps/shared_types/legacy/ContainerType.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/FishingHook.h"
 #include "mc/world/actor/item/ItemActor.h"
+#include "mc/world/actor/monster/ZombieVillager.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/containers/FullContainerName.h"
@@ -21,6 +25,7 @@
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
 #include "mc/world/level/BlockPos.h"
+#include "mc/world/level/Level.h"
 
 #include <memory>
 #include <optional>
@@ -31,8 +36,17 @@ namespace advancements {
 namespace {
 
 constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
+constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
+
+struct PendingZombieVillagerCure {
+    ActorUniqueID zombieVillagerId;
+    mce::UUID     playerId;
+    int           ticksRemaining{CureZombieVillagerMaxTrackedTicks};
+};
+
+std::unordered_map<int64, PendingZombieVillagerCure> gPendingZombieVillagerCures;
 
 int countMatchingItems(Player const& player, std::string const& itemId) {
     auto const& inventory = player.getInventory();
@@ -67,6 +81,10 @@ void dispatchConsumeItem(Entry& mod, Player& player, std::string const& itemId) 
             ItemTriggerPayload{itemId, std::nullopt},
         }
     );
+}
+
+bool isConsumeItemUseMethod(ItemUseMethod useMethod) {
+    return useMethod == ItemUseMethod::Eat || useMethod == ItemUseMethod::Consume;
 }
 
 void dispatchUsedTotem(Entry& mod, Player& player) {
@@ -122,6 +140,54 @@ void dispatchEnchantedItem(Entry& mod, Player& player) {
             NoTriggerPayload{},
         }
     );
+}
+
+void dispatchCuredZombieVillager(Entry& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:cured_zombie_villager",
+            NoTriggerPayload{},
+        }
+    );
+}
+
+bool isZombieVillagerActorType(ActorType actorType) {
+    return actorType == ActorType::ZombieVillager || actorType == ActorType::ZombieVillagerV2;
+}
+
+bool isZombieVillagerCureInteraction(Actor& actor) {
+    if (!isZombieVillagerActorType(actor.getEntityTypeId())) {
+        return false;
+    }
+    return static_cast<ZombieVillager&>(actor).villagerConversionTime > 0;
+}
+
+void trackZombieVillagerCure(Player& player, Actor& actor) {
+    auto const zombieVillagerId = actor.getOrCreateUniqueID();
+    gPendingZombieVillagerCures[zombieVillagerId.rawID] = PendingZombieVillagerCure{
+        zombieVillagerId,
+        player.getUuid(),
+    };
+}
+
+void checkPendingZombieVillagerCures(Player& player) {
+    for (auto it = gPendingZombieVillagerCures.begin(); it != gPendingZombieVillagerCures.end();) {
+        auto& pending = it->second;
+        if (pending.playerId != player.getUuid()) {
+            ++it;
+            continue;
+        }
+
+        --pending.ticksRemaining;
+        if (pending.ticksRemaining <= 0) {
+            it = gPendingZombieVillagerCures.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
 }
 
 std::optional<std::string> bucketItemIdForBucketedEntity(ActorType actorType) {
@@ -235,7 +301,7 @@ LL_TYPE_INSTANCE_HOOK(
     origin(item, useMethod, consumeItem);
 
     auto* mod = currentRuntimeTriggerMod();
-    if (mod == nullptr || !consumeItem || itemId.empty()) {
+    if (mod == nullptr || !consumeItem || itemId.empty() || !isConsumeItemUseMethod(useMethod)) {
         return;
     }
 
@@ -318,10 +384,22 @@ LL_TYPE_INSTANCE_HOOK(
     Actor&      actor,
     Vec3 const& location
 ) {
+    auto const mayStartZombieVillagerCure = isZombieVillagerActorType(actor.getEntityTypeId())
+                                         && !isZombieVillagerCureInteraction(actor)
+                                         && !getSelectedItem().isNull()
+                                         && getSelectedItem().getTypeName() == "minecraft:golden_apple";
+    auto const actorTypeName = actor.getTypeName();
     auto const entityId = actor.getOrCreateUniqueID().getHash();
     auto result = origin(actor, location);
-    if (!result.mSuccess) {
+
+    auto* mod = currentRuntimeTriggerMod();
+
+    if (!result.mSuccess && !result.mSwing) {
         return result;
+    }
+
+    if (mayStartZombieVillagerCure) {
+        trackZombieVillagerCure(*this, actor);
     }
 
     auto pending = gPendingBucketedEntities.find(entityId);
@@ -329,12 +407,61 @@ LL_TYPE_INSTANCE_HOOK(
         return result;
     }
 
-    auto* mod = currentRuntimeTriggerMod();
     if (mod != nullptr) {
         dispatchFilledBucket(*mod, *this, pending->second);
     }
     gPendingBucketedEntities.erase(pending);
     return result;
+}
+
+LL_TYPE_INSTANCE_HOOK(
+    ZombieVillagerMaintainOldDataHook,
+    HookPriority::Normal,
+    TransformationComponent,
+    &TransformationComponent::maintainOldData,
+    void,
+    Actor&                           originalActor,
+    Actor&                           transformed,
+    TransformationDescription const& transformation,
+    ActorUniqueID const&             ownerID,
+    Level const&                     level
+) {
+    auto const originalType = originalActor.getTypeName();
+    auto const transformedType = transformed.getTypeName();
+    auto const originalRuntimeType = originalActor.getEntityTypeId();
+    auto const originalUniqueId = originalActor.getOrCreateUniqueID().rawID;
+    auto const maybeTrackedCure = isZombieVillagerActorType(originalRuntimeType)
+                               ? gPendingZombieVillagerCures.find(originalUniqueId)
+                               : gPendingZombieVillagerCures.end();
+
+    auto* mod = currentRuntimeTriggerMod();
+    origin(originalActor, transformed, transformation, ownerID, level);
+
+    if (mod == nullptr || maybeTrackedCure == gPendingZombieVillagerCures.end()) {
+        return;
+    }
+
+    auto const transformedRuntimeType = transformed.getEntityTypeId();
+    if (transformedRuntimeType != ActorType::Villager && transformedRuntimeType != ActorType::VillagerV2) {
+        return;
+    }
+
+    auto* player = level.getPlayer(maybeTrackedCure->second.playerId);
+    if (player == nullptr) {
+        return;
+    }
+
+    dispatchCuredZombieVillager(*mod, *player);
+    gPendingZombieVillagerCures.erase(maybeTrackedCure);
+}
+
+LL_TYPE_INSTANCE_HOOK(PlayerTickInventoryRuntimeHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
+    origin(currentTick);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod != nullptr && !gPendingZombieVillagerCures.empty()) {
+        checkPendingZombieVillagerCures(*this);
+    }
 }
 
 struct InventoryRuntimeHookState {
@@ -345,6 +472,8 @@ struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<PullFishingHookHook>        pullFishingHook;
     ll::memory::HookRegistrar<BucketUseOnEntityHook>      bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
+    ll::memory::HookRegistrar<ZombieVillagerMaintainOldDataHook> zombieVillagerMaintainOldDataHook;
+    ll::memory::HookRegistrar<PlayerTickInventoryRuntimeHook> playerTickInventoryRuntimeHook;
 };
 
 std::unique_ptr<InventoryRuntimeHookState> gInventoryRuntimeHookState;
@@ -366,11 +495,14 @@ void registerInventoryRuntime() {
     (void)PullFishingHookHook::_AutoHookCount;
     (void)BucketUseOnEntityHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
+    (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
+    (void)PlayerTickInventoryRuntimeHook::_AutoHookCount;
     gInventoryRuntimeHookState = std::make_unique<InventoryRuntimeHookState>();
 }
 
 void unregisterInventoryRuntime() {
     gPendingBucketedEntities.clear();
+    gPendingZombieVillagerCures.clear();
     gInventoryRuntimeHookState.reset();
 }
 
