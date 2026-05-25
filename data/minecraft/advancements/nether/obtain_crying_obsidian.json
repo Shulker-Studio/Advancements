@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:nether/loot_bastion",
+  "display": {
+    "title": {
+      "translate": "advancements.nether.obtain_crying_obsidian.title"
+    },
+    "description": {
+      "translate": "advancements.nether.obtain_crying_obsidian.description"
+    },
+    "icon": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "crying_obsidian": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:crying_obsidian",
+        "count": 1
+      }
+    }
+  },
+  "requirements": [["crying_obsidian"]]
+}

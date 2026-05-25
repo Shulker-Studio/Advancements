@@ -149,10 +149,10 @@
 | `nether/distract_piglin` | interaction / inventory family | missing-trigger | |
 | `nether/loot_bastion` | `player_generates_container_loot` | done | 已核原版 JSON：父级 `minecraft:nether/find_bastion`，四个 bastion chest loot table 条件，OR requirements；当前窄 runtime 仅覆盖这四个 loot table |
 | `nether/use_lodestone` | location / use item family | missing-trigger | |
-| `nether/obtain_crying_obsidian` | `inventory_changed` | missing-data | runtime 可承载，后续可直接补数据 |
+| `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/charge_respawn_anchor` | interaction / block use family | missing-trigger | |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，`obtain_crying_obsidian` 仍缺数据。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`。
 
 ## End Vanilla Inventory
 
@@ -243,7 +243,7 @@
 | `husbandry/make_a_sign_glow` | other | missing-trigger | |
 | `husbandry/allay_deliver_item_to_player` | other | missing-trigger | |
 | `husbandry/allay_deliver_cake_to_note_block` | `allay_drop_item_on_block` | missing-trigger | |
-| `husbandry/obtain_sniffer_egg` | `inventory_changed` | missing-data | |
+| `husbandry/obtain_sniffer_egg` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed`；按原版保持 hidden |
 | `husbandry/feed_snifflet` | other | missing-trigger | |
 | `husbandry/plant_any_sniffer_seed` | other | missing-trigger | |
 | `husbandry/remove_wolf_armor` | other | missing-trigger | |
@@ -257,11 +257,12 @@
 - `husbandry/tadpole_in_a_bucket`
 - `husbandry/axolotl_in_a_bucket`
 - `husbandry/balanced_diet`
+- `husbandry/obtain_sniffer_egg`
 - `husbandry/obtain_netherite_hoe`
 
 ## Immediate Alignment Fixes
 
 1. `adventure/kill_all_mobs` 用当前已支持敌对怪集合正式建成原版 ID，而不是 demo
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `obtain_sniffer_egg`）
+3. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `froglights`，在父级与语义明确后）
 4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态

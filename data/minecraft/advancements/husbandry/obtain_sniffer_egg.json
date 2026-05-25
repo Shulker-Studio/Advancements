@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:husbandry/root",
+  "display": {
+    "title": {
+      "translate": "advancements.husbandry.obtain_sniffer_egg.title"
+    },
+    "description": {
+      "translate": "advancements.husbandry.obtain_sniffer_egg.description"
+    },
+    "icon": {
+      "item": "minecraft:sniffer_egg"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": true
+  },
+  "criteria": {
+    "sniffer_egg": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "item": "minecraft:sniffer_egg",
+        "count": 1
+      }
+    }
+  },
+  "requirements": [["sniffer_egg"]]
+}

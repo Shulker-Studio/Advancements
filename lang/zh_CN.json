@@ -108,5 +108,9 @@
   "advancements.end.elytra.title": "天空即为极限",
   "advancements.end.elytra.description": "找到鞘翅",
   "advancements.end.dragon_breath.title": "你需要来点薄荷糖",
-  "advancements.end.dragon_breath.description": "用玻璃瓶收集龙息"
+  "advancements.end.dragon_breath.description": "用玻璃瓶收集龙息",
+  "advancements.nether.obtain_crying_obsidian.title": "谁在切洋葱？",
+  "advancements.nether.obtain_crying_obsidian.description": "获得哭泣的黑曜石",
+  "advancements.husbandry.obtain_sniffer_egg.title": "怪味蛋",
+  "advancements.husbandry.obtain_sniffer_egg.description": "获得嗅探兽蛋"
 }
