@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <utility>
 
 namespace advancements {
 namespace {
@@ -80,6 +81,8 @@ TriggerCondition compileChangedDimensionCondition(nlohmann::json const& conditio
     }
     return DimensionTriggerCondition{fromDimension, toDimension};
 }
+
+TriggerCondition compileNoCondition(nlohmann::json const&) { return InvalidTriggerCondition{}; }
 
 TriggerCondition compileShotCrossbowCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"item"})) {
@@ -451,9 +454,9 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
         return compileShotCrossbowCondition(conditions);
     }
     if (triggerId == "minecraft:player_killed_entity") {
-        auto const compiled = compilePlayerKilledEntitySniperDuelCondition(conditions);
+        auto compiled = compilePlayerKilledEntitySniperDuelCondition(conditions);
         if (!std::holds_alternative<InvalidTriggerCondition>(compiled)) {
-            return compiled;
+            return std::move(compiled);
         }
         return compileEntityCondition(conditions);
     }
@@ -484,6 +487,124 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     return InvalidTriggerCondition{};
 }
 
+template <typename T>
+T const* payloadAs(TriggerContext const& context) {
+    return std::get_if<T>(&context.payload);
+}
+
+bool matchesNoCondition(TriggerCondition const& condition, TriggerContext const&) {
+    return std::holds_alternative<NoTriggerCondition>(condition);
+}
+
+bool matchesBlockCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<BlockTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<BlockTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->blockId == compiled->blockId;
+}
+
+bool matchesInventoryItemCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<ItemTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<ItemTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (payload->itemId != compiled->itemId) {
+        return false;
+    }
+    if (!compiled->count) {
+        return true;
+    }
+    if (!payload->itemCount) {
+        return false;
+    }
+    return *payload->itemCount >= *compiled->count;
+}
+
+bool matchesSimpleItemCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<ItemTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<ItemTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->itemId == compiled->itemId;
+}
+
+bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<EntityTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->entityTypeId == compiled->entityTypeId;
+}
+
+bool matchesChangedDimensionCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<DimensionTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<DimensionTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (compiled->fromDimension && payload->fromDimension != *compiled->fromDimension) {
+        return false;
+    }
+    if (compiled->toDimension && payload->toDimension != *compiled->toDimension) {
+        return false;
+    }
+    return true;
+}
+
+constexpr TriggerDescriptor MigratedDescriptors[]{
+    {"bedrock:player_destroy_block", compileBlockCondition, matchesBlockCondition},
+    {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
+    {"minecraft:consume_item", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
+    {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},
+    {"minecraft:filled_bucket", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
+    {"minecraft:fishing_rod_hooked", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
+    {"minecraft:inventory_changed", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, true); }, matchesInventoryItemCondition},
+    {"minecraft:slept_in_bed", compileNoCondition, matchesNoCondition},
+    {"minecraft:used_totem", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
+};
+
+TriggerDescriptor const* findTriggerDescriptor(std::string_view triggerId) {
+    auto const found = std::ranges::find_if(MigratedDescriptors, [triggerId](TriggerDescriptor const& descriptor) {
+        return descriptor.id == triggerId;
+    });
+    if (found == std::end(MigratedDescriptors)) {
+        return nullptr;
+    }
+    return &*found;
+}
+
+TriggerCondition compileDescriptorCondition(
+    TriggerDescriptor const&             descriptor,
+    std::optional<nlohmann::json> const& rawConditions
+) {
+    if (!rawConditions) {
+        return NoTriggerCondition{};
+    }
+
+    auto const& conditions = *rawConditions;
+    if (!conditions.is_object()) {
+        return InvalidTriggerCondition{};
+    }
+    if (conditions.empty()) {
+        return NoTriggerCondition{};
+    }
+    return descriptor.compile(conditions);
+}
+
+bool shouldKeepLegacyBinding(std::string_view triggerId, std::optional<nlohmann::json> const& rawConditions) {
+    if (triggerId != "minecraft:player_killed_entity" || !rawConditions || !rawConditions->is_object()
+        || rawConditions->empty()) {
+        return false;
+    }
+
+    return !std::holds_alternative<InvalidTriggerCondition>(compilePlayerKilledEntitySniperDuelCondition(*rawConditions));
+}
+
 } // namespace
 
 void TriggerIndex::rebuild(LoadResult const& result) {
@@ -492,11 +613,18 @@ void TriggerIndex::rebuild(LoadResult const& result) {
 
     for (auto const& [advancementId, advancement] : result.advancements) {
         for (auto const& [criterionName, criterion] : advancement.criteria) {
+            auto const* descriptor = findTriggerDescriptor(criterion.trigger);
+            if (descriptor != nullptr && shouldKeepLegacyBinding(criterion.trigger, criterion.conditions)) {
+                descriptor = nullptr;
+            }
             mBindings[criterion.trigger].push_back(CriterionBinding{
+                &advancement,
                 advancementId,
                 criterionName,
                 criterion.trigger,
-                compileTriggerCondition(criterion.trigger, criterion.conditions)
+                descriptor,
+                descriptor == nullptr ? compileTriggerCondition(criterion.trigger, criterion.conditions)
+                                      : compileDescriptorCondition(*descriptor, criterion.conditions)
             });
             ++mBindingCount;
         }

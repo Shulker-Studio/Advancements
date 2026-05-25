@@ -43,11 +43,19 @@ bool matchesItemCondition(TriggerCondition const& condition, TriggerContext cons
 
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
     auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
-    auto const* payload  = payloadAs<EntityTriggerPayload>(context);
-    if (compiled == nullptr || payload == nullptr) {
+    if (compiled == nullptr) {
         return false;
     }
-    return payload->entityTypeId == compiled->entityTypeId;
+
+    if (auto const* payload = payloadAs<EntityTriggerPayload>(context); payload != nullptr) {
+        return payload->entityTypeId == compiled->entityTypeId;
+    }
+
+    if (auto const* payload = payloadAs<PlayerKilledEntitySniperDuelPayload>(context); payload != nullptr) {
+        return payload->killedEntityTypeId == compiled->entityTypeId;
+    }
+
+    return false;
 }
 
 bool matchesChangedDimensionCondition(TriggerCondition const& condition, TriggerContext const& context) {
@@ -151,22 +159,25 @@ TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService&
 
 void TriggerDispatcher::dispatch(
     std::filesystem::path const& worldDataDir,
-    LoadResult const&            definitions,
+    [[maybe_unused]] LoadResult const& definitions,
     TriggerContext const&        context
 ) const {
     auto const bindings = mIndex.find(context.triggerId);
     for (auto const& binding : bindings) {
-        if (!matches(binding, context)) {
+        auto const matched = binding.descriptor == nullptr ? legacyMatches(binding, context)
+                                                           : binding.descriptor->match(binding.condition, context);
+        if (!matched) {
             continue;
         }
 
-        auto const advancement = definitions.advancements.find(binding.advancementId);
-        if (advancement == definitions.advancements.end()) {
+        if (binding.advancement == nullptr) {
             continue;
         }
+
+        auto const& advancement = *binding.advancement;
 
         auto const result =
-            mProgressService.grantCriterion(worldDataDir, context.player.getUuid(), advancement->second, binding.criterionName);
+            mProgressService.grantCriterion(worldDataDir, context.player.getUuid(), advancement, binding.criterionName);
 
         auto& mod    = advancements::Entry::getInstance();
         auto& logger = mod.getSelf().getLogger();
@@ -192,14 +203,14 @@ void TriggerDispatcher::dispatch(
         }
 
         if (result.becameDone) {
-            notifyAdvancementCompleted(mod, context.player, advancement->second);
+            notifyAdvancementCompleted(mod, context.player, advancement);
         }
 
         ignoreResult(result);
     }
 }
 
-bool TriggerDispatcher::matches(CriterionBinding const& binding, TriggerContext const& context) const {
+bool TriggerDispatcher::legacyMatches(CriterionBinding const& binding, TriggerContext const& context) const {
     if (std::holds_alternative<NoTriggerCondition>(binding.condition)) {
         return true;
     }

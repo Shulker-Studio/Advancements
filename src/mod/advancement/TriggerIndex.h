@@ -10,7 +10,77 @@
 #include <variant>
 #include <vector>
 
+class Player;
+
 namespace advancements {
+
+struct NoTriggerPayload {};
+
+struct ItemTriggerPayload {
+    std::string        itemId;
+    std::optional<int> itemCount;
+};
+
+struct EntityTriggerPayload {
+    std::string entityTypeId;
+};
+
+struct BlockTriggerPayload {
+    std::string blockId;
+};
+
+struct DimensionTriggerPayload {
+    std::string fromDimension;
+    std::string toDimension;
+};
+
+struct LocationStructurePayload {
+    std::string structureId;
+};
+
+struct LootTablePayload {
+    std::string lootTableId;
+};
+
+struct PlayerHurtEntityPayload {
+    bool directEntityIsArrow;
+    bool isProjectileDamage;
+};
+
+struct TargetHitPayload {
+    int   signalStrength;
+    float projectileHorizontalDistance;
+};
+
+struct EntityHurtPlayerPayload {
+    bool blockedDamage;
+    bool isProjectileDamage;
+};
+
+struct PlayerKilledEntitySniperDuelPayload {
+    std::string killedEntityTypeId;
+    float       horizontalDistance;
+    bool        killingBlowIsProjectile;
+};
+
+using TriggerPayload = std::variant<
+    NoTriggerPayload,
+    ItemTriggerPayload,
+    EntityTriggerPayload,
+    BlockTriggerPayload,
+    DimensionTriggerPayload,
+    LocationStructurePayload,
+    LootTablePayload,
+    PlayerHurtEntityPayload,
+    TargetHitPayload,
+    EntityHurtPlayerPayload,
+    PlayerKilledEntitySniperDuelPayload>;
+
+struct TriggerContext {
+    Player&        player;
+    std::string    triggerId;
+    TriggerPayload payload;
+};
 
 struct NoTriggerCondition {};
 
@@ -77,11 +147,22 @@ using TriggerCondition = std::variant<
     EntityHurtPlayerCondition,
     PlayerKilledEntitySniperDuelCondition>;
 
+struct TriggerDescriptor {
+    using CompileFn = TriggerCondition (*)(nlohmann::json const& conditions);
+    using MatchFn   = bool (*)(TriggerCondition const& condition, TriggerContext const& context);
+
+    std::string_view id;
+    CompileFn        compile;
+    MatchFn          match;
+};
+
 struct CriterionBinding {
-    std::string      advancementId;
-    std::string      criterionName;
-    std::string      triggerId;
-    TriggerCondition condition;
+    AdvancementDefinition const* advancement;
+    std::string                  advancementId;
+    std::string                  criterionName;
+    std::string                  triggerId;
+    TriggerDescriptor const*     descriptor;
+    TriggerCondition             condition;
 };
 
 class TriggerIndex {
