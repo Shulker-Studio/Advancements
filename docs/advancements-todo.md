@@ -21,6 +21,7 @@
 
 - `minecraft:inventory_changed`
 - `minecraft:consume_item`
+- `minecraft:cured_zombie_villager`
 - `minecraft:used_totem`
 - `minecraft:filled_bucket`
 - `minecraft:fishing_rod_hooked`
@@ -55,7 +56,7 @@
 | `construct_beacon` | missing-trigger | |
 | `consume_item` | done | 当前窄实现，仅 `conditions.item` |
 | `crafter_recipe_crafted` | missing-trigger | |
-| `cured_zombie_villager` | missing-trigger | |
+| `cured_zombie_villager` | partial | 当前窄实现：仅支持无 `conditions` 的 `story/cure_zombie_villager`；基于玩家对僵尸村民成功使用金苹果时记录责任玩家，并在后续 transformation seam 上确认转化；不支持未核实的 `zombie` / `villager` 条件谓词 |
 | `default_block_use` | missing-trigger | |
 | `effects_changed` | missing-trigger | |
 | `enchanted_item` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Enchantment` 后触发；不依赖打开附魔 UI |
@@ -120,7 +121,7 @@
 | `story/enchant_item` | `enchanted_item` | done | 已补数据，复用当前完成附魔结果转移语义的 `enchanted_item` |
 | `story/shiny_gear` | `inventory_changed` | done | |
 | `story/enter_the_nether` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
-| `story/cure_zombie_villager` | `cured_zombie_villager` | missing-trigger | |
+| `story/cure_zombie_villager` | `cured_zombie_villager` | partial | 已发货窄实现；本地 row 使用裸 `minecraft:cured_zombie_villager` trigger。raw vanilla JSON 未能在本波次取得，依据本地 wiki 摘录和可见 LL headers 保持最小形状；runtime 当前在成功金苹果交互时记录责任玩家，并在 `TransformationComponent::maintainOldData(...)` 观察到 tracked 的 `zombie_villager(_v2) -> villager(_v2)` 转化时派发进度。当前主要 caveat 是未对原版 `conditions.zombie` / `conditions.villager` 做支持，且仍需 live server QA 继续证明该完成点与僵尸村民治疗完成严格对齐 |
 | `story/follow_ender_eye` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:stronghold`；当前窄实现基于玩家所在 Stronghold 结构触发，按 location 语义每 20 tick 轮询，不再依赖 `used_ender_eye` |
 | `story/enter_the_end` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension`；父节点已回正为 `story/follow_ender_eye` |
 
