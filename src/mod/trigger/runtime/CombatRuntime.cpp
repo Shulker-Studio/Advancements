@@ -74,16 +74,19 @@ std::optional<Player*> findHurtingPlayer(ActorDamageSource const& source) {
     return static_cast<Player*>(actor);
 }
 
-bool damageSourceDirectEntityIsArrow(ActorDamageSource const& source) {
+std::optional<std::string> findDirectDamagerTypeId(ActorDamageSource const& source) {
     if (!source.isEntitySource()) {
-        return false;
+        return std::nullopt;
     }
 
-    auto* directDamager = ll::service::getLevel()->fetchEntity(source.getDamagingEntityUniqueID(), false);
-    if (directDamager == nullptr) {
-        return false;
+    auto* actor = ll::service::getLevel()->fetchEntity(source.getDamagingEntityUniqueID(), false);
+    if (actor == nullptr) {
+        return std::nullopt;
     }
-    return directDamager->getTypeName() == "minecraft:arrow";
+    return actor->getTypeName();
+}
+bool damageSourceDirectEntityIsArrow(ActorDamageSource const& source) {
+    return findDirectDamagerTypeId(source) == "minecraft:arrow";
 }
 
 bool damageSourceIsSupportedProjectile(ActorDamageSource const& source) {
@@ -121,6 +124,7 @@ void registerCombatRuntime(Entry& mod) {
                     event.self().getTypeName(),
                     horizontalDistance((**player).getPosition(), event.self().getPosition()),
                     damageSourceIsSupportedProjectile(event.source()),
+                    findDirectDamagerTypeId(event.source()),
                 },
             }
         );

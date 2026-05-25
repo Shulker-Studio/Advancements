@@ -58,9 +58,10 @@ struct EntityHurtPlayerPayload {
 };
 
 struct PlayerKilledEntitySniperDuelPayload {
-    std::string killedEntityTypeId;
-    float       horizontalDistance;
-    bool        killingBlowIsProjectile;
+    std::string                killedEntityTypeId;
+    float                      horizontalDistance;
+    bool                       killingBlowIsProjectile;
+    std::optional<std::string> directEntityTypeId;
 };
 
 using TriggerPayload = std::variant<
@@ -128,9 +129,10 @@ struct EntityHurtPlayerCondition {
 };
 
 struct PlayerKilledEntitySniperDuelCondition {
-    std::string targetEntityTypeId;
-    float       horizontalDistanceMin;
-    bool        requireProjectileKillingBlow;
+    std::string                targetEntityTypeId;
+    std::optional<float>       horizontalDistanceMin;
+    bool                       requireProjectileKillingBlow;
+    std::optional<std::string> directEntityTypeId;
 };
 
 using TriggerCondition = std::variant<
