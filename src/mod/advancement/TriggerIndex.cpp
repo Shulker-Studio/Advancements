@@ -456,7 +456,7 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     if (triggerId == "minecraft:player_killed_entity") {
         auto compiled = compilePlayerKilledEntitySniperDuelCondition(conditions);
         if (!std::holds_alternative<InvalidTriggerCondition>(compiled)) {
-            return std::move(compiled);
+            return compiled;
         }
         return compileEntityCondition(conditions);
     }
@@ -465,12 +465,6 @@ TriggerCondition compileTriggerCondition(std::string_view triggerId, std::option
     }
     if (triggerId == "minecraft:changed_dimension") {
         return compileChangedDimensionCondition(conditions);
-    }
-    if (triggerId == "minecraft:location") {
-        return compileLocationStructureCondition(conditions);
-    }
-    if (triggerId == "minecraft:player_generates_container_loot") {
-        return compileLootTableCondition(conditions);
     }
     if (triggerId == "minecraft:player_hurt_entity") {
         return compilePlayerHurtEntityCondition(conditions);
@@ -541,6 +535,45 @@ bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext co
     return payload->entityTypeId == compiled->entityTypeId;
 }
 
+bool matchesPlayerKilledEntitySniperDuelCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<PlayerKilledEntitySniperDuelCondition>(&condition);
+    auto const* payload  = payloadAs<PlayerKilledEntitySniperDuelPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (payload->killedEntityTypeId != compiled->targetEntityTypeId) {
+        return false;
+    }
+    if (payload->horizontalDistance < compiled->horizontalDistanceMin) {
+        return false;
+    }
+    if (compiled->requireProjectileKillingBlow && !payload->killingBlowIsProjectile) {
+        return false;
+    }
+    return true;
+}
+
+bool matchesPlayerKilledEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    if (std::holds_alternative<PlayerKilledEntitySniperDuelCondition>(condition)) {
+        return matchesPlayerKilledEntitySniperDuelCondition(condition, context);
+    }
+
+    auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
+    if (compiled == nullptr) {
+        return false;
+    }
+
+    if (auto const* payload = payloadAs<EntityTriggerPayload>(context); payload != nullptr) {
+        return payload->entityTypeId == compiled->entityTypeId;
+    }
+
+    if (auto const* payload = payloadAs<PlayerKilledEntitySniperDuelPayload>(context); payload != nullptr) {
+        return payload->killedEntityTypeId == compiled->entityTypeId;
+    }
+
+    return false;
+}
+
 bool matchesChangedDimensionCondition(TriggerCondition const& condition, TriggerContext const& context) {
     auto const* compiled = std::get_if<DimensionTriggerCondition>(&condition);
     auto const* payload  = payloadAs<DimensionTriggerPayload>(context);
@@ -556,15 +589,88 @@ bool matchesChangedDimensionCondition(TriggerCondition const& condition, Trigger
     return true;
 }
 
+bool matchesLocationStructureCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<LocationStructureCondition>(&condition);
+    auto const* payload  = payloadAs<LocationStructurePayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->structureId == compiled->structureId;
+}
+
+bool matchesLootTableCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<LootTableCondition>(&condition);
+    auto const* payload  = payloadAs<LootTablePayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->lootTableId == compiled->lootTableId;
+}
+
+bool matchesPlayerHurtEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<PlayerHurtEntityCondition>(&condition);
+    auto const* payload  = payloadAs<PlayerHurtEntityPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (compiled->requireArrowDirectEntity && !payload->directEntityIsArrow) {
+        return false;
+    }
+    if (compiled->requireProjectileDamageTag && !payload->isProjectileDamage) {
+        return false;
+    }
+    return true;
+}
+
+bool matchesTargetHitCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<TargetHitCondition>(&condition);
+    auto const* payload  = payloadAs<TargetHitPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (payload->signalStrength != compiled->requiredSignalStrength) {
+        return false;
+    }
+    return payload->projectileHorizontalDistance >= compiled->projectileHorizontalDistanceMin;
+}
+
+bool matchesEntityHurtPlayerCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<EntityHurtPlayerCondition>(&condition);
+    auto const* payload  = payloadAs<EntityHurtPlayerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (compiled->requireBlockedDamage && !payload->blockedDamage) {
+        return false;
+    }
+    if (compiled->requireProjectileDamageTag && !payload->isProjectileDamage) {
+        return false;
+    }
+    return true;
+}
+
 constexpr TriggerDescriptor MigratedDescriptors[]{
     {"bedrock:player_destroy_block", compileBlockCondition, matchesBlockCondition},
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
     {"minecraft:consume_item", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
     {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},
+    {"minecraft:entity_hurt_player", compileEntityHurtPlayerCondition, matchesEntityHurtPlayerCondition},
     {"minecraft:filled_bucket", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
     {"minecraft:fishing_rod_hooked", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
     {"minecraft:inventory_changed", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, true); }, matchesInventoryItemCondition},
+    {"minecraft:location", compileLocationStructureCondition, matchesLocationStructureCondition},
+    {"minecraft:player_generates_container_loot", compileLootTableCondition, matchesLootTableCondition},
+    {"minecraft:player_hurt_entity", compilePlayerHurtEntityCondition, matchesPlayerHurtEntityCondition},
+    {"minecraft:player_killed_entity", [](nlohmann::json const& conditions) {
+         auto compiled = compilePlayerKilledEntitySniperDuelCondition(conditions);
+         if (!std::holds_alternative<InvalidTriggerCondition>(compiled)) {
+             return compiled;
+         }
+         return compileEntityCondition(conditions);
+     }, matchesPlayerKilledEntityCondition},
+    {"minecraft:shot_crossbow", compileShotCrossbowCondition, matchesSimpleItemCondition},
     {"minecraft:slept_in_bed", compileNoCondition, matchesNoCondition},
+    {"minecraft:target_hit", compileTargetHitCondition, matchesTargetHitCondition},
     {"minecraft:used_totem", [](nlohmann::json const& conditions) { return compileItemCondition(conditions, false); }, matchesSimpleItemCondition},
 };
 
@@ -596,15 +702,6 @@ TriggerCondition compileDescriptorCondition(
     return descriptor.compile(conditions);
 }
 
-bool shouldKeepLegacyBinding(std::string_view triggerId, std::optional<nlohmann::json> const& rawConditions) {
-    if (triggerId != "minecraft:player_killed_entity" || !rawConditions || !rawConditions->is_object()
-        || rawConditions->empty()) {
-        return false;
-    }
-
-    return !std::holds_alternative<InvalidTriggerCondition>(compilePlayerKilledEntitySniperDuelCondition(*rawConditions));
-}
-
 } // namespace
 
 void TriggerIndex::rebuild(LoadResult const& result) {
@@ -614,9 +711,6 @@ void TriggerIndex::rebuild(LoadResult const& result) {
     for (auto const& [advancementId, advancement] : result.advancements) {
         for (auto const& [criterionName, criterion] : advancement.criteria) {
             auto const* descriptor = findTriggerDescriptor(criterion.trigger);
-            if (descriptor != nullptr && shouldKeepLegacyBinding(criterion.trigger, criterion.conditions)) {
-                descriptor = nullptr;
-            }
             mBindings[criterion.trigger].push_back(CriterionBinding{
                 &advancement,
                 advancementId,
