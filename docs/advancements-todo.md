@@ -82,7 +82,7 @@
 | `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
 | `player_hurt_entity` | done | 当前窄实现：基于 `ll::event::ActorHurtEvent`，仅支持 `damage.type.direct_entity.type = #minecraft:arrows` + `damage.type.tags` 含 `minecraft:is_projectile` 这一已核 condition surface |
 | `player_interacted_with_entity` | missing-trigger | |
-| `player_killed_entity` | done | 当前窄实现：保留 `conditions.entity`，并额外支持 `adventure/sniper_duel` 已核窄形状（`entity[0].predicate.type = minecraft:skeleton` + `entity[0].predicate.distance.horizontal.min = 50.0` + `killing_blow.tags` 含 `minecraft:is_projectile`）；不泛化其他 nested predicates |
+| `player_killed_entity` | done | 当前窄实现：保留 `conditions.entity`，并额外支持 `adventure/sniper_duel` 已核窄形状（骷髅 + 50m horizontal + projectile killing blow）与 `nether/return_to_sender` 已核窄形状（恶魂 + direct fireball + projectile killing blow）；不泛化其他 nested predicates |
 | `player_sheared_equipment` | missing-trigger | |
 | `recipe_crafted` | missing-trigger | |
 | `recipe_unlocked` | missing-trigger | |
@@ -130,7 +130,7 @@
 | Vanilla ID | Main trigger family | Status | Notes |
 | --- | --- | --- | --- |
 | `nether/root` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
-| `nether/return_to_sender` | projectile / ghast fireball family | missing-trigger | |
+| `nether/return_to_sender` | `player_killed_entity` / ghast fireball narrow slice | done | 已核原版 JSON：`minecraft:player_killed_entity` + `entity[0].predicate.type = minecraft:ghast` + `killing_blow.direct_entity.type = minecraft:fireball` + `killing_blow.tags` 含 `minecraft:is_projectile`；当前 runtime 复用 MobDieEvent/player attribution，并从 ActorDamageSource 记录 direct damager type；需 live-server QA 证明 Bedrock 反弹恶魂火球击杀时 direct damager 为 `minecraft:fireball` |
 | `nether/find_bastion` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:bastion_remnant`；当前窄实现基于玩家所在结构触发 |
 | `nether/obtain_ancient_debris` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/fast_travel` | `nether_travel` | missing-trigger | |
@@ -153,7 +153,7 @@
 | `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/charge_respawn_anchor` | interaction / block use family | missing-trigger | |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐。
 
 ## End Vanilla Inventory
 
