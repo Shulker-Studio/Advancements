@@ -1,0 +1,30 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:nether/create_beacon",
+  "display": {
+    "title": {
+      "translate": "advancements.nether.create_full_beacon.title"
+    },
+    "description": {
+      "translate": "advancements.nether.create_full_beacon.description"
+    },
+    "icon": {
+      "item": "minecraft:beacon"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "beacon": {
+      "trigger": "minecraft:construct_beacon",
+      "conditions": {
+        "level": {
+          "min": 4
+        }
+      }
+    }
+  },
+  "requirements": [["beacon"]]
+}

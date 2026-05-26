@@ -1,0 +1,25 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:nether/summon_wither",
+  "display": {
+    "title": {
+      "translate": "advancements.nether.create_beacon.title"
+    },
+    "description": {
+      "translate": "advancements.nether.create_beacon.description"
+    },
+    "icon": {
+      "item": "minecraft:beacon"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "beacon": {
+      "trigger": "minecraft:construct_beacon"
+    }
+  },
+  "requirements": [["beacon"]]
+}
