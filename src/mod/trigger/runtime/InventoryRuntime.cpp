@@ -1,10 +1,6 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
-#include "mod/Entry.h"
 
-#include "ll/api/event/EventBus.h"
 #include "ll/api/memory/Hook.h"
-#include "ll/api/service/Bedrock.h"
-#include <ll/api/event/player/PlayerDisconnectEvent.h>
 
 #include "mc/entity/components_json_legacy/TransformationComponent.h"
 #include "mc/deps/shared_types/legacy/ContainerType.h"
@@ -42,7 +38,6 @@ constexpr auto BrewingStandResultContainer = ContainerEnumName::BrewingStandResu
 constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
-ll::event::ListenerPtr                    gPlayerDisconnectListener;
 
 struct PendingZombieVillagerCure {
     ActorUniqueID zombieVillagerId;
@@ -486,10 +481,10 @@ std::unique_ptr<InventoryRuntimeHookState> gInventoryRuntimeHookState;
 
 } // namespace
 
-bool inventoryRuntimeRegistered() { return gInventoryRuntimeHookState != nullptr || gPlayerDisconnectListener; }
+bool inventoryRuntimeRegistered() { return gInventoryRuntimeHookState != nullptr; }
 
-void registerInventoryRuntime(Entry& mod) {
-    if (gInventoryRuntimeHookState || gPlayerDisconnectListener) {
+void registerInventoryRuntime() {
+    if (gInventoryRuntimeHookState) {
         return;
     }
 
@@ -503,26 +498,9 @@ void registerInventoryRuntime(Entry& mod) {
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
     (void)PlayerTickInventoryRuntimeHook::_AutoHookCount;
     gInventoryRuntimeHookState = std::make_unique<InventoryRuntimeHookState>();
-
-    auto& eventBus = ll::event::EventBus::getInstance();
-    gPlayerDisconnectListener = eventBus.emplaceListener<ll::event::player::PlayerDisconnectEvent>([&mod](auto& event) {
-        if (auto worldDataDir = mod.getSelf().getWorldDataDir(); worldDataDir) {
-            auto const flushErrors = mod.getProgressService().flushPlayer(*worldDataDir, event.self().getUuid());
-            for (auto const& error : flushErrors) {
-                mod.getSelf().getLogger().error("{}", error);
-            }
-        }
-        return true;
-    });
 }
 
 void unregisterInventoryRuntime() {
-    auto& eventBus = ll::event::EventBus::getInstance();
-    if (gPlayerDisconnectListener) {
-        eventBus.removeListener(gPlayerDisconnectListener);
-        gPlayerDisconnectListener.reset();
-    }
-
     gPendingBucketedEntities.clear();
     gPendingZombieVillagerCures.clear();
     gInventoryRuntimeHookState.reset();

@@ -2,6 +2,7 @@
 
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/mod/RegisterHelper.h"
+#include "mod/advancement/ProgressLifecycle.h"
 #include "mod/trigger/RuntimeTriggerAdapters.h"
 #include "mod/commands/AdvancementsCommand.h"
 
@@ -25,12 +26,14 @@ bool Entry::load() {
 bool Entry::enable() {
     getSelf().getLogger().debug("Enabling...");
     reloadAdvancements();
+    registerProgressLifecycle(*this);
     registerRuntimeTriggerAdapters(*this);
     return true;
 }
 
 bool Entry::disable() {
     getSelf().getLogger().debug("Disabling...");
+    unregisterProgressLifecycle();
     if (auto worldDataDir = getSelf().getWorldDataDir(); worldDataDir) {
         auto const flushErrors = mProgressService.flushAll(*worldDataDir);
         for (auto const& error : flushErrors) {
