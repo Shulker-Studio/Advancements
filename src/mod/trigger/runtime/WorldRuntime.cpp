@@ -12,6 +12,7 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/actor/BeaconBlockActor.h"
 #include "mc/world/level/block/SkullBlock.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/end/EndDragonFight.h"
@@ -34,6 +35,9 @@ ll::event::ListenerPtr gDestroyBlockListener;
 constexpr int LocationStructureCheckIntervalTicks = 20;
 constexpr float WitherSummonChebyshevRange       = 50.0F;
 constexpr float RespawnDragonHorizontalRange     = 192.0F;
+constexpr float BeaconHorizontalRange            = 10.0F;
+constexpr float BeaconVerticalRangeBelow         = 9.0F;
+constexpr float BeaconVerticalRangeAbove         = 5.0F;
 
 struct LocationStructurePlayerState {
     int                        ticksUntilCheck{LocationStructureCheckIntervalTicks};
@@ -169,6 +173,21 @@ bool isWithinRespawnDragonRange(Player const& player) {
     return horizontal <= RespawnDragonHorizontalRange;
 }
 
+bool isWithinConstructBeaconRange(Player const& player, BlockSource const& region, BlockPos const& pos) {
+    if (player.getDimensionId() != region.getDimensionId()) {
+        return false;
+    }
+
+    auto const playerPos    = player.getPosition();
+    auto const beaconCenter = pos.center();
+    auto const horizontalOffset = std::max(std::abs(playerPos.x - beaconCenter.x), std::abs(playerPos.z - beaconCenter.z));
+    if (horizontalOffset > BeaconHorizontalRange) {
+        return false;
+    }
+
+    return playerPos.y >= beaconCenter.y - BeaconVerticalRangeBelow && playerPos.y <= beaconCenter.y + BeaconVerticalRangeAbove;
+}
+
 void dispatchSummonedWither(Entry& mod, Level& level, BlockSource const& region, Vec3 const& pos) {
     level.forEachPlayer([&](Player& player) {
         if (isWithinWitherSummonRange(player, region, pos)) {
@@ -194,6 +213,22 @@ void dispatchRespawnDragon(Entry& mod, Level& level) {
                     player,
                     "minecraft:summoned_entity",
                     EntityTriggerPayload{"minecraft:ender_dragon"},
+                }
+            );
+        }
+        return true;
+    });
+}
+
+void dispatchConstructBeacon(Entry& mod, Level& level, BlockSource const& region, BlockPos const& pos, int beaconLevel) {
+    level.forEachPlayer([&](Player& player) {
+        if (isWithinConstructBeaconRange(player, region, pos)) {
+            dispatchTrigger(
+                mod,
+                TriggerContext{
+                    player,
+                    "minecraft:construct_beacon",
+                    ConstructBeaconTriggerPayload{beaconLevel},
                 }
             );
         }
@@ -311,12 +346,35 @@ LL_TYPE_INSTANCE_HOOK(EndDragonFightTryRespawnHook, HookPriority::Normal, EndDra
     dispatchRespawnDragon(*mod, *level);
 }
 
+LL_TYPE_INSTANCE_HOOK(BeaconBlockActorCheckShapeHook, HookPriority::Normal, BeaconBlockActor, &BeaconBlockActor::checkShape, void, BlockSource& region) {
+    auto const previousLevel = this->mNumLevels;
+    origin(region);
+
+    auto const currentLevel = this->mNumLevels;
+    if (currentLevel <= 0 || currentLevel <= previousLevel) {
+        return;
+    }
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return;
+    }
+
+    auto* level = ll::service::getLevel().as_ptr();
+    if (level == nullptr) {
+        return;
+    }
+
+    dispatchConstructBeacon(*mod, *level, region, this->mPosition, currentLevel);
+}
+
 struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<PlayerTickWorldHook>                 tickWorldHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerStartSleepInBedHook>           startSleepInBedHook;
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
     ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
+    ll::memory::HookRegistrar<BeaconBlockActorCheckShapeHook>      beaconBlockActorCheckShapeHook;
 };
 
 std::unique_ptr<WorldRuntimeHookState> gWorldRuntimeHookState;
@@ -335,6 +393,7 @@ void registerWorldRuntime(Entry& mod) {
     (void)PlayerStartSleepInBedHook::_AutoHookCount;
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
+    (void)BeaconBlockActorCheckShapeHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
 
     auto& eventBus = ll::event::EventBus::getInstance();

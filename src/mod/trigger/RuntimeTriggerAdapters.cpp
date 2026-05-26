@@ -79,6 +79,13 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.horizontalDistance
                 );
+            } else if constexpr (std::is_same_v<Payload, ConstructBeaconTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} beacon_level={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.level
+                );
             } else if constexpr (std::is_same_v<Payload, PlayerKilledEntitySniperDuelPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} killed_entity={} horizontal_distance={} killing_blow_projectile={}",
