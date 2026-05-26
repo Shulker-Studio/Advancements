@@ -7,6 +7,7 @@
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 
+#include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -14,6 +15,7 @@
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/RespawnAnchorBlock.h"
 #include "mc/world/level/block/actor/BeaconBlockActor.h"
+#include "mc/world/level/block/actor/EndGatewayBlockActor.h"
 #include "mc/world/level/block/SkullBlock.h"
 #include "mc/world/level/block/VanillaStates.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -70,6 +72,21 @@ void dispatchLocationStructure(Entry& mod, Player& player, std::string const& st
             LocationStructurePayload{structureId},
         }
     );
+}
+
+void dispatchEnterBlock(Entry& mod, Player& player, std::string const& blockId) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:enter_block",
+            EnterBlockPayload{blockId},
+        }
+    );
+}
+
+bool positionChanged(Vec3 const& before, Vec3 const& after) {
+    return before.x != after.x || before.y != after.y || before.z != after.z;
 }
 
 std::optional<std::string> currentSupportedLocationStructure(Player& player) {
@@ -264,6 +281,25 @@ LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player
 }
 
 LL_TYPE_INSTANCE_HOOK(
+    EndGatewayBlockActorTeleportEntityHook,
+    HookPriority::Normal,
+    EndGatewayBlockActor,
+    &EndGatewayBlockActor::teleportEntity,
+    void,
+    Actor& entity
+) {
+    auto* mod = currentRuntimeTriggerMod();
+    auto const isPlayer = entity.isPlayer();
+    auto const positionBeforeTeleport = entity.getPosition();
+
+    origin(entity);
+
+    if (mod != nullptr && isPlayer && positionChanged(positionBeforeTeleport, entity.getPosition())) {
+        dispatchEnterBlock(*mod, static_cast<Player&>(entity), "minecraft:end_gateway");
+    }
+}
+
+LL_TYPE_INSTANCE_HOOK(
     PlayerFireDimensionChangedEventHook,
     HookPriority::Normal,
     Player,
@@ -429,6 +465,7 @@ struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<PlayerStartSleepInBedHook>           startSleepInBedHook;
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
     ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
+    ll::memory::HookRegistrar<EndGatewayBlockActorTeleportEntityHook> endGatewayTeleportEntityHook;
     ll::memory::HookRegistrar<BeaconBlockActorCheckShapeHook>      beaconBlockActorCheckShapeHook;
     ll::memory::HookRegistrar<RespawnAnchorBumpChargeHook>         respawnAnchorBumpChargeHook;
 };
@@ -449,6 +486,7 @@ void registerWorldRuntime(Entry& mod) {
     (void)PlayerStartSleepInBedHook::_AutoHookCount;
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
+    (void)EndGatewayBlockActorTeleportEntityHook::_AutoHookCount;
     (void)BeaconBlockActorCheckShapeHook::_AutoHookCount;
     (void)RespawnAnchorBumpChargeHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
