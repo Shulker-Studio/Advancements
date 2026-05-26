@@ -44,6 +44,7 @@
 - `minecraft:changed_dimension`
 - `minecraft:location`（当前为窄实现，仅结构进入类）
 - `minecraft:player_generates_container_loot`（当前为窄实现，仅 `nether/loot_bastion`）
+- `minecraft:summoned_entity`（当前为窄实现，仅 `nether/summon_wither` / `end/respawn_dragon`）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `bedrock:player_destroy_block`

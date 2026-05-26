@@ -33,6 +33,7 @@
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `minecraft:player_generates_container_loot`
+- `minecraft:summoned_entity`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -91,7 +92,7 @@
 | `slept_in_bed` | done | 当前窄实现，Hook `Player::$startSleepInBed` 且仅在 `BedSleepingResult::Ok` 后触发 |
 | `slide_down_block` | missing-trigger | |
 | `started_riding` | missing-trigger | |
-| `summoned_entity` | missing-trigger | |
+| `summoned_entity` | done | 当前窄实现：仅支持已核原版 `nether/summon_wither` 与 `end/respawn_dragon` 形状；Wither 走 `SkullBlock::checkMobSpawn` 成功路径并对同维度 50 格切比雪夫距离内玩家派发，Ender Dragon 走 `EndDragonFight::tryRespawn()` 进入复活流程后的窄派发 |
 | `spear_mobs` | missing-trigger | |
 | `tame_animal` | missing-trigger | |
 | `target_hit` | partial | 当前仅支持 `adventure/bullseye` 已核窄形状：`signal_strength = 15` + `projectile[0].condition = minecraft:entity_properties` + `projectile[0].entity = this` + `projectile[0].predicate.distance.horizontal.min = 30.0` |
@@ -137,7 +138,7 @@
 | `nether/find_fortress` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:fortress`；当前窄实现基于玩家所在结构触发 |
 | `nether/uneasy_alliance` | complex entity transport / kill family | missing-trigger | |
 | `nether/get_wither_skull` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `nether/summon_wither` | `summoned_entity` | missing-trigger | |
+| `nether/summon_wither` | `summoned_entity` | done | 已核原版 JSON：父级 `minecraft:nether/get_wither_skull`，`minecraft:summoned_entity` + `entity[0].predicate.type = minecraft:wither`；当前窄 runtime 基于 `SkullBlock::checkMobSpawn` 成功路径，对同维度 50 格切比雪夫距离内玩家派发 |
 | `nether/obtain_blaze_rod` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/create_beacon` | `construct_beacon` | missing-trigger | |
 | `nether/brew_potion` | `brewed_potion` | missing-trigger | |
@@ -153,23 +154,23 @@
 | `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/charge_respawn_anchor` | interaction / block use family | missing-trigger | |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`summon_wither` 已作为 LL `SpawnedMobEvent` 的 `summoned_entity` 凋灵窄切片补齐。
 
 ## End Vanilla Inventory
 
 | Vanilla ID | Main trigger family | Status | Notes |
 | --- | --- | --- | --- |
 | `end/root` | `changed_dimension` | done | 已补数据，复用现有 `changed_dimension` |
-| `end/kill_dragon` | boss kill family | missing-trigger | |
+| `end/kill_dragon` | `player_killed_entity` | done | 已核原版 JSON：父级 `minecraft:end/root`，`minecraft:player_killed_entity` + `entity = minecraft:ender_dragon`；当前窄实现复用现有 `MobDieEvent` / `player_killed_entity` 路径 |
 | `end/dragon_egg` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `end/enter_end_gateway` | location / gateway family | missing-trigger | |
 | `end/elytra` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `end/levitate` | `levitation` | missing-trigger | |
-| `end/respawn_dragon` | summon / boss event family | missing-trigger | |
+| `end/respawn_dragon` | `summoned_entity` / EndDragonFight respawn seam | done | 已核原版 JSON：父级 `minecraft:end/kill_dragon`，运行时按 `minecraft:summoned_entity` + `entity[0].predicate.type = minecraft:ender_dragon` 窄派发；当前窄实现基于 `EndDragonFight::tryRespawn()` 进入复活流程后的状态变化 |
 | `end/find_end_city` | `location` | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:end_city`；当前窄实现基于玩家所在结构触发 |
 | `end/dragon_breath` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 
-当前总评：`end/*` 仍主要卡在 `location / levitation / boss` 这些未实现 trigger；root 与少量物品获得型条目已具备基础数据。
+当前总评：`end/*` 里 `kill_dragon` 与 `respawn_dragon` 已补齐窄实现；剩余主要卡在 `location / levitation` 等未实现 trigger。
 
 ## Adventure Vanilla Inventory
 
