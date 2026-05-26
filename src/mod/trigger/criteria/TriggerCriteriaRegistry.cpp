@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/TriggerCriteriaRegistry.h"
 
+#include "mod/trigger/criteria/BeaconCriteria.h"
 #include "mod/trigger/criteria/BlockCriteria.h"
 #include "mod/trigger/criteria/DamageCriteria.h"
 #include "mod/trigger/criteria/DimensionCriteria.h"
@@ -20,6 +21,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"bedrock:player_destroy_block", compileBlockCondition, matchesBlockCondition},
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
     {"minecraft:brewed_potion", compileNoCondition, matchesNoCondition},
+    {"minecraft:construct_beacon", compileConstructBeaconCondition, matchesConstructBeaconCondition},
     {"minecraft:consume_item", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:cured_zombie_villager", compileNoCondition, matchesNoCondition},
     {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},
