@@ -51,7 +51,7 @@
 | `avoid_vibration` | missing-trigger | |
 | `bee_nest_destroyed` | missing-trigger | |
 | `bred_animals` | missing-trigger | |
-| `brewed_potion` | missing-trigger | |
+| `brewed_potion` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `BrewingStandResultContainer` 成功转移且当前 screen type 为 `ContainerType::BrewingStand` 后触发；不检查输出物品类型，匹配 wiki/原版“从酿造台输出栏获取任意物品”的语义 |
 | `changed_dimension` | done | 当前窄实现，支持 `conditions.from` / `conditions.to`；通知时机仍有 caveat |
 | `channeled_lightning` | missing-trigger | |
 | `construct_beacon` | missing-trigger | |
@@ -141,7 +141,7 @@
 | `nether/summon_wither` | `summoned_entity` | done | 已核原版 JSON：父级 `minecraft:nether/get_wither_skull`，`minecraft:summoned_entity` + `entity[0].predicate.type = minecraft:wither`；当前窄 runtime 基于 `SkullBlock::checkMobSpawn` 成功路径，对同维度 50 格切比雪夫距离内玩家派发 |
 | `nether/obtain_blaze_rod` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/create_beacon` | `construct_beacon` | missing-trigger | |
-| `nether/brew_potion` | `brewed_potion` | missing-trigger | |
+| `nether/brew_potion` | `brewed_potion` | done | 已补数据，复用当前酿造台输出槽成功取物语义的 `brewed_potion` |
 | `nether/all_potions` | `effects_changed` | missing-trigger | |
 | `nether/create_full_beacon` | `construct_beacon` | missing-trigger | |
 | `nether/all_effects` | `effects_changed` | missing-trigger | |

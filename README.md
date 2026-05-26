@@ -45,6 +45,7 @@
 - `minecraft:location`（当前为窄实现，仅结构进入类）
 - `minecraft:player_generates_container_loot`（当前为窄实现，仅 `nether/loot_bastion`）
 - `minecraft:summoned_entity`（当前为窄实现，仅 `nether/summon_wither` / `end/respawn_dragon`）
+- `minecraft:brewed_potion`（当前为窄实现，仅从酿造台输出槽成功取物）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `bedrock:player_destroy_block`
