@@ -109,6 +109,8 @@
   "advancements.nether.obtain_crying_obsidian.description": "Obtain Crying Obsidian",
   "advancements.nether.return_to_sender.title": "Return to Sender",
   "advancements.nether.return_to_sender.description": "Destroy a Ghast with a fireball",
+  "advancements.nether.fast_travel.title": "Subspace Bubble",
+  "advancements.nether.fast_travel.description": "Use the Nether to travel 7 km in the Overworld",
   "advancements.end.root.title": "The End",
   "advancements.end.root.description": "Or the beginning?",
   "advancements.end.dragon_egg.title": "The Next Generation",
