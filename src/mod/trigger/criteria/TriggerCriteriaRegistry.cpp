@@ -45,6 +45,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"minecraft:summoned_entity", compileSummonedEntityCondition, matchesEntityCondition},
     {"minecraft:target_hit", compileTargetHitCondition, matchesTargetHitCondition},
     {"minecraft:used_totem", compileSimpleItemCondition, matchesSimpleItemCondition},
+    {"minecraft:villager_trade", compileVillagerTradeCondition, matchesVillagerTradeCondition},
 };
 
 } // namespace

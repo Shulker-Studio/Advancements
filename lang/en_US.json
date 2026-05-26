@@ -93,6 +93,8 @@
   "advancements.adventure.sleep_in_bed.description": "Sleep in a bed to change your respawn point",
   "advancements.adventure.trade.title": "What a Deal!",
   "advancements.adventure.trade.description": "Successfully trade with a Villager",
+  "advancements.adventure.trade_at_world_height.title": "Star Trader",
+  "advancements.adventure.trade_at_world_height.description": "Trade with a Villager at the build height limit",
   "advancements.adventure.ol_betsy.title": "Ol' Betsy",
   "advancements.adventure.ol_betsy.description": "Shoot a Crossbow",
   "advancements.adventure.shoot_arrow.title": "Take Aim",

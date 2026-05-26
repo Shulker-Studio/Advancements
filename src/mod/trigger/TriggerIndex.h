@@ -167,6 +167,10 @@ struct LootTableCondition {
     std::string lootTableId;
 };
 
+struct VillagerTradeCondition {
+    float playerYMin;
+};
+
 struct PlayerHurtEntityCondition {
     bool requireArrowDirectEntity;
     bool requireProjectileDamageTag;
@@ -204,6 +208,7 @@ using TriggerCondition = std::variant<
     EffectsChangedCondition,
     ConstructBeaconTriggerCondition,
     LootTableCondition,
+    VillagerTradeCondition,
     PlayerHurtEntityCondition,
     TargetHitCondition,
     EntityHurtPlayerCondition,
