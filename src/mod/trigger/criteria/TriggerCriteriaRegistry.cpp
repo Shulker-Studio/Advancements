@@ -6,6 +6,7 @@
 #include "mod/trigger/criteria/EntityCriteria.h"
 #include "mod/trigger/criteria/ItemCriteria.h"
 #include "mod/trigger/criteria/LootCriteria.h"
+#include "mod/trigger/criteria/NetherTravelCriteria.h"
 #include "mod/trigger/criteria/NoCriteria.h"
 #include "mod/trigger/criteria/ProjectileCriteria.h"
 #include "mod/trigger/criteria/StructureCriteria.h"
@@ -26,6 +27,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"minecraft:fishing_rod_hooked", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:inventory_changed", compileInventoryItemCondition, matchesInventoryItemCondition},
     {"minecraft:location", compileLocationStructureCondition, matchesLocationStructureCondition},
+    {"minecraft:nether_travel", compileNetherTravelCondition, matchesNetherTravelCondition},
     {"minecraft:player_generates_container_loot", compileLootTableCondition, matchesLootTableCondition},
     {"minecraft:player_hurt_entity", compilePlayerHurtEntityCondition, matchesPlayerHurtEntityCondition},
     {"minecraft:player_killed_entity", compilePlayerKilledEntityCondition, matchesPlayerKilledEntityCondition},

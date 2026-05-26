@@ -12,6 +12,7 @@
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
 
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <string>
@@ -30,6 +31,7 @@ struct LocationStructurePlayerState {
 };
 
 std::unordered_map<mce::UUID, LocationStructurePlayerState> gLocationStructurePlayerStates;
+std::unordered_map<mce::UUID, Vec3>                         gNetherTravelStartPositions;
 
 void dispatchSleptInBed(Entry& mod, Player& player) {
     dispatchTrigger(
@@ -118,6 +120,23 @@ void dispatchChangedDimension(Entry& mod, Player& player, DimensionType fromDime
     );
 }
 
+float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
+    auto const dx = lhs.x - rhs.x;
+    auto const dz = lhs.z - rhs.z;
+    return std::sqrt(dx * dx + dz * dz);
+}
+
+void dispatchNetherTravel(Entry& mod, Player& player, float horizontalTravelDistance) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:nether_travel",
+            NetherTravelTriggerPayload{horizontalTravelDistance},
+        }
+    );
+}
+
 LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
     origin(currentTick);
 
@@ -136,6 +155,7 @@ LL_TYPE_INSTANCE_HOOK(
     DimensionType fromDimension,
     DimensionType toDimension
 ) {
+    auto const positionBeforeChange = this->getPosition();
     origin(fromDimension, toDimension);
 
     auto* mod = currentRuntimeTriggerMod();
@@ -145,6 +165,23 @@ LL_TYPE_INSTANCE_HOOK(
 
     if (fromDimension != toDimension) {
         dispatchChangedDimension(*mod, *this, fromDimension, toDimension);
+
+        auto const playerId = this->getUuid();
+        if (fromDimension == VanillaDimensions::Overworld() && toDimension == VanillaDimensions::Nether()) {
+            gNetherTravelStartPositions[playerId] = positionBeforeChange;
+            return;
+        }
+
+        if (fromDimension == VanillaDimensions::Nether()) {
+            auto const found = gNetherTravelStartPositions.find(playerId);
+            if (found != gNetherTravelStartPositions.end()) {
+                if (toDimension == VanillaDimensions::Overworld()) {
+                    auto const travelled = horizontalDistance(found->second, this->getPosition());
+                    dispatchNetherTravel(*mod, *this, travelled);
+                }
+                gNetherTravelStartPositions.erase(found);
+            }
+        }
     }
 }
 
@@ -208,6 +245,7 @@ void registerWorldRuntime(Entry& mod) {
 
 void unregisterWorldRuntime() {
     gLocationStructurePlayerStates.clear();
+    gNetherTravelStartPositions.clear();
     gWorldRuntimeHookState.reset();
 
     auto& eventBus = ll::event::EventBus::getInstance();

@@ -38,6 +38,10 @@ struct LocationStructurePayload {
     std::string structureId;
 };
 
+struct NetherTravelTriggerPayload {
+    float horizontalDistance;
+};
+
 struct LootTablePayload {
     std::string lootTableId;
 };
@@ -71,6 +75,7 @@ using TriggerPayload = std::variant<
     BlockTriggerPayload,
     DimensionTriggerPayload,
     LocationStructurePayload,
+    NetherTravelTriggerPayload,
     LootTablePayload,
     PlayerHurtEntityPayload,
     TargetHitPayload,
@@ -109,6 +114,10 @@ struct LocationStructureCondition {
     std::string structureId;
 };
 
+struct NetherTravelTriggerCondition {
+    float horizontalDistanceMin;
+};
+
 struct LootTableCondition {
     std::string lootTableId;
 };
@@ -143,6 +152,7 @@ using TriggerCondition = std::variant<
     BlockTriggerCondition,
     DimensionTriggerCondition,
     LocationStructureCondition,
+    NetherTravelTriggerCondition,
     LootTableCondition,
     PlayerHurtEntityCondition,
     TargetHitCondition,
