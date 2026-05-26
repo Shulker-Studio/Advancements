@@ -54,7 +54,7 @@
 | `brewed_potion` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `BrewingStandResultContainer` 成功转移且当前 screen type 为 `ContainerType::BrewingStand` 后触发；不检查输出物品类型，匹配 wiki/原版“从酿造台输出栏获取任意物品”的语义 |
 | `changed_dimension` | done | 当前窄实现，支持 `conditions.from` / `conditions.to`；通知时机仍有 caveat |
 | `channeled_lightning` | missing-trigger | |
-| `construct_beacon` | missing-trigger | |
+| `construct_beacon` | done | 当前窄实现：hook `BeaconBlockActor::checkShape` 关键刷新函数，在当前 `mNumLevels` 从低层级提升为更高层级时触发；仅支持裸条件和 `conditions.level.min`，并按 wiki 语义派发给同维度、信标中心水平切比雪夫距离 10 格内、垂直向下 9 格到向上 5 格内的玩家；实测该关键函数约每 80 tick / 4 秒进入一次，避免直接监听每 tick 热路径；仍需 live-server QA 验证 Bedrock 层级刷新时机与 Java 激活语义严格对齐 |
 | `consume_item` | done | 当前窄实现，仅 `conditions.item` |
 | `crafter_recipe_crafted` | missing-trigger | |
 | `cured_zombie_villager` | partial | 当前窄实现：仅支持无 `conditions` 的 `story/cure_zombie_villager`；基于玩家对僵尸村民成功使用金苹果时记录责任玩家，并在后续 transformation seam 上确认转化；不支持未核实的 `zombie` / `villager` 条件谓词 |
@@ -140,10 +140,10 @@
 | `nether/get_wither_skull` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/summon_wither` | `summoned_entity` | done | 已核原版 JSON：父级 `minecraft:nether/get_wither_skull`，`minecraft:summoned_entity` + `entity[0].predicate.type = minecraft:wither`；当前窄 runtime 基于 `SkullBlock::checkMobSpawn` 成功路径，对同维度 50 格切比雪夫距离内玩家派发 |
 | `nether/obtain_blaze_rod` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `nether/create_beacon` | `construct_beacon` | missing-trigger | |
+| `nether/create_beacon` | `construct_beacon` | done | 已补数据并接入窄实现：裸 `minecraft:construct_beacon`，基于激活信标层级变为大于 0 时派发 |
 | `nether/brew_potion` | `brewed_potion` | done | 已补数据，复用当前酿造台输出槽成功取物语义的 `brewed_potion` |
 | `nether/all_potions` | `effects_changed` | missing-trigger | |
-| `nether/create_full_beacon` | `construct_beacon` | missing-trigger | |
+| `nether/create_full_beacon` | `construct_beacon` | done | 已补数据并接入窄实现：`minecraft:construct_beacon` + `conditions.level.min = 4`，复用信标层级提升派发；仍需 live-server QA 验证满级信标刷新时机 |
 | `nether/all_effects` | `effects_changed` | missing-trigger | |
 | `nether/explore_nether` | `location` | missing-trigger | 已核原版 JSON：使用 biome location 条件并要求遍历多个 Nether biome；超出本轮 structure-entry 窄实现 |
 | `nether/ride_strider` | ride / lava family | missing-trigger | |
