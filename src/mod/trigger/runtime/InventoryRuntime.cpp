@@ -67,7 +67,7 @@ void dispatchInventoryChangedForItem(Entry& mod, Player& player, std::string con
         mod,
         TriggerContext{
             player,
-            "bedrock:inventory_changed",
+            "minecraft:inventory_changed",
             ItemTriggerPayload{itemId, countMatchingItems(player, itemId)},
         }
     );
