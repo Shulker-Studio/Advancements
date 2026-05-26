@@ -34,9 +34,11 @@
 - `minecraft:enchanted_item`
 - `minecraft:player_generates_container_loot`
 - `minecraft:nether_travel`
+- `minecraft:levitation`
 - `minecraft:summoned_entity`
 - `minecraft:brewed_potion`
 - `minecraft:construct_beacon`
+- `minecraft:effects_changed`
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
 - `bedrock:player_destroy_block`
 
@@ -63,7 +65,7 @@
 | `crafter_recipe_crafted` | missing-trigger | |
 | `cured_zombie_villager` | partial | 当前窄实现：仅支持无 `conditions` 的 `story/cure_zombie_villager`；基于玩家对僵尸村民成功使用金苹果时记录责任玩家，并在后续 transformation seam 上确认转化；不支持未核实的 `zombie` / `villager` 条件谓词 |
 | `default_block_use` | missing-trigger | |
-| `effects_changed` | missing-trigger | |
+| `effects_changed` | done | 当前窄实现：hook `Actor::addEffect` 后仅对玩家派发，并按当前玩家已拥有的效果快照匹配 `conditions.effects` 中每个空对象 effect；已扩到当前 Bedrock/LL 可见 effect id 集合，并接受 `hero_of_the_village -> village_hero` alias；按当前项目约定，`glowing` / `dolphins_grace` 两个 Java-only 效果不纳入 Bedrock 测试集合 |
 | `enchanted_item` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Enchantment` 后触发；不依赖打开附魔 UI |
 | `enter_block` | done | 当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅当原传送逻辑执行后玩家位置发生变化时派发；仅用于 `end/enter_end_gateway` 的 `{ "block": "minecraft:end_gateway" }` 形状 |
 | `entity_hurt_player` | done | 当前仅支持 `story/deflect_arrow` 已核窄形状：`damage.blocked = true` + `damage.type.tags` 含 `minecraft:is_projectile`；runtime 使用 `Player::_blockUsingShield` 成功路径派发 |
@@ -79,7 +81,7 @@
 | `item_used_on_block` | done | 当前窄实现：仅支持 `nether/charge_respawn_anchor` 形状 `conditions.item = minecraft:glowstone` + `conditions.block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge`，只在玩家触发的正向充能把 `RespawnAnchorCharge` 从小于 4 提升到 4 时派发；保留 `Advancements debug: respawn_anchor_bump_charge ...` 日志供 live-server QA |
 | `kill_mob_near_sculk_catalyst` | missing-trigger | |
 | `killed_by_arrow` | missing-trigger | |
-| `levitation` | missing-trigger | |
+| `levitation` | done | 当前窄实现：基于 `Player::$tickWorld` 观察玩家 `MobEffect::LEVITATION()` 状态，仅支持已核 wiki 语义/本地 JSON 形状 `conditions.distance.y.min = 50.0`；效果开始时记录起始 Y，效果结束时用结束 Y 结算一次绝对垂直位移；仍需 live-server QA 验证潜影贝弹丸给予的 Bedrock levitation 状态与 Java 完成时机严格对齐 |
 | `lightning_strike` | missing-trigger | |
 | `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold、trial_chambers；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
 | `nether_travel` | done | 当前窄实现：仅支持已核原版 `nether/fast_travel` 形状 `conditions.distance.horizontal.min`；runtime 在玩家从主世界进入下界前记录主世界水平起点，并在从下界返回主世界时按主世界水平距离触发；未泛化 `distance` 其他子键 |
@@ -146,9 +148,9 @@
 | `nether/obtain_blaze_rod` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/create_beacon` | `construct_beacon` | done | 已补数据并接入窄实现：裸 `minecraft:construct_beacon`，基于激活信标层级变为大于 0 时派发 |
 | `nether/brew_potion` | `brewed_potion` | done | 已补数据，复用当前酿造台输出槽成功取物语义的 `brewed_potion` |
-| `nether/all_potions` | `effects_changed` | missing-trigger | |
+| `nether/all_potions` | `effects_changed` | done | 已按本地 wiki 语义补齐：父级 `minecraft:nether/brew_potion`，`minecraft:effects_changed` + 17 个 required effect 空条件，奖励 100 XP；runtime hook `Actor::addEffect` 后对玩家当前 effect 快照匹配 |
 | `nether/create_full_beacon` | `construct_beacon` | done | 已补数据并接入窄实现：`minecraft:construct_beacon` + `conditions.level.min = 4`，复用信标层级提升派发；仍需 live-server QA 验证满级信标刷新时机 |
-| `nether/all_effects` | `effects_changed` | missing-trigger | |
+| `nether/all_effects` | `effects_changed` | done | 已补本地 JSON：父级 `minecraft:nether/all_potions`，按当前项目定义使用 Bedrock 可见效果全集，并显式排除 `glowing` / `dolphins_grace` 两个 Java-only 效果；奖励 1000 XP，hidden 保持 true |
 | `nether/explore_nether` | `location` | missing-trigger | 已核原版 JSON：使用 biome location 条件并要求遍历多个 Nether biome；超出本轮 structure-entry 窄实现 |
 | `nether/ride_strider` | ride / lava family | missing-trigger | |
 | `nether/ride_strider_in_overworld_lava` | `ride_entity_in_lava` | missing-trigger | |
@@ -158,7 +160,7 @@
 | `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/charge_respawn_anchor` | `item_used_on_block` / respawn anchor charge narrow slice | done | 已补数据并接入窄实现：criterion `charge_respawn_anchor` 使用 `minecraft:item_used_on_block` + `item = minecraft:glowstone` + `block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge` 并在 `delta > 0`、`source != nullptr`、充能从 `< 4` 变为 `4` 时派发；debug 日志会打印 player、pos、delta、before、after，供 live-server QA 验证 seam |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`fast_travel` 已作为 `nether_travel` 窄切片补齐；`summon_wither` 已作为 `summoned_entity` 凋灵窄切片补齐；`charge_respawn_anchor` 已作为 `item_used_on_block` / `_bumpCharge` 满充能窄切片补齐。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`fast_travel` 已作为 `nether_travel` 窄切片补齐；`summon_wither` 已作为 `summoned_entity` 凋灵窄切片补齐；`charge_respawn_anchor` 已作为 `item_used_on_block` / `_bumpCharge` 满充能窄切片补齐；`all_potions` 已作为 `effects_changed` 的 17 效果快照窄切片补齐；`all_effects` 已按当前项目定义作为“排除 `glowing` / `dolphins_grace` 的 Bedrock 子集”补齐。
 
 ## End Vanilla Inventory
 
@@ -169,12 +171,12 @@
 | `end/dragon_egg` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `end/enter_end_gateway` | `enter_block` / end gateway narrow slice | done | 已核原版 JSON：父级 `minecraft:end/kill_dragon`，`minecraft:enter_block` + `conditions.block = minecraft:end_gateway`；当前窄 runtime 基于 `EndGatewayBlockActor::teleportEntity(Actor&)` 专用传送 seam，并在原传送逻辑后确认玩家位置变化再派发，不再走玩家 tick 轮询；live-server QA 已确认玩家使用折跃门会触发并授予该进度 |
 | `end/elytra` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `end/levitate` | `levitation` | missing-trigger | |
+| `end/levitate` | `levitation` | done | 已补本地 JSON：父级 `minecraft:end/find_end_city`，`minecraft:levitation` + `conditions.distance.y.min = 50.0`，奖励 50 XP；runtime 为当前窄 `levitation` 开始/结束位置结算切片 |
 | `end/respawn_dragon` | `summoned_entity` / EndDragonFight respawn seam | done | 已核原版 JSON：父级 `minecraft:end/kill_dragon`，运行时按 `minecraft:summoned_entity` + `entity[0].predicate.type = minecraft:ender_dragon` 窄派发；当前窄实现基于 `EndDragonFight::tryRespawn()` 进入复活流程后的状态变化 |
 | `end/find_end_city` | `location` | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:end_city`；当前窄实现基于玩家所在结构触发 |
 | `end/dragon_breath` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 
-当前总评：`end/*` 里 `kill_dragon`、`enter_end_gateway` 与 `respawn_dragon` 已补齐窄实现；剩余主要卡在 `levitation` 等未实现 trigger。
+当前总评：`end/*` 里 `kill_dragon`、`enter_end_gateway`、`respawn_dragon` 与 `levitate` 已补齐窄实现；后续 End 剩余风险主要是 live-server QA 与更宽泛 trigger 语义确认。
 
 ## Adventure Vanilla Inventory
 

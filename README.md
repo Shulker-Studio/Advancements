@@ -45,6 +45,8 @@
 - `minecraft:location`（当前为窄实现，仅结构进入类）
 - `minecraft:player_generates_container_loot`（当前为窄实现，仅 `nether/loot_bastion`）
 - `minecraft:summoned_entity`（当前为窄实现，仅 `nether/summon_wither` / `end/respawn_dragon`）
+- `minecraft:levitation`（当前为窄实现，仅 `end/levitate` 的垂直位移条件）
+- `minecraft:effects_changed`（当前为窄实现，仅 `nether/all_potions` 的 required effects 快照）
 - `minecraft:brewed_potion`（当前为窄实现，仅从酿造台输出槽成功取物）
 - `minecraft:construct_beacon`（当前为窄实现，仅 `nether/create_beacon` / `nether/create_full_beacon`）
 - `minecraft:villager_trade`
