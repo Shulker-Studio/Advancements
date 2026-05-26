@@ -33,7 +33,10 @@
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `minecraft:player_generates_container_loot`
+- `minecraft:nether_travel`
 - `minecraft:summoned_entity`
+- `minecraft:brewed_potion`
+- `minecraft:construct_beacon`
 - `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
@@ -72,7 +75,7 @@
 | `impossible` | missing-trigger | 可后续纯数据实现 |
 | `inventory_changed` | done | 当前窄实现，支持 `item` + `count` |
 | `item_durability_changed` | missing-trigger | |
-| `item_used_on_block` | missing-trigger | |
+| `item_used_on_block` | done | 当前窄实现：仅支持 `nether/charge_respawn_anchor` 形状 `conditions.item = minecraft:glowstone` + `conditions.block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge`，只在玩家触发的正向充能把 `RespawnAnchorCharge` 从小于 4 提升到 4 时派发；保留 `Advancements debug: respawn_anchor_bump_charge ...` 日志供 live-server QA |
 | `kill_mob_near_sculk_catalyst` | missing-trigger | |
 | `killed_by_arrow` | missing-trigger | |
 | `levitation` | missing-trigger | |
@@ -152,9 +155,9 @@
 | `nether/loot_bastion` | `player_generates_container_loot` | done | 已核原版 JSON：父级 `minecraft:nether/find_bastion`，四个 bastion chest loot table 条件，OR requirements；当前窄 runtime 仅覆盖这四个 loot table |
 | `nether/use_lodestone` | location / use item family | missing-trigger | |
 | `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `nether/charge_respawn_anchor` | interaction / block use family | missing-trigger | |
+| `nether/charge_respawn_anchor` | `item_used_on_block` / respawn anchor charge narrow slice | done | 已补数据并接入窄实现：criterion `charge_respawn_anchor` 使用 `minecraft:item_used_on_block` + `item = minecraft:glowstone` + `block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge` 并在 `delta > 0`、`source != nullptr`、充能从 `< 4` 变为 `4` 时派发；debug 日志会打印 player、pos、delta、before、after，供 live-server QA 验证 seam |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`summon_wither` 已作为 LL `SpawnedMobEvent` 的 `summoned_entity` 凋灵窄切片补齐。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`fast_travel` 已作为 `nether_travel` 窄切片补齐；`summon_wither` 已作为 `summoned_entity` 凋灵窄切片补齐；`charge_respawn_anchor` 已作为 `item_used_on_block` / `_bumpCharge` 满充能窄切片补齐。
 
 ## End Vanilla Inventory
 
