@@ -29,6 +29,10 @@ struct BlockTriggerPayload {
     std::string blockId;
 };
 
+struct EnterBlockPayload {
+    std::string blockId;
+};
+
 struct ItemUsedOnBlockPayload {
     std::string itemId;
     std::string blockId;
@@ -82,6 +86,7 @@ using TriggerPayload = std::variant<
     ItemTriggerPayload,
     EntityTriggerPayload,
     BlockTriggerPayload,
+    EnterBlockPayload,
     ItemUsedOnBlockPayload,
     DimensionTriggerPayload,
     LocationStructurePayload,
@@ -113,6 +118,10 @@ struct EntityTriggerCondition {
 };
 
 struct BlockTriggerCondition {
+    std::string blockId;
+};
+
+struct EnterBlockCondition {
     std::string blockId;
 };
 
@@ -170,6 +179,7 @@ using TriggerCondition = std::variant<
     ItemTriggerCondition,
     EntityTriggerCondition,
     BlockTriggerCondition,
+    EnterBlockCondition,
     ItemUsedOnBlockCondition,
     DimensionTriggerCondition,
     LocationStructureCondition,

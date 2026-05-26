@@ -27,6 +27,13 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.blockId
                 );
+            } else if constexpr (std::is_same_v<Payload, EnterBlockPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} entered_block={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.blockId
+                );
             } else if constexpr (std::is_same_v<Payload, ItemUsedOnBlockPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} item={} block={}",

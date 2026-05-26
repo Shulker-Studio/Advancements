@@ -24,6 +24,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"minecraft:construct_beacon", compileConstructBeaconCondition, matchesConstructBeaconCondition},
     {"minecraft:consume_item", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:cured_zombie_villager", compileNoCondition, matchesNoCondition},
+    {"minecraft:enter_block", compileEnterBlockCondition, matchesEnterBlockCondition},
     {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},
     {"minecraft:entity_hurt_player", compileEntityHurtPlayerCondition, matchesEntityHurtPlayerCondition},
     {"minecraft:filled_bucket", compileSimpleItemCondition, matchesSimpleItemCondition},
