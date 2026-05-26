@@ -33,6 +33,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"minecraft:player_killed_entity", compilePlayerKilledEntityCondition, matchesPlayerKilledEntityCondition},
     {"minecraft:shot_crossbow", compileShotCrossbowCondition, matchesSimpleItemCondition},
     {"minecraft:slept_in_bed", compileNoCondition, matchesNoCondition},
+    {"minecraft:summoned_entity", compileSummonedEntityCondition, matchesEntityCondition},
     {"minecraft:target_hit", compileTargetHitCondition, matchesTargetHitCondition},
     {"minecraft:used_totem", compileSimpleItemCondition, matchesSimpleItemCondition},
 };

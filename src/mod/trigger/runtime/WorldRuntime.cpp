@@ -1,17 +1,25 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
+#include "mod/Entry.h"
+
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/memory/Hook.h"
+#include "ll/api/service/Bedrock.h"
 
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/SkullBlock.h"
 #include "mc/world/level/dimension/Dimension.h"
+#include "mc/world/level/dimension/end/EndDragonFight.h"
+#include "mc/world/level/dimension/end/RespawnAnimation.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <optional>
@@ -24,6 +32,8 @@ namespace {
 ll::event::ListenerPtr gDestroyBlockListener;
 
 constexpr int LocationStructureCheckIntervalTicks = 20;
+constexpr float WitherSummonChebyshevRange       = 50.0F;
+constexpr float RespawnDragonHorizontalRange     = 192.0F;
 
 struct LocationStructurePlayerState {
     int                        ticksUntilCheck{LocationStructureCheckIntervalTicks};
@@ -137,6 +147,60 @@ void dispatchNetherTravel(Entry& mod, Player& player, float horizontalTravelDist
     );
 }
 
+bool isWithinWitherSummonRange(Player const& player, BlockSource const& region, Vec3 const& pos) {
+    if (player.getDimensionId() != region.getDimensionId()) {
+        return false;
+    }
+
+    auto const playerPos     = player.getPosition();
+    auto const maxAxisOffset = std::max(
+        {std::abs(playerPos.x - pos.x), std::abs(playerPos.y - pos.y), std::abs(playerPos.z - pos.z)}
+    );
+    return maxAxisOffset <= WitherSummonChebyshevRange;
+}
+
+bool isWithinRespawnDragonRange(Player const& player) {
+    if (player.getDimensionId() != VanillaDimensions::TheEnd()) {
+        return false;
+    }
+
+    auto const playerPos = player.getPosition();
+    auto const horizontal = std::max(std::abs(playerPos.x), std::abs(playerPos.z));
+    return horizontal <= RespawnDragonHorizontalRange;
+}
+
+void dispatchSummonedWither(Entry& mod, Level& level, BlockSource const& region, Vec3 const& pos) {
+    level.forEachPlayer([&](Player& player) {
+        if (isWithinWitherSummonRange(player, region, pos)) {
+            dispatchTrigger(
+                mod,
+                TriggerContext{
+                    player,
+                    "minecraft:summoned_entity",
+                    EntityTriggerPayload{"minecraft:wither"},
+                }
+            );
+        }
+        return true;
+    });
+}
+
+void dispatchRespawnDragon(Entry& mod, Level& level) {
+    level.forEachPlayer([&](Player& player) {
+        if (isWithinRespawnDragonRange(player)) {
+            dispatchTrigger(
+                mod,
+                TriggerContext{
+                    player,
+                    "minecraft:summoned_entity",
+                    EntityTriggerPayload{"minecraft:ender_dragon"},
+                }
+            );
+        }
+        return true;
+    });
+}
+
 LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
     origin(currentTick);
 
@@ -206,10 +270,53 @@ LL_TYPE_INSTANCE_HOOK(
     return result;
 }
 
+LL_TYPE_INSTANCE_HOOK(
+    SkullBlockCheckMobSpawnHook,
+    HookPriority::Normal,
+    SkullBlock,
+    &SkullBlock::checkMobSpawn,
+    bool,
+    ::Level&       level,
+    ::BlockSource& region,
+    ::BlockPos const& pos
+) {
+    auto const spawned = origin(level, region, pos);
+    auto*      mod     = currentRuntimeTriggerMod();
+    if (spawned && mod != nullptr) {
+        dispatchSummonedWither(*mod, level, region, pos.center());
+    }
+    return spawned;
+}
+
+LL_TYPE_INSTANCE_HOOK(EndDragonFightTryRespawnHook, HookPriority::Normal, EndDragonFight, &EndDragonFight::tryRespawn, void) {
+    auto const hadRespawnStage = this->mRespawnStage != RespawnAnimation::None;
+    auto const hadCrystals     = !this->mRespawnCrystals->empty();
+    origin();
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod == nullptr) {
+        return;
+    }
+
+    auto const enteredRespawnStage = !hadRespawnStage && this->mRespawnStage != RespawnAnimation::None;
+    auto const recordedCrystals    = !hadCrystals && !this->mRespawnCrystals->empty();
+    if (!enteredRespawnStage && !recordedCrystals) {
+        return;
+    }
+
+    auto* level = ll::service::getLevel().as_ptr();
+    if (level == nullptr) {
+        return;
+    }
+    dispatchRespawnDragon(*mod, *level);
+}
+
 struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<PlayerTickWorldHook>                 tickWorldHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerStartSleepInBedHook>           startSleepInBedHook;
+    ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
+    ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
 };
 
 std::unique_ptr<WorldRuntimeHookState> gWorldRuntimeHookState;
@@ -226,6 +333,8 @@ void registerWorldRuntime(Entry& mod) {
     (void)PlayerTickWorldHook::_AutoHookCount;
     (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
     (void)PlayerStartSleepInBedHook::_AutoHookCount;
+    (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
+    (void)EndDragonFightTryRespawnHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
 
     auto& eventBus = ll::event::EventBus::getInstance();

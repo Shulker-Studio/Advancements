@@ -159,6 +159,47 @@ TriggerCondition compilePlayerKilledEntityCondition(nlohmann::json const& condit
     return compileEntityCondition(conditions);
 }
 
+TriggerCondition compileSummonedEntityCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"entity"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("entity") || !conditions.at("entity").is_array()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entity = conditions.at("entity");
+    if (entity.size() != 1 || !entity.at(0).is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityEntry = entity.at(0);
+    if (!hasOnlyKeys(entityEntry, {"condition", "entity", "predicate"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityEntry.contains("condition") || !entityEntry.at("condition").is_string()
+        || entityEntry.at("condition").get<std::string>() != "minecraft:entity_properties") {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityEntry.contains("entity") || !entityEntry.at("entity").is_string()
+        || entityEntry.at("entity").get<std::string>() != "this") {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityEntry.contains("predicate") || !entityEntry.at("predicate").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& predicate = entityEntry.at("predicate");
+    if (!hasOnlyKeys(predicate, {"type"}) || !predicate.contains("type") || !predicate.at("type").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityTypeId = predicate.at("type").get<std::string>();
+    if (entityTypeId != "minecraft:wither" && entityTypeId != "minecraft:ender_dragon") {
+        return InvalidTriggerCondition{};
+    }
+    return EntityTriggerCondition{entityTypeId};
+}
+
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
     auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
     auto const* payload  = payloadAs<EntityTriggerPayload>(context);
