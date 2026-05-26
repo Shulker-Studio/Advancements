@@ -1,0 +1,29 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:nether/obtain_crying_obsidian",
+  "display": {
+    "title": {
+      "translate": "advancements.nether.charge_respawn_anchor.title"
+    },
+    "description": {
+      "translate": "advancements.nether.charge_respawn_anchor.description"
+    },
+    "icon": {
+      "item": "minecraft:respawn_anchor"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "charge_respawn_anchor": {
+      "trigger": "minecraft:item_used_on_block",
+      "conditions": {
+        "item": "minecraft:glowstone",
+        "block": "minecraft:respawn_anchor"
+      }
+    }
+  },
+  "requirements": [["charge_respawn_anchor"]]
+}
