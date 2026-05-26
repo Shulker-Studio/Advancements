@@ -23,6 +23,18 @@
         "entity": "minecraft:blaze"
       }
     },
+    "minecraft:bogged": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:bogged"
+      }
+    },
+    "minecraft:breeze": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:breeze"
+      }
+    },
     "minecraft:cave_spider": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
@@ -53,6 +65,12 @@
         "entity": "minecraft:creeper"
       }
     },
+    "minecraft:creaking": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:creaking"
+      }
+    },
     "minecraft:drowned": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
@@ -81,6 +99,12 @@
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
         "entity": "minecraft:endermite"
+      }
+    },
+    "minecraft:evoker": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:evoker"
       }
     },
     "minecraft:ghast": {
@@ -185,6 +209,12 @@
         "entity": "minecraft:witch"
       }
     },
+    "minecraft:wither": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:wither"
+      }
+    },
     "minecraft:wither_skeleton": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
@@ -202,7 +232,13 @@
       "conditions": {
         "entity": "minecraft:zombie_villager"
       }
+    },
+    "minecraft:zoglin": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": "minecraft:zoglin"
+      }
     }
   },
-  "requirements": [["minecraft:blaze", "minecraft:cave_spider", "minecraft:creeper", "minecraft:drowned", "minecraft:elder_guardian", "minecraft:ender_dragon", "minecraft:enderman", "minecraft:endermite", "minecraft:ghast", "minecraft:guardian", "minecraft:hoglin", "minecraft:husk", "minecraft:magma_cube", "minecraft:phantom", "minecraft:piglin", "minecraft:piglin_brute", "minecraft:pillager", "minecraft:ravager", "minecraft:shulker", "minecraft:silverfish", "minecraft:skeleton", "minecraft:slime", "minecraft:spider", "minecraft:stray", "minecraft:vex", "minecraft:vindicator", "minecraft:witch", "minecraft:wither_skeleton", "minecraft:zombie", "minecraft:zombified_piglin", "minecraft:zombie_villager"]]
+  "requirements": [["minecraft:blaze", "minecraft:bogged", "minecraft:breeze", "minecraft:cave_spider", "minecraft:creaking", "minecraft:creeper", "minecraft:drowned", "minecraft:elder_guardian", "minecraft:ender_dragon", "minecraft:enderman", "minecraft:endermite", "minecraft:evoker", "minecraft:ghast", "minecraft:guardian", "minecraft:hoglin", "minecraft:husk", "minecraft:magma_cube", "minecraft:phantom", "minecraft:piglin", "minecraft:piglin_brute", "minecraft:pillager", "minecraft:ravager", "minecraft:shulker", "minecraft:silverfish", "minecraft:skeleton", "minecraft:slime", "minecraft:spider", "minecraft:stray", "minecraft:vex", "minecraft:vindicator", "minecraft:witch", "minecraft:wither", "minecraft:wither_skeleton", "minecraft:zoglin", "minecraft:zombie", "minecraft:zombified_piglin", "minecraft:zombie_villager"]]
 }
