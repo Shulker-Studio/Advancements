@@ -94,6 +94,13 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.horizontalDistance
                 );
+            } else if constexpr (std::is_same_v<Payload, LevitationTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} vertical_distance={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.verticalDistance
+                );
             } else if constexpr (std::is_same_v<Payload, ConstructBeaconTriggerPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} beacon_level={}",
@@ -118,7 +125,7 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 
 bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered() || lootRuntimeRegistered()
-        || projectileRuntimeRegistered();
+        || projectileRuntimeRegistered() || effectRuntimeRegistered();
 }
 
 } // namespace
@@ -148,6 +155,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerWorldRuntime(mod);
     registerLootRuntime();
     registerCombatRuntime(mod);
+    registerEffectRuntime();
 }
 
 void unregisterRuntimeTriggerAdapters() {
@@ -157,6 +165,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterWorldRuntime();
     unregisterLootRuntime();
     unregisterCombatRuntime();
+    unregisterEffectRuntime();
 }
 
 } // namespace advancements

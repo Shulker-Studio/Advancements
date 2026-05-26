@@ -9,6 +9,7 @@
 
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/effect/MobEffect.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
@@ -49,8 +50,13 @@ struct LocationStructurePlayerState {
     std::optional<std::string> lastStructureId;
 };
 
+struct LevitationPlayerState {
+    Vec3 startPosition;
+};
+
 std::unordered_map<mce::UUID, LocationStructurePlayerState> gLocationStructurePlayerStates;
 std::unordered_map<mce::UUID, Vec3>                         gNetherTravelStartPositions;
+std::unordered_map<mce::UUID, LevitationPlayerState>         gLevitationPlayerStates;
 
 void dispatchSleptInBed(Entry& mod, Player& player) {
     dispatchTrigger(
@@ -81,6 +87,17 @@ void dispatchEnterBlock(Entry& mod, Player& player, std::string const& blockId) 
             player,
             "minecraft:enter_block",
             EnterBlockPayload{blockId},
+        }
+    );
+}
+
+void dispatchLevitation(Entry& mod, Player& player, float verticalDistance) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:levitation",
+            LevitationTriggerPayload{verticalDistance},
         }
     );
 }
@@ -128,6 +145,21 @@ void checkLocationStructure(Entry& mod, Player& player) {
 
     state.lastStructureId = structureId;
     dispatchLocationStructure(mod, player, *structureId);
+}
+
+void checkLevitation(Entry& mod, Player& player) {
+    auto* levitation = MobEffect::LEVITATION();
+    if (levitation == nullptr || !player.hasEffect(*levitation)) {
+        auto const found = gLevitationPlayerStates.find(player.getUuid());
+        if (found != gLevitationPlayerStates.end()) {
+            auto const endPosition = player.getPosition();
+            dispatchLevitation(mod, player, endPosition.y - found->second.startPosition.y);
+            gLevitationPlayerStates.erase(found);
+        }
+        return;
+    }
+
+    gLevitationPlayerStates.try_emplace(player.getUuid(), LevitationPlayerState{player.getPosition()});
 }
 
 std::string dimensionId(DimensionType dimension) {
@@ -277,6 +309,7 @@ LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player
     auto* mod = currentRuntimeTriggerMod();
     if (mod != nullptr) {
         checkLocationStructure(*mod, *this);
+        checkLevitation(*mod, *this);
     }
 }
 
@@ -509,6 +542,7 @@ void registerWorldRuntime(Entry& mod) {
 void unregisterWorldRuntime() {
     gLocationStructurePlayerStates.clear();
     gNetherTravelStartPositions.clear();
+    gLevitationPlayerStates.clear();
     gWorldRuntimeHookState.reset();
 
     auto& eventBus = ll::event::EventBus::getInstance();

@@ -51,6 +51,12 @@ struct NetherTravelTriggerPayload {
     float horizontalDistance;
 };
 
+struct LevitationTriggerPayload {
+    float verticalDistance;
+};
+
+struct EffectsChangedPayload {};
+
 struct ConstructBeaconTriggerPayload {
     int level;
 };
@@ -91,6 +97,8 @@ using TriggerPayload = std::variant<
     DimensionTriggerPayload,
     LocationStructurePayload,
     NetherTravelTriggerPayload,
+    LevitationTriggerPayload,
+    EffectsChangedPayload,
     ConstructBeaconTriggerPayload,
     LootTablePayload,
     PlayerHurtEntityPayload,
@@ -143,6 +151,14 @@ struct NetherTravelTriggerCondition {
     float horizontalDistanceMin;
 };
 
+struct LevitationTriggerCondition {
+    float verticalDistanceMin;
+};
+
+struct EffectsChangedCondition {
+    std::vector<std::string> requiredEffects;
+};
+
 struct ConstructBeaconTriggerCondition {
     int levelMin;
 };
@@ -184,6 +200,8 @@ using TriggerCondition = std::variant<
     DimensionTriggerCondition,
     LocationStructureCondition,
     NetherTravelTriggerCondition,
+    LevitationTriggerCondition,
+    EffectsChangedCondition,
     ConstructBeaconTriggerCondition,
     LootTableCondition,
     PlayerHurtEntityCondition,

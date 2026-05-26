@@ -29,4 +29,8 @@ bool projectileRuntimeRegistered();
 void registerProjectileRuntime();
 void unregisterProjectileRuntime();
 
+bool effectRuntimeRegistered();
+void registerEffectRuntime();
+void unregisterEffectRuntime();
+
 } // namespace advancements
