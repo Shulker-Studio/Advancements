@@ -7,6 +7,19 @@
 namespace advancements {
 void ignoreResult(ProgressMutationResult const&) {}
 
+bool descriptorMatches(CriterionBinding const& binding, TriggerContext const& context) {
+    if (std::holds_alternative<NoTriggerCondition>(binding.condition)) {
+        return true;
+    }
+    if (std::holds_alternative<InvalidTriggerCondition>(binding.condition)) {
+        return false;
+    }
+    if (binding.descriptor == nullptr) {
+        return false;
+    }
+    return binding.descriptor->match(binding.condition, context);
+}
+
 TriggerDispatcher::TriggerDispatcher(TriggerIndex const& index, ProgressService& progressService)
 : mIndex(index),
   mProgressService(progressService) {}
@@ -19,7 +32,7 @@ void TriggerDispatcher::dispatch(
     auto const bindings = mIndex.find(context.triggerId);
     for (auto const& binding : bindings) {
         auto const matched = binding.descriptor == nullptr ? legacyMatches(binding, context)
-                                                           : binding.descriptor->match(binding.condition, context);
+                                                           : descriptorMatches(binding, context);
         if (!matched) {
             continue;
         }
