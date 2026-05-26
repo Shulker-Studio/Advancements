@@ -108,7 +108,7 @@
 | `used_ender_eye` | missing-trigger | Java 原版存在该 trigger，但当前项目已不再保留其独立运行时路径；`story/follow_ender_eye` 已回正为 `minecraft:location` + stronghold 结构条件 |
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
-| `villager_trade` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Trade` 后触发；不依赖打开交易 UI |
+| `villager_trade` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Trade` 后触发；不依赖打开交易 UI；条件解析支持空条件 `adventure/trade` 与已核窄形状 `player[0].predicate.minecraft:location.position.y.min`（`adventure/trade_at_world_height`） |
 | `voluntary_exile` | missing-trigger | |
 
 ## Story Vanilla Inventory
@@ -183,7 +183,7 @@
 | Vanilla ID | Main trigger family | Status | Notes |
 | --- | --- | --- | --- |
 | `adventure/root` | `player_killed_entity` OR `entity_killed_player` | done | 已按原版补齐 `killed_something` / `killed_by_something` 两个 criterion，并使用 OR requirement |
-| `adventure/kill_a_mob` | `player_killed_entity` | partial | 已按原版 hostile 集合方向大幅扩展，但仍需继续核完整列表与当前 runtime 可测范围 |
+| `adventure/kill_a_mob` | `player_killed_entity` | done | 已补齐当前本地 hostile 集合窄切片，复用现有 `player_killed_entity` 简单实体匹配；本波次补入 `bogged`、`breeze`、`creaking`、`evoker`、`wither`、`zoglin` 六项，并保持不泛化其他 nested predicates |
 | `adventure/voluntary_exile` | `voluntary_exile` | missing-trigger | |
 | `adventure/spyglass_at_parrot` | other | missing-trigger | |
 | `adventure/spyglass_at_ghast` | other | missing-trigger | |
@@ -194,11 +194,11 @@
 | `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
 | `adventure/sniper_duel` | `player_killed_entity` | done | 已补本地 JSON + lang，并接入已核窄实现：仅支持 skeleton + 水平距离 `>= 50.0` + projectile killing_blow tags；保持非泛化 |
 | `adventure/bullseye` | `target_hit` | done | 已落地本地 JSON + lang；runtime/条件解析仅支持该行已核窄形状（`signal_strength = 15` 与 projectile 水平距离 `>= 30`） |
-| `adventure/kill_all_mobs` | `player_killed_entity` | partial | 已补原版 ID，但当前仍受 runtime 支持怪物集合限制，未必达到原版完整可测范围 |
+| `adventure/kill_all_mobs` | `player_killed_entity` | done | 已补齐当前本地 hostile 集合窄切片，继续复用现有 `player_killed_entity` 简单实体匹配；本波次补入 `bogged`、`breeze`、`creaking`、`evoker`、`wither`、`zoglin` 六项，并与本地历史已跑通清单对齐 |
 | `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
 | `adventure/ol_betsy` | `shot_crossbow` | missing-trigger | |
 | `adventure/trade` | `villager_trade` | done | 已补数据，复用当前完成交易语义的 `villager_trade` |
-| `adventure/trade_at_world_height` | `villager_trade` | missing-trigger | |
+| `adventure/trade_at_world_height` | `villager_trade` | done | 已按原版 raw JSON 形状补数据：父级 `minecraft:adventure/trade`，`minecraft:villager_trade` + `player[0].predicate.location.position.y.min = 319.0`；当前窄实现按玩家交易完成时脚部位置 `Y >= 319` 匹配 |
 | `adventure/salvage_sherd` | other | missing-trigger | |
 | `adventure/sleep_in_bed` | `slept_in_bed` | done | 已补数据，复用现有 `slept_in_bed` |
 | `adventure/adventuring_time` | `location` | missing-trigger | |
