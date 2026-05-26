@@ -12,8 +12,10 @@
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/RespawnAnchorBlock.h"
 #include "mc/world/level/block/actor/BeaconBlockActor.h"
 #include "mc/world/level/block/SkullBlock.h"
+#include "mc/world/level/block/VanillaStates.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/end/EndDragonFight.h"
 #include "mc/world/level/dimension/end/RespawnAnimation.h"
@@ -38,6 +40,7 @@ constexpr float RespawnDragonHorizontalRange     = 192.0F;
 constexpr float BeaconHorizontalRange            = 10.0F;
 constexpr float BeaconVerticalRangeBelow         = 9.0F;
 constexpr float BeaconVerticalRangeAbove         = 5.0F;
+constexpr int RespawnAnchorFullCharge            = 4;
 
 struct LocationStructurePlayerState {
     int                        ticksUntilCheck{LocationStructureCheckIntervalTicks};
@@ -236,6 +239,21 @@ void dispatchConstructBeacon(Entry& mod, Level& level, BlockSource const& region
     });
 }
 
+std::optional<int> respawnAnchorCharge(BlockSource const& region, BlockPos const& pos) {
+    return region.getBlock(pos).getState<int>(VanillaStates::RespawnAnchorCharge());
+}
+
+void dispatchRespawnAnchorCharged(Entry& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:item_used_on_block",
+            ItemUsedOnBlockPayload{"minecraft:glowstone", "minecraft:respawn_anchor"},
+        }
+    );
+}
+
 LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
     origin(currentTick);
 
@@ -368,6 +386,43 @@ LL_TYPE_INSTANCE_HOOK(BeaconBlockActorCheckShapeHook, HookPriority::Normal, Beac
     dispatchConstructBeacon(*mod, *level, region, this->mPosition, currentLevel);
 }
 
+LL_TYPE_STATIC_HOOK(
+    RespawnAnchorBumpChargeHook,
+    HookPriority::Normal,
+    RespawnAnchorBlock,
+    &RespawnAnchorBlock::_bumpCharge,
+    void,
+    BlockSource&    region,
+    BlockPos const& pos,
+    Player*         source,
+    short           delta
+) {
+    auto const previousCharge = respawnAnchorCharge(region, pos);
+    origin(region, pos, source, delta);
+    auto const currentCharge = respawnAnchorCharge(region, pos);
+
+    auto* mod = currentRuntimeTriggerMod();
+    if (mod != nullptr) {
+        mod->getSelf().getLogger().debug(
+            "Advancements debug: respawn_anchor_bump_charge player={} pos=({}, {}, {}) delta={} before={} after={}",
+            source != nullptr ? source->getRealName() : std::string{"-"},
+            pos.x,
+            pos.y,
+            pos.z,
+            delta,
+            previousCharge ? std::to_string(*previousCharge) : std::string{"-"},
+            currentCharge ? std::to_string(*currentCharge) : std::string{"-"}
+        );
+    }
+
+    if (mod == nullptr || source == nullptr || delta <= 0 || !previousCharge || !currentCharge) {
+        return;
+    }
+    if (*previousCharge < RespawnAnchorFullCharge && *currentCharge == RespawnAnchorFullCharge) {
+        dispatchRespawnAnchorCharged(*mod, *source);
+    }
+}
+
 struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<PlayerTickWorldHook>                 tickWorldHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
@@ -375,6 +430,7 @@ struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
     ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
     ll::memory::HookRegistrar<BeaconBlockActorCheckShapeHook>      beaconBlockActorCheckShapeHook;
+    ll::memory::HookRegistrar<RespawnAnchorBumpChargeHook>         respawnAnchorBumpChargeHook;
 };
 
 std::unique_ptr<WorldRuntimeHookState> gWorldRuntimeHookState;
@@ -394,6 +450,7 @@ void registerWorldRuntime(Entry& mod) {
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
     (void)BeaconBlockActorCheckShapeHook::_AutoHookCount;
+    (void)RespawnAnchorBumpChargeHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
 
     auto& eventBus = ll::event::EventBus::getInstance();

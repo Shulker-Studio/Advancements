@@ -33,6 +33,22 @@ TriggerCondition compileSimpleItemCondition(nlohmann::json const& conditions) {
     return compileItemCondition(conditions, false);
 }
 
+TriggerCondition compileItemUsedOnBlockCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"item", "block"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("item") || !conditions.at("item").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("block") || !conditions.at("block").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+    return ItemUsedOnBlockCondition{
+        conditions.at("item").get<std::string>(),
+        conditions.at("block").get<std::string>(),
+    };
+}
+
 TriggerCondition compileShotCrossbowCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"item"})) {
         return InvalidTriggerCondition{};
@@ -81,6 +97,15 @@ bool matchesSimpleItemCondition(TriggerCondition const& condition, TriggerContex
         return false;
     }
     return payload->itemId == compiled->itemId;
+}
+
+bool matchesItemUsedOnBlockCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<ItemUsedOnBlockCondition>(&condition);
+    auto const* payload  = payloadAs<ItemUsedOnBlockPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->itemId == compiled->itemId && payload->blockId == compiled->blockId;
 }
 
 } // namespace advancements::criteria

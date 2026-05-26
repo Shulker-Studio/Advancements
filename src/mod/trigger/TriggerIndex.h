@@ -29,6 +29,11 @@ struct BlockTriggerPayload {
     std::string blockId;
 };
 
+struct ItemUsedOnBlockPayload {
+    std::string itemId;
+    std::string blockId;
+};
+
 struct DimensionTriggerPayload {
     std::string fromDimension;
     std::string toDimension;
@@ -77,6 +82,7 @@ using TriggerPayload = std::variant<
     ItemTriggerPayload,
     EntityTriggerPayload,
     BlockTriggerPayload,
+    ItemUsedOnBlockPayload,
     DimensionTriggerPayload,
     LocationStructurePayload,
     NetherTravelTriggerPayload,
@@ -107,6 +113,11 @@ struct EntityTriggerCondition {
 };
 
 struct BlockTriggerCondition {
+    std::string blockId;
+};
+
+struct ItemUsedOnBlockCondition {
+    std::string itemId;
     std::string blockId;
 };
 
@@ -159,6 +170,7 @@ using TriggerCondition = std::variant<
     ItemTriggerCondition,
     EntityTriggerCondition,
     BlockTriggerCondition,
+    ItemUsedOnBlockCondition,
     DimensionTriggerCondition,
     LocationStructureCondition,
     NetherTravelTriggerCondition,
