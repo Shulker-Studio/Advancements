@@ -19,6 +19,7 @@ namespace {
 constexpr TriggerDescriptor MigratedDescriptors[]{
     {"bedrock:player_destroy_block", compileBlockCondition, matchesBlockCondition},
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
+    {"minecraft:brewed_potion", compileNoCondition, matchesNoCondition},
     {"minecraft:consume_item", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:cured_zombie_villager", compileNoCondition, matchesNoCondition},
     {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},

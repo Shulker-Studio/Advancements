@@ -36,6 +36,7 @@ namespace advancements {
 namespace {
 
 constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
+constexpr auto BrewingStandResultContainer = ContainerEnumName::BrewingStandResultContainer;
 constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
@@ -142,6 +143,17 @@ void dispatchEnchantedItem(Entry& mod, Player& player) {
     );
 }
 
+void dispatchBrewedPotion(Entry& mod, Player& player) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:brewed_potion",
+            NoTriggerPayload{},
+        }
+    );
+}
+
 void dispatchCuredZombieVillager(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
@@ -210,19 +222,6 @@ std::optional<std::string> bucketItemIdForBucketedEntity(ActorType actorType) {
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    VillagerTradeRemoveHook,
-    HookPriority::Normal,
-    ItemStackRequestActionHandler,
-    &ItemStackRequestActionHandler::_handleRemove,
-    ::ItemStackNetResult,
-    ::ItemStackRequestActionTransferBase const& requestAction,
-    ::ItemStack&                                removedItem,
-    ::ItemStackRequestActionHandler::RemoveType removeType
-) {
-    return origin(requestAction, removedItem, removeType);
-}
-
-LL_TYPE_INSTANCE_HOOK(
     VillagerTradeTransferHook,
     HookPriority::Normal,
     ItemStackRequestActionHandler,
@@ -233,22 +232,26 @@ LL_TYPE_INSTANCE_HOOK(
     bool                                        isDstHintSlot,
     bool                                        isSwap
 ) {
-    auto const& sourceSlot = *requestAction.mSrc;
-    bool const isSuccessfulOutputTransfer = sourceSlot.mFullContainerName.mName == SuccessfulOutputContainer;
-    auto const screenType                 = mItemStackNetManager.getScreenContext().mScreenContainerType;
+    auto const& sourceSlot      = *requestAction.mSrc;
+    auto const  sourceContainer = sourceSlot.mFullContainerName.mName;
+    auto const  screenType      = mItemStackNetManager.getScreenContext().mScreenContainerType;
 
     auto const result = origin(requestAction, isSrcHintSlot, isDstHintSlot, isSwap);
     auto*      mod    = currentRuntimeTriggerMod();
-    if (result != ItemStackNetResult::Success || !isSuccessfulOutputTransfer || mod == nullptr) {
+    if (result != ItemStackNetResult::Success || mod == nullptr) {
         return result;
     }
 
-    if (screenType == SharedTypes::Legacy::ContainerType::Trade) {
+    if (screenType == SharedTypes::Legacy::ContainerType::Trade && sourceContainer == SuccessfulOutputContainer) {
         dispatchVillagerTrade(*mod, mPlayer);
     }
 
-    if (screenType == SharedTypes::Legacy::ContainerType::Enchantment) {
+    if (screenType == SharedTypes::Legacy::ContainerType::Enchantment && sourceContainer == SuccessfulOutputContainer) {
         dispatchEnchantedItem(*mod, mPlayer);
+    }
+
+    if (screenType == SharedTypes::Legacy::ContainerType::BrewingStand && sourceContainer == BrewingStandResultContainer) {
+        dispatchBrewedPotion(*mod, mPlayer);
     }
 
     return result;
@@ -487,7 +490,6 @@ void registerInventoryRuntime() {
         return;
     }
 
-    (void)VillagerTradeRemoveHook::_AutoHookCount;
     (void)VillagerTradeTransferHook::_AutoHookCount;
     (void)PlayerInventoryChangedHook::_AutoHookCount;
     (void)PlayerUseItemHook::_AutoHookCount;
