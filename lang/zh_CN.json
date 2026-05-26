@@ -37,6 +37,8 @@
   "advancements.nether.loot_bastion.description": "掠夺堡垒遗迹里的箱子",
   "advancements.nether.find_fortress.title": "阴森的要塞",
   "advancements.nether.find_fortress.description": "闯入下界要塞",
+  "advancements.end.enter_end_gateway.title": "远程折跃",
+  "advancements.end.enter_end_gateway.description": "逃离这座岛屿",
   "advancements.end.find_end_city.title": "在游戏尽头的城市",
   "advancements.end.find_end_city.description": "进去吧，又能发生什么呢？",
   "advancements.adventure.minecraft_trials_edition.title": "Minecraft：试炼版",
