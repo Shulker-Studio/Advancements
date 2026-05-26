@@ -24,7 +24,7 @@ void dispatchShotCrossbow(Entry& mod, Player& player) {
         TriggerContext{
             player,
             "minecraft:shot_crossbow",
-            NoTriggerPayload{},
+            ItemTriggerPayload{"minecraft:crossbow", std::nullopt},
         }
     );
 }

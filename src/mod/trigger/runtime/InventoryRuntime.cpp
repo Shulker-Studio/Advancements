@@ -92,7 +92,7 @@ void dispatchUsedTotem(Entry& mod, Player& player) {
         TriggerContext{
             player,
             "minecraft:used_totem",
-            NoTriggerPayload{},
+            ItemTriggerPayload{"minecraft:totem_of_undying", std::nullopt},
         }
     );
 }
