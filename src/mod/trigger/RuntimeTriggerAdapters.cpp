@@ -150,7 +150,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     }
 
     gRuntimeTriggerMod = &mod;
-    registerInventoryRuntime();
+    registerInventoryRuntime(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
     registerLootRuntime();

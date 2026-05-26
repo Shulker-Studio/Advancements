@@ -51,6 +51,11 @@ public:
         std::string const&           criterionName
     );
 
+    [[nodiscard]] std::vector<std::string> flushPlayer(
+        std::filesystem::path const& worldDataDir,
+        mce::UUID const&             playerUuid
+    );
+
     [[nodiscard]] std::vector<std::string> flushAll(std::filesystem::path const& worldDataDir);
 
 private:

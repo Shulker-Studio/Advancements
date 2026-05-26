@@ -105,6 +105,38 @@ ProgressMutationResult ProgressService::revokeCriterion(
     return mutate(worldDataDir, playerUuid, advancement, criterionName, false);
 }
 
+std::vector<std::string> ProgressService::flushPlayer(
+    std::filesystem::path const& worldDataDir,
+    mce::UUID const&             playerUuid
+) {
+    std::vector<std::string> flushErrors;
+
+    auto const key = playerUuid.asString();
+    auto const found = mCache.find(key);
+    if (found == mCache.end()) {
+        return flushErrors;
+    }
+
+    auto& cachedProgress = found->second;
+    if (cachedProgress.dirty) {
+        std::vector<std::string> errors;
+        if (!savePlayerProgress(worldDataDir, cachedProgress.playerUuid, cachedProgress.progress, errors)) {
+            if (errors.empty()) {
+                flushErrors.emplace_back(std::format("failed to flush progress for {}", key));
+            } else {
+                for (auto const& error : errors) {
+                    flushErrors.emplace_back(std::format("failed to flush progress for {}: {}", key, error));
+                }
+            }
+            return flushErrors;
+        }
+        cachedProgress.dirty = false;
+    }
+
+    mCache.erase(found);
+    return flushErrors;
+}
+
 std::vector<std::string> ProgressService::flushAll(std::filesystem::path const& worldDataDir) {
     std::vector<std::string> flushErrors;
 

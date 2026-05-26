@@ -10,7 +10,7 @@ Entry* currentRuntimeTriggerMod();
 void   dispatchTrigger(Entry& mod, TriggerContext const& context);
 
 bool inventoryRuntimeRegistered();
-void registerInventoryRuntime();
+void registerInventoryRuntime(Entry& mod);
 void unregisterInventoryRuntime();
 
 bool combatRuntimeRegistered();
