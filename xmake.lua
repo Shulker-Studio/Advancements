@@ -36,7 +36,7 @@ target("Advancements") -- Change this to your mod name.
         local outputdir = path.join(os.projectdir(), "bin", target:name())
         if os.isdir("data") then
             os.rm(path.join(outputdir, "data"))
-            os.cp("data", outputdir)
+            os.cp("data", path.join(outputdir, "data"))
         end
         if os.isdir("lang") then
             os.rm(path.join(outputdir, "lang"))
