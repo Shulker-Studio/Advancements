@@ -72,6 +72,13 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     payload.directEntityIsArrow,
                     payload.isProjectileDamage
                 );
+            } else if constexpr (std::is_same_v<Payload, NetherTravelTriggerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} horizontal_distance={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.horizontalDistance
+                );
             } else if constexpr (std::is_same_v<Payload, PlayerKilledEntitySniperDuelPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} killed_entity={} horizontal_distance={} killing_blow_projectile={}",
