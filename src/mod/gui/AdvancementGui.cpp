@@ -35,6 +35,14 @@ bool isDone(PlayerProgress const& progress, std::string const& advancementId) {
     return found != progress.advancements.end() && found->second.done;
 }
 
+std::string formatProgressLabel(std::string const& title, int completed, size_t total) {
+    return std::format("{}\n({}/{})", title, completed, total);
+}
+
+std::string formatStatusLabel(std::string const& title, std::string const& status) {
+    return std::format("{}\n({})", title, status);
+}
+
 int completedCount(PlayerProgress const& progress, std::vector<std::string> const& ids) {
     auto count = 0;
     for (auto const& id : ids) {
@@ -197,10 +205,14 @@ void showCategory(Entry& mod, Player& player, std::string const& categoryKey) {
 
     for (auto const& id : ids) {
         auto const& advancement = definitions.advancements.at(id);
-        auto        buttonText  = titleFor(advancement, player);
+        auto const  buttonTitle = titleFor(advancement, player);
         auto const  groups      = effectiveRequirementGroups(advancement);
-        if (groups.size() > 1) {
-            buttonText += std::format(" ({}/{})", satisfiedGroupCount(advancement, progress), groups.size());
+        auto const  done        = isDone(progress, id);
+        auto        buttonText  = buttonTitle;
+        if (done) {
+            buttonText = formatStatusLabel(buttonTitle, localizeKey("advancements.gui.status.done", player));
+        } else {
+            buttonText = formatProgressLabel(buttonTitle, satisfiedGroupCount(advancement, progress), groups.size());
         }
         form.appendButton(buttonText, [&mod, categoryKey, id](Player& callbackPlayer) {
             showDetail(mod, callbackPlayer, categoryKey, id);
@@ -235,7 +247,7 @@ void showAdvancementsGui(Entry& mod, Player& player) {
         auto const total     = category.advancementIds.size();
         auto const key       = category.key;
         form.appendButton(
-            std::format("{} ({}/{})", localizeKey(category.titleKey, player), completed, total),
+            formatProgressLabel(localizeKey(category.titleKey, player), completed, total),
             [&mod, key](Player& callbackPlayer) { showCategory(mod, callbackPlayer, key); }
         );
     }

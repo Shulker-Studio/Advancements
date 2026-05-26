@@ -16,9 +16,9 @@ struct CategoryDefinition {
 
 constexpr std::array<CategoryDefinition, 5> RootCategories{
     CategoryDefinition{"story", "advancements.story.root.title", "minecraft:story/"},
-    CategoryDefinition{"adventure", "advancements.adventure.root.title", "minecraft:adventure/"},
     CategoryDefinition{"nether", "advancements.nether.root.title", "minecraft:nether/"},
     CategoryDefinition{"end", "advancements.end.root.title", "minecraft:end/"},
+    CategoryDefinition{"adventure", "advancements.adventure.root.title", "minecraft:adventure/"},
     CategoryDefinition{"husbandry", "advancements.husbandry.root.title", "minecraft:husbandry/"}
 };
 
