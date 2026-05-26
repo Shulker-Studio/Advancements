@@ -2,13 +2,13 @@
 
 一个面向 LeviLamina 的 Java 风格进度（Advancements）插件。
 
-当前版本：`0.1.0`
+当前版本：`0.1.1`
 
 ## 项目状态
 
 > 当前仍在开发中（WIP / Work in Progress）。
 
-`0.1.0` 是首个可发布版本，已经具备基础可玩性，但距离完整覆盖 Java 原版进度系统仍有不少工作要做。
+`0.1.1` 在 `0.1.0` 的基础上修复了一批关键触发与 GUI 体验问题，已经更适合继续分发测试与日常游玩使用，但距离完整覆盖 Java 原版进度系统仍有不少工作要做。
 
 ## 关于 GPT Vibe Coding
 
@@ -78,7 +78,7 @@ plugins/
 如果你已经通过 release + `tooth.json` 发布，可以使用：
 
 ```bash
-lip install github.com/Shulker-Studio/Advancements@0.1.0
+lip install github.com/Shulker-Studio/Advancements@0.1.1
 ```
 
 安装目标目录为：
