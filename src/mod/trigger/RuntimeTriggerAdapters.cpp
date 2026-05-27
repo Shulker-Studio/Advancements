@@ -231,9 +231,7 @@ bool anyRuntimeRegistered() {
         || event::block::beaconLevelChangedEventSourceRegistered()
         || event::block::witherSummonedEventSourceRegistered()
         || event::player::dragonRespawnedEventSourceRegistered()
-        || combatRuntimeRegistered() || worldRuntimeRegistered()
-        || lootRuntimeRegistered() || projectileRuntimeRegistered()
-        || effectRuntimeRegistered();
+        || worldRuntimeRegistered();
 }
 
 } // namespace
@@ -310,11 +308,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerPlayerGeneratedContainerLootTrigger(mod);
     registerShotCrossbowTrigger(mod);
     registerSleptInBedTrigger(mod);
-    registerProjectileRuntime();
     registerWorldRuntime(mod);
-    registerLootRuntime();
-    registerCombatRuntime(mod);
-    registerEffectRuntime();
 }
 
 void unregisterRuntimeTriggerAdapters() {
@@ -371,11 +365,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::player::unregisterPlayerSleptInBedEventSource();
     event::player::unregisterPlayerTickEventSource();
     event::player::unregisterPlayerUsedTotemEventSource();
-    unregisterProjectileRuntime();
     unregisterWorldRuntime();
-    unregisterLootRuntime();
-    unregisterCombatRuntime();
-    unregisterEffectRuntime();
 }
 
 } // namespace advancements
