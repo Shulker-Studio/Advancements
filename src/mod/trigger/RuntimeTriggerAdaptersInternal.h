@@ -25,6 +25,10 @@ bool changedDimensionTriggerRegistered();
 void registerChangedDimensionTrigger(Entry& mod);
 void unregisterChangedDimensionTrigger();
 
+bool netherTravelTriggerRegistered();
+void registerNetherTravelTrigger(Entry& mod);
+void unregisterNetherTravelTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();

@@ -38,6 +38,7 @@
 #include "mod/trigger/triggers/ItemUsedOnBlockTrigger.h"
 #include "mod/trigger/triggers/LevitationTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
+#include "mod/trigger/triggers/NetherTravelTrigger.h"
 #include "mod/trigger/triggers/PlayerGeneratedContainerLootTrigger.h"
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerHurtEntityTrigger.h"
@@ -187,6 +188,7 @@ bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
         || levitationTriggerRegistered()
         || changedDimensionTriggerRegistered()
+        || netherTravelTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
@@ -268,6 +270,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerChangedDimensionTrigger(mod);
     registerLocationTrigger(mod);
     registerLevitationTrigger(mod);
+    registerNetherTravelTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
@@ -299,6 +302,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterConstructBeaconTrigger();
     unregisterChangedDimensionTrigger();
     unregisterLevitationTrigger();
+    unregisterNetherTravelTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
