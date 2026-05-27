@@ -39,6 +39,7 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"minecraft:nether_travel", compileNetherTravelCondition, matchesNetherTravelCondition},
     {"minecraft:player_generates_container_loot", compileLootTableCondition, matchesLootTableCondition},
     {"minecraft:player_hurt_entity", compilePlayerHurtEntityCondition, matchesPlayerHurtEntityCondition},
+    {"minecraft:player_interacted_with_entity", compilePlayerInteractedWithEntityCondition, matchesPlayerInteractedWithEntityCondition},
     {"minecraft:player_killed_entity", compilePlayerKilledEntityCondition, matchesPlayerKilledEntityCondition},
     {"minecraft:shot_crossbow", compileShotCrossbowCondition, matchesSimpleItemCondition},
     {"minecraft:slept_in_bed", compileNoCondition, matchesNoCondition},

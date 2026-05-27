@@ -25,6 +25,8 @@
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/Level.h"
 
+#include <mc/legacy/ActorUniqueID.h>
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -36,6 +38,9 @@ namespace {
 constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
 constexpr auto BrewingStandResultContainer = ContainerEnumName::BrewingStandResultContainer;
 constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
+constexpr int  TemperateFrogVariant                 = 0;
+constexpr int  ColdFrogVariant                      = 1;
+constexpr int  WarmFrogVariant                      = 2;
 
 std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
@@ -161,6 +166,36 @@ void dispatchCuredZombieVillager(Entry& mod, Player& player) {
             NoTriggerPayload{},
         }
     );
+}
+
+void dispatchPlayerInteractedWithEntity(
+    Entry&             mod,
+    Player&            player,
+    std::string const& itemId,
+    std::string const& entityTypeId,
+    std::string const& entityVariantId
+) {
+    dispatchTrigger(
+        mod,
+        TriggerContext{
+            player,
+            "minecraft:player_interacted_with_entity",
+            PlayerInteractedWithEntityPayload{itemId, entityTypeId, entityVariantId},
+        }
+    );
+}
+
+std::optional<std::string> frogVariantIdForVariant(int variant) {
+    switch (variant) {
+    case TemperateFrogVariant:
+        return std::string{"minecraft:temperate"};
+    case ColdFrogVariant:
+        return std::string{"minecraft:cold"};
+    case WarmFrogVariant:
+        return std::string{"minecraft:warm"};
+    default:
+        return std::nullopt;
+    }
 }
 
 bool isZombieVillagerActorType(ActorType actorType) {
@@ -389,7 +424,13 @@ LL_TYPE_INSTANCE_HOOK(
                                          && !isZombieVillagerCureInteraction(actor)
                                          && !getSelectedItem().isNull()
                                          && getSelectedItem().getTypeName() == "minecraft:golden_apple";
+    auto const selectedItemId = !getSelectedItem().isNull() ? std::optional<std::string>{getSelectedItem().getTypeName()}
+                                                            : std::nullopt;
     auto const actorTypeName = actor.getTypeName();
+    auto const actorWasLeashed = actor.isLeashed();
+    auto const leashHolderBefore = actor.getLeashHolder();
+    auto const frogVariantId = actorTypeName == "minecraft:frog" ? frogVariantIdForVariant(actor.getVariant())
+                                                                  : std::nullopt;
     auto const entityId = actor.getOrCreateUniqueID().getHash();
     auto result = origin(actor, location);
 
@@ -401,6 +442,15 @@ LL_TYPE_INSTANCE_HOOK(
 
     if (mayStartZombieVillagerCure) {
         trackZombieVillagerCure(*this, actor);
+    }
+
+    if (mod != nullptr && selectedItemId && *selectedItemId == "minecraft:lead" && actorTypeName == "minecraft:frog"
+        && frogVariantId && !actorWasLeashed && actor.isLeashed()) {
+        auto const leashHolderAfter = actor.getLeashHolder();
+        if (leashHolderAfter != ActorUniqueID::INVALID_ID() && leashHolderAfter == getOrCreateUniqueID()
+            && leashHolderBefore != leashHolderAfter) {
+            dispatchPlayerInteractedWithEntity(*mod, *this, *selectedItemId, actorTypeName, *frogVariantId);
+        }
     }
 
     auto pending = gPendingBucketedEntities.find(entityId);

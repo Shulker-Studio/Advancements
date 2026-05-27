@@ -57,6 +57,15 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.entityTypeId
                 );
+            } else if constexpr (std::is_same_v<Payload, PlayerInteractedWithEntityPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} item={} entity={} variant={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.itemId,
+                    payload.entityTypeId,
+                    payload.entityVariantId
+                );
             } else if constexpr (std::is_same_v<Payload, DimensionTriggerPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} from={} to={}",
