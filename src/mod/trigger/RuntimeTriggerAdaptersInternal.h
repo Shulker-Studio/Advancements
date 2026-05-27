@@ -57,6 +57,10 @@ bool consumeItemTriggerRegistered();
 void registerConsumeItemTrigger(Entry& mod);
 void unregisterConsumeItemTrigger();
 
+bool filledBucketTriggerRegistered();
+void registerFilledBucketTrigger(Entry& mod);
+void unregisterFilledBucketTrigger();
+
 bool fishingRodHookedTriggerRegistered();
 void registerFishingRodHookedTrigger(Entry& mod);
 void unregisterFishingRodHookedTrigger();
