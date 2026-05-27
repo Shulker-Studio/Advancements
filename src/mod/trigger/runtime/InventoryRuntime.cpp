@@ -6,13 +6,10 @@
 #include "ll/api/memory/Hook.h"
 
 #include "mc/entity/components_json_legacy/TransformationComponent.h"
-#include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/monster/ZombieVillager.h"
-#include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/gamemode/InteractionResult.h"
-#include "mc/world/item/ItemStack.h"
 #include "mc/world/level/Level.h"
 
 #include <mc/legacy/ActorUniqueID.h>
@@ -38,30 +35,6 @@ struct PendingZombieVillagerCure {
 
 std::unordered_map<int64, PendingZombieVillagerCure> gPendingZombieVillagerCures;
 ll::event::ListenerPtr                               gPlayerTickListener;
-
-int countMatchingItems(Player const& player, std::string const& itemId) {
-    auto const& inventory = player.getInventory();
-    int         total     = 0;
-    for (int slot = 0; slot < inventory.getContainerSize(); ++slot) {
-        auto const& item = inventory.getItem(slot);
-        if (item.isNull() || item.getTypeName() != itemId) {
-            continue;
-        }
-        total += item.mCount;
-    }
-    return total;
-}
-
-void dispatchInventoryChangedForItem(Entry& mod, Player& player, std::string const& itemId) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:inventory_changed",
-            ItemTriggerPayload{itemId, countMatchingItems(player, itemId)},
-        }
-    );
-}
 
 void dispatchCuredZombieVillager(Entry& mod, Player& player) {
     dispatchTrigger(
@@ -138,38 +111,6 @@ void checkPendingZombieVillagerCures(Player& player) {
         else {
             ++it;
         }
-    }
-}
-
-LL_TYPE_INSTANCE_HOOK(
-    PlayerInventoryChangedHook,
-    HookPriority::Normal,
-    Player,
-    &Player::inventoryChanged,
-    void,
-    Container&       container,
-    int              slot,
-    ItemStack const& oldItem,
-    ItemStack const& newItem,
-    bool             forceBalanced
-) {
-    std::optional<std::string> const currentItemId =
-        !newItem.isNull() ? std::optional<std::string>{newItem.getTypeName()} : std::nullopt;
-    std::optional<std::string> const oldItemId = !oldItem.isNull() ? std::optional<std::string>{oldItem.getTypeName()} : std::nullopt;
-
-    origin(container, slot, oldItem, newItem, forceBalanced);
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod == nullptr) {
-        return;
-    }
-
-    if (currentItemId) {
-        dispatchInventoryChangedForItem(*mod, *this, *currentItemId);
-    }
-
-    if (oldItemId && oldItemId != currentItemId) {
-        dispatchInventoryChangedForItem(*mod, *this, *oldItemId);
     }
 }
 
@@ -259,7 +200,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 struct InventoryRuntimeHookState {
-    ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
     ll::memory::HookRegistrar<ZombieVillagerMaintainOldDataHook> zombieVillagerMaintainOldDataHook;
 };
@@ -275,7 +215,6 @@ void registerInventoryRuntime() {
         return;
     }
 
-    (void)PlayerInventoryChangedHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
     gInventoryRuntimeHookState = std::make_unique<InventoryRuntimeHookState>();
