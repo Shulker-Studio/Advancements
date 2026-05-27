@@ -170,12 +170,14 @@ void registerCombatRuntime(Entry& mod) {
                 "minecraft:player_hurt_entity",
                 PlayerHurtEntityPayload{
                     damageSourceDirectEntityIsArrow(event.source()),
+                    findDirectDamagerTypeId(event.source()),
                     damageSourceIsSupportedProjectile(event.source()),
                     mainhandItemIsMace,
                     event.damage(),
                 },
             }
         );
+
         return true;
     });
 }

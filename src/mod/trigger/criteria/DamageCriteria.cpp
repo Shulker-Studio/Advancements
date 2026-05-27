@@ -25,9 +25,10 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
         return InvalidTriggerCondition{};
     }
 
-    bool requireArrowDirectEntity   = false;
-    bool requireProjectileDamageTag = false;
-    bool requireMainhandMace        = false;
+    bool requireArrowDirectEntity    = false;
+    bool requireTridentDirectEntity  = false;
+    bool requireProjectileDamageTag  = false;
+    bool requireMainhandMace         = false;
     std::optional<float> damageDealtMin;
 
     if (type.contains("direct_entity")) {
@@ -42,10 +43,14 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
             if (!directEntity.at("type").is_string()) {
                 return InvalidTriggerCondition{};
             }
-            if (directEntity.at("type").get<std::string>() != "#minecraft:arrows") {
+            auto const directEntityType = directEntity.at("type").get<std::string>();
+            if (directEntityType == "#minecraft:arrows") {
+                requireArrowDirectEntity = true;
+            } else if (directEntityType == "minecraft:thrown_trident") {
+                requireTridentDirectEntity = true;
+            } else {
                 return InvalidTriggerCondition{};
             }
-            requireArrowDirectEntity = true;
         }
         if (directEntity.contains("equipment")) {
             if (!directEntity.at("equipment").is_object()) {
@@ -70,7 +75,7 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
             }
             requireMainhandMace = true;
         }
-        if (!requireArrowDirectEntity && !requireMainhandMace) {
+        if (!requireArrowDirectEntity && !requireTridentDirectEntity && !requireMainhandMace) {
             return InvalidTriggerCondition{};
         }
     }
@@ -120,18 +125,19 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
         damageDealtMin = dealt.at("min").get<float>();
     }
 
-    if (requireArrowDirectEntity || requireProjectileDamageTag) {
-        if (!requireArrowDirectEntity || !requireProjectileDamageTag || requireMainhandMace || damageDealtMin.has_value()) {
+    if (requireArrowDirectEntity || requireTridentDirectEntity || requireProjectileDamageTag) {
+        if ((!requireArrowDirectEntity && !requireTridentDirectEntity) || !requireProjectileDamageTag || requireMainhandMace
+            || damageDealtMin.has_value()) {
             return InvalidTriggerCondition{};
         }
-        return PlayerHurtEntityCondition{true, true, false, std::nullopt};
+        return PlayerHurtEntityCondition{requireArrowDirectEntity, requireTridentDirectEntity, true, false, std::nullopt};
     }
 
     if (!requireMainhandMace || !damageDealtMin.has_value()) {
         return InvalidTriggerCondition{};
     }
 
-    return PlayerHurtEntityCondition{false, false, true, damageDealtMin};
+    return PlayerHurtEntityCondition{false, false, false, true, damageDealtMin};
 }
 
 TriggerCondition compileEntityHurtPlayerCondition(nlohmann::json const& conditions) {
@@ -187,6 +193,9 @@ bool matchesPlayerHurtEntityCondition(TriggerCondition const& condition, Trigger
         return false;
     }
     if (compiled->requireArrowDirectEntity && !payload->directEntityIsArrow) {
+        return false;
+    }
+    if (compiled->requireTridentDirectEntity && payload->directEntityTypeId != "minecraft:thrown_trident") {
         return false;
     }
     if (compiled->requireProjectileDamageTag && !payload->isProjectileDamage) {
