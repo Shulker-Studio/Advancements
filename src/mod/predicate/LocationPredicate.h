@@ -9,8 +9,13 @@ class Player;
 
 namespace advancements::predicate {
 
+struct PositionRangePredicate {
+    std::optional<float> yMin;
+};
+
 struct LocationPredicate {
-    std::string structureId;
+    std::optional<std::string> structureId;
+    std::optional<PositionRangePredicate> position;
 };
 
 std::optional<LocationPredicate> parseLocationPredicate(nlohmann::json const& predicate);

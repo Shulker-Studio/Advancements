@@ -6,16 +6,55 @@
 #include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
 
 namespace advancements::predicate {
+namespace {
+
+std::optional<PositionRangePredicate> parsePositionRangePredicate(nlohmann::json const& predicate) {
+    if (!predicate.is_object() || !hasOnlyKeys(predicate, {"y"})) {
+        return std::nullopt;
+    }
+    if (!predicate.contains("y") || !predicate.at("y").is_object()) {
+        return std::nullopt;
+    }
+
+    auto const& y = predicate.at("y");
+    if (!hasOnlyKeys(y, {"min"}) || !y.contains("min") || !y.at("min").is_number()) {
+        return std::nullopt;
+    }
+
+    return PositionRangePredicate{y.at("min").get<float>()};
+}
+
+} // namespace
 
 std::optional<LocationPredicate> parseLocationPredicate(nlohmann::json const& predicate) {
-    if (!predicate.is_object() || !hasOnlyKeys(predicate, {"structures"})) {
-        return std::nullopt;
-    }
-    if (!predicate.contains("structures") || !predicate.at("structures").is_string()) {
+    if (!predicate.is_object() || !hasOnlyKeys(predicate, {"structures", "position"})) {
         return std::nullopt;
     }
 
-    return LocationPredicate{predicate.at("structures").get<std::string>()};
+    std::optional<std::string> structureId;
+    if (predicate.contains("structures")) {
+        if (!predicate.at("structures").is_string()) {
+            return std::nullopt;
+        }
+        structureId = predicate.at("structures").get<std::string>();
+    }
+
+    std::optional<PositionRangePredicate> position;
+    if (predicate.contains("position")) {
+        if (!predicate.at("position").is_object()) {
+            return std::nullopt;
+        }
+        position = parsePositionRangePredicate(predicate.at("position"));
+        if (!position) {
+            return std::nullopt;
+        }
+    }
+
+    if (!structureId && !position) {
+        return std::nullopt;
+    }
+
+    return LocationPredicate{std::move(structureId), position};
 }
 
 std::optional<std::string> currentSupportedLocationStructure(Player& player) {
@@ -39,7 +78,7 @@ std::optional<std::string> currentSupportedLocationStructure(Player& player) {
 }
 
 bool matchesLocationPredicate(LocationPredicate const& predicate, std::string const& structureId) {
-    return predicate.structureId == structureId;
+    return predicate.structureId && *predicate.structureId == structureId;
 }
 
 } // namespace advancements::predicate

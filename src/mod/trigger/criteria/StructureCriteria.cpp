@@ -7,10 +7,10 @@ namespace advancements::criteria {
 
 TriggerCondition compileLocationStructureCondition(nlohmann::json const& conditions) {
     auto const predicate = predicate::parseSinglePlayerLocationPredicate(conditions);
-    if (!predicate) {
+    if (!predicate || !predicate->location.structureId) {
         return InvalidTriggerCondition{};
     }
-    return LocationStructureCondition{predicate->location.structureId};
+    return LocationStructureCondition{*predicate->location.structureId};
 }
 
 bool matchesLocationStructureCondition(TriggerCondition const& condition, TriggerContext const& context) {

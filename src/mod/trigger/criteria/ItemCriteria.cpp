@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/ItemCriteria.h"
 
+#include "mod/predicate/PlayerPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
 #include "mc/world/actor/player/Inventory.h"
@@ -49,51 +50,12 @@ TriggerCondition compileItemCondition(nlohmann::json const& conditions, bool all
 }
 
 std::optional<float> parseVillagerTradePlayerYMin(nlohmann::json const& conditions) {
-    if (!hasOnlyKeys(conditions, {"player"})) {
-        return std::nullopt;
-    }
-    if (!conditions.contains("player") || !conditions.at("player").is_array() || conditions.at("player").size() != 1) {
-        return std::nullopt;
-    }
-
-    auto const& playerCondition = conditions.at("player").front();
-    if (!playerCondition.is_object() || !hasOnlyKeys(playerCondition, {"condition", "entity", "predicate"})) {
-        return std::nullopt;
-    }
-    if (!playerCondition.contains("condition") || !playerCondition.at("condition").is_string()
-        || playerCondition.at("condition").get<std::string>() != "minecraft:entity_properties") {
-        return std::nullopt;
-    }
-    if (!playerCondition.contains("entity") || !playerCondition.at("entity").is_string()
-        || playerCondition.at("entity").get<std::string>() != "this") {
-        return std::nullopt;
-    }
-    if (!playerCondition.contains("predicate") || !playerCondition.at("predicate").is_object()) {
+    auto const predicate = predicate::parseSinglePlayerLocationPredicate(conditions);
+    if (!predicate || !predicate->location.position || !predicate->location.position->yMin) {
         return std::nullopt;
     }
 
-    auto const& predicate = playerCondition.at("predicate");
-    if (!hasOnlyKeys(predicate, {"location"}) || !predicate.contains("location")
-        || !predicate.at("location").is_object()) {
-        return std::nullopt;
-    }
-
-    auto const& location = predicate.at("location");
-    if (!hasOnlyKeys(location, {"position"}) || !location.contains("position") || !location.at("position").is_object()) {
-        return std::nullopt;
-    }
-
-    auto const& position = location.at("position");
-    if (!hasOnlyKeys(position, {"y"}) || !position.contains("y") || !position.at("y").is_object()) {
-        return std::nullopt;
-    }
-
-    auto const& y = position.at("y");
-    if (!hasOnlyKeys(y, {"min"}) || !y.contains("min") || !y.at("min").is_number()) {
-        return std::nullopt;
-    }
-
-    return y.at("min").get<float>();
+    return *predicate->location.position->yMin;
 }
 
 } // namespace

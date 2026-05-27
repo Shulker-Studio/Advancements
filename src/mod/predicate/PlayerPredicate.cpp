@@ -4,7 +4,7 @@
 
 namespace advancements::predicate {
 
-std::optional<PlayerPredicate> parseSinglePlayerLocationPredicate(nlohmann::json const& conditions) {
+std::optional<nlohmann::json const*> parseSinglePlayerThisEntityPredicateRoot(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"player"})) {
         return std::nullopt;
     }
@@ -28,13 +28,21 @@ std::optional<PlayerPredicate> parseSinglePlayerLocationPredicate(nlohmann::json
         return std::nullopt;
     }
 
-    auto const& entityPredicate = playerCondition.at("predicate");
-    if (!hasOnlyKeys(entityPredicate, {"location"}) || !entityPredicate.contains("location")
-        || !entityPredicate.at("location").is_object()) {
+    return &playerCondition.at("predicate");
+}
+
+std::optional<PlayerPredicate> parseSinglePlayerLocationPredicate(nlohmann::json const& conditions) {
+    auto entityPredicate = parseSinglePlayerThisEntityPredicateRoot(conditions);
+    if (!entityPredicate) {
         return std::nullopt;
     }
 
-    auto location = parseLocationPredicate(entityPredicate.at("location"));
+    auto const& predicate = **entityPredicate;
+    if (!hasOnlyKeys(predicate, {"location"}) || !predicate.contains("location") || !predicate.at("location").is_object()) {
+        return std::nullopt;
+    }
+
+    auto location = parseLocationPredicate(predicate.at("location"));
     if (!location) {
         return std::nullopt;
     }
