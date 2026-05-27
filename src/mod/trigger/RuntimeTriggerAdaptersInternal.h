@@ -93,6 +93,10 @@ bool itemUsedOnBlockTriggerRegistered();
 void registerItemUsedOnBlockTrigger(Entry& mod);
 void unregisterItemUsedOnBlockTrigger();
 
+bool constructBeaconTriggerRegistered();
+void registerConstructBeaconTrigger(Entry& mod);
+void unregisterConstructBeaconTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();

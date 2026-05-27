@@ -2,6 +2,7 @@
 
 #include "mod/Entry.h"
 #include "mod/event/block/TargetBlockHitEvent.h"
+#include "mod/event/block/BeaconLevelChangedEvent.h"
 #include "mod/event/entity/EntityHurtByPlayerEvent.h"
 #include "mod/event/entity/EntityKilledByPlayerEvent.h"
 #include "mod/event/item/ContainerOutputTakenEvent.h"
@@ -22,6 +23,7 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
+#include "mod/trigger/triggers/ConstructBeaconTrigger.h"
 #include "mod/trigger/triggers/ConsumeItemTrigger.h"
 #include "mod/trigger/triggers/EnterBlockTrigger.h"
 #include "mod/trigger/triggers/EffectsChangedTrigger.h"
@@ -189,6 +191,7 @@ bool anyRuntimeRegistered() {
         || playerGeneratedContainerLootTriggerRegistered()
         || enterBlockTriggerRegistered()
         || itemUsedOnBlockTriggerRegistered()
+        || constructBeaconTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
@@ -204,7 +207,8 @@ bool anyRuntimeRegistered() {
         || event::player::playerEffectsChangedEventSourceRegistered()
         || event::player::playerSleptInBedEventSourceRegistered()
         || event::player::playerUsedTotemEventSourceRegistered()
-        || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
+        || event::block::targetBlockHitEventSourceRegistered()
+        || event::block::beaconLevelChangedEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
         || lootRuntimeRegistered() || projectileRuntimeRegistered()
         || effectRuntimeRegistered();
 }
@@ -231,6 +235,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     }
 
     gRuntimeTriggerMod = &mod;
+    event::block::registerBeaconLevelChangedEventSource();
     event::block::registerTargetBlockHitEventSource();
     event::entity::registerEntityHurtByPlayerEventSource();
     event::entity::registerEntityKilledByPlayerEventSource();
@@ -252,6 +257,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerInventoryRuntime();
     registerEntityHurtPlayerTrigger(mod);
     registerEntityKilledPlayerTrigger(mod);
+    registerConstructBeaconTrigger(mod);
     registerLocationTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
@@ -281,6 +287,7 @@ void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
     unregisterEntityHurtPlayerTrigger();
     unregisterEntityKilledPlayerTrigger();
+    unregisterConstructBeaconTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
@@ -300,6 +307,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterSleptInBedTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();
+    event::block::unregisterBeaconLevelChangedEventSource();
     event::block::unregisterTargetBlockHitEventSource();
     event::entity::unregisterEntityHurtByPlayerEventSource();
     event::entity::unregisterEntityKilledByPlayerEventSource();
