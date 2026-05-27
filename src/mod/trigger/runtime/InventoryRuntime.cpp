@@ -22,30 +22,9 @@
 namespace advancements {
 namespace {
 
-constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 constexpr int  TemperateFrogVariant                 = 0;
 constexpr int  ColdFrogVariant                      = 1;
 constexpr int  WarmFrogVariant                      = 2;
-
-struct PendingZombieVillagerCure {
-    ActorUniqueID zombieVillagerId;
-    mce::UUID     playerId;
-    int           ticksRemaining{CureZombieVillagerMaxTrackedTicks};
-};
-
-std::unordered_map<int64, PendingZombieVillagerCure> gPendingZombieVillagerCures;
-ll::event::ListenerPtr                               gPlayerTickListener;
-
-void dispatchCuredZombieVillager(Entry& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:cured_zombie_villager",
-            NoTriggerPayload{},
-        }
-    );
-}
 
 std::optional<std::string> frogVariantIdForVariant(int variant) {
     switch (variant) {
@@ -60,43 +39,6 @@ std::optional<std::string> frogVariantIdForVariant(int variant) {
     }
 }
 
-bool isZombieVillagerActorType(ActorType actorType) {
-    return actorType == ActorType::ZombieVillager || actorType == ActorType::ZombieVillagerV2;
-}
-
-bool isZombieVillagerCureInteraction(Actor& actor) {
-    if (!isZombieVillagerActorType(actor.getEntityTypeId())) {
-        return false;
-    }
-    return static_cast<ZombieVillager&>(actor).villagerConversionTime > 0;
-}
-
-void trackZombieVillagerCure(Player& player, Actor& actor) {
-    auto const zombieVillagerId = actor.getOrCreateUniqueID();
-    gPendingZombieVillagerCures[zombieVillagerId.rawID] = PendingZombieVillagerCure{
-        zombieVillagerId,
-        player.getUuid(),
-    };
-}
-
-void checkPendingZombieVillagerCures(Player& player) {
-    for (auto it = gPendingZombieVillagerCures.begin(); it != gPendingZombieVillagerCures.end();) {
-        auto& pending = it->second;
-        if (pending.playerId != player.getUuid()) {
-            ++it;
-            continue;
-        }
-
-        --pending.ticksRemaining;
-        if (pending.ticksRemaining <= 0) {
-            it = gPendingZombieVillagerCures.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
-}
-
 LL_TYPE_INSTANCE_HOOK(
     PlayerInteractEntityHook,
     HookPriority::Normal,
@@ -106,21 +48,7 @@ LL_TYPE_INSTANCE_HOOK(
     Actor&      actor,
     Vec3 const& location
 ) {
-    auto const mayStartZombieVillagerCure = isZombieVillagerActorType(actor.getEntityTypeId())
-                                         && !isZombieVillagerCureInteraction(actor)
-                                         && !getSelectedItem().isNull()
-                                         && getSelectedItem().getTypeName() == "minecraft:golden_apple";
-    auto result = origin(actor, location);
-
-    if (!result.mSuccess && !result.mSwing) {
-        return result;
-    }
-
-    if (mayStartZombieVillagerCure) {
-        trackZombieVillagerCure(*this, actor);
-    }
-
-    return result;
+    return origin(actor, location);
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -135,33 +63,7 @@ LL_TYPE_INSTANCE_HOOK(
     ActorUniqueID const&             ownerID,
     Level const&                     level
 ) {
-    auto const originalType = originalActor.getTypeName();
-    auto const transformedType = transformed.getTypeName();
-    auto const originalRuntimeType = originalActor.getEntityTypeId();
-    auto const originalUniqueId = originalActor.getOrCreateUniqueID().rawID;
-    auto const maybeTrackedCure = isZombieVillagerActorType(originalRuntimeType)
-                               ? gPendingZombieVillagerCures.find(originalUniqueId)
-                               : gPendingZombieVillagerCures.end();
-
-    auto* mod = currentRuntimeTriggerMod();
     origin(originalActor, transformed, transformation, ownerID, level);
-
-    if (mod == nullptr || maybeTrackedCure == gPendingZombieVillagerCures.end()) {
-        return;
-    }
-
-    auto const transformedRuntimeType = transformed.getEntityTypeId();
-    if (transformedRuntimeType != ActorType::Villager && transformedRuntimeType != ActorType::VillagerV2) {
-        return;
-    }
-
-    auto* player = level.getPlayer(maybeTrackedCure->second.playerId);
-    if (player == nullptr) {
-        return;
-    }
-
-    dispatchCuredZombieVillager(*mod, *player);
-    gPendingZombieVillagerCures.erase(maybeTrackedCure);
 }
 
 struct InventoryRuntimeHookState {
@@ -181,21 +83,10 @@ void registerInventoryRuntime() {
 
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
     gInventoryRuntimeHookState = std::make_unique<InventoryRuntimeHookState>();
-    gPlayerTickListener = ll::event::EventBus::getInstance().emplaceListener<event::player::PlayerTickEvent>([](auto& event) {
-        auto* mod = currentRuntimeTriggerMod();
-        if (mod != nullptr && !gPendingZombieVillagerCures.empty()) {
-            checkPendingZombieVillagerCures(event.self());
-        }
-    });
 }
 
 void unregisterInventoryRuntime() {
-    gPendingZombieVillagerCures.clear();
     gInventoryRuntimeHookState.reset();
-    if (gPlayerTickListener) {
-        ll::event::EventBus::getInstance().removeListener(gPlayerTickListener);
-        gPlayerTickListener.reset();
-    }
 }
 
 } // namespace advancements
