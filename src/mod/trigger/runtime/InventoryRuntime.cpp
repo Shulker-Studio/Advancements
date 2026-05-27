@@ -8,8 +8,6 @@
 #include "mc/entity/components_json_legacy/TransformationComponent.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
-#include "mc/world/actor/FishingHook.h"
-#include "mc/world/actor/item/ItemActor.h"
 #include "mc/world/actor/monster/ZombieVillager.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
@@ -83,17 +81,6 @@ void dispatchConsumeItem(Entry& mod, Player& player, std::string const& itemId) 
 
 bool isConsumeItemUseMethod(ItemUseMethod useMethod) {
     return useMethod == ItemUseMethod::Eat || useMethod == ItemUseMethod::Consume;
-}
-
-void dispatchFishingRodHooked(Entry& mod, Player& player, std::string const& itemId) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:fishing_rod_hooked",
-            ItemTriggerPayload{itemId, std::nullopt},
-        }
-    );
 }
 
 void dispatchFilledBucket(Entry& mod, Player& player, std::string const& itemId) {
@@ -259,34 +246,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    PullFishingHookHook,
-    HookPriority::Normal,
-    FishingHook,
-    &FishingHook::_pullCloser,
-    void,
-    Actor& inEntity,
-    float  inSpeed
-) {
-    auto* mod = currentRuntimeTriggerMod();
-    auto* player = getPlayerOwner();
-    std::optional<std::string> itemId;
-    if (inEntity.isType(ActorType::ItemEntity)) {
-        auto const& item = static_cast<ItemActor&>(inEntity).item();
-        if (!item.isNull()) {
-            itemId = item.getTypeName();
-        }
-    }
-
-    origin(inEntity, inSpeed);
-
-    if (mod == nullptr || player == nullptr || !itemId) {
-        return;
-    }
-
-    dispatchFishingRodHooked(*mod, *player, *itemId);
-}
-
-LL_TYPE_INSTANCE_HOOK(
     BucketUseOnEntityHook,
     HookPriority::Normal,
     BucketItem,
@@ -409,7 +368,6 @@ LL_TYPE_INSTANCE_HOOK(
 struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
-    ll::memory::HookRegistrar<PullFishingHookHook>        pullFishingHook;
     ll::memory::HookRegistrar<BucketUseOnEntityHook>      bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
     ll::memory::HookRegistrar<ZombieVillagerMaintainOldDataHook> zombieVillagerMaintainOldDataHook;
@@ -428,7 +386,6 @@ void registerInventoryRuntime() {
 
     (void)PlayerInventoryChangedHook::_AutoHookCount;
     (void)PlayerUseItemHook::_AutoHookCount;
-    (void)PullFishingHookHook::_AutoHookCount;
     (void)BucketUseOnEntityHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
