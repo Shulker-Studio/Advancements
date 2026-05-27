@@ -12,6 +12,7 @@
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
+#include "mod/event/player/PlayerChargedRespawnAnchorEvent.h"
 #include "mod/event/player/PlayerEnteredEndGatewayEvent.h"
 #include "mod/event/player/PlayerEffectsChangedEvent.h"
 #include "mod/event/player/PlayerKilledByEntityEvent.h"
@@ -30,6 +31,7 @@
 #include "mod/trigger/triggers/FilledBucketTrigger.h"
 #include "mod/trigger/triggers/FishingRodHookedTrigger.h"
 #include "mod/trigger/triggers/InventoryChangedTrigger.h"
+#include "mod/trigger/triggers/ItemUsedOnBlockTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/PlayerGeneratedContainerLootTrigger.h"
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
@@ -186,6 +188,7 @@ bool anyRuntimeRegistered() {
         || effectsChangedTriggerRegistered()
         || playerGeneratedContainerLootTriggerRegistered()
         || enterBlockTriggerRegistered()
+        || itemUsedOnBlockTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
@@ -196,6 +199,7 @@ bool anyRuntimeRegistered() {
         || event::item::playerShotCrossbowEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
+        || event::player::playerChargedRespawnAnchorEventSourceRegistered()
         || event::player::playerEnteredEndGatewayEventSourceRegistered()
         || event::player::playerEffectsChangedEventSourceRegistered()
         || event::player::playerSleptInBedEventSourceRegistered()
@@ -238,6 +242,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerInventoryChangedEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
+    event::player::registerPlayerChargedRespawnAnchorEventSource();
     event::player::registerPlayerEnteredEndGatewayEventSource();
     event::player::registerPlayerEffectsChangedEventSource();
     event::player::registerPlayerKilledByEntityEventSource();
@@ -258,6 +263,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerConsumeItemTrigger(mod);
     registerEnterBlockTrigger(mod);
     registerEffectsChangedTrigger(mod);
+    registerItemUsedOnBlockTrigger(mod);
     registerInventoryChangedTrigger(mod);
     registerFilledBucketTrigger(mod);
     registerFishingRodHookedTrigger(mod);
@@ -285,6 +291,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterConsumeItemTrigger();
     unregisterEnterBlockTrigger();
     unregisterEffectsChangedTrigger();
+    unregisterItemUsedOnBlockTrigger();
     unregisterInventoryChangedTrigger();
     unregisterFilledBucketTrigger();
     unregisterFishingRodHookedTrigger();
@@ -304,6 +311,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerInventoryChangedEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
+    event::player::unregisterPlayerChargedRespawnAnchorEventSource();
     event::player::unregisterPlayerEnteredEndGatewayEventSource();
     event::player::unregisterPlayerEffectsChangedEventSource();
     event::player::unregisterPlayerKilledByEntityEventSource();

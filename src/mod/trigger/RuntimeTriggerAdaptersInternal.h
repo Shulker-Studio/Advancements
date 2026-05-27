@@ -89,6 +89,10 @@ bool enterBlockTriggerRegistered();
 void registerEnterBlockTrigger(Entry& mod);
 void unregisterEnterBlockTrigger();
 
+bool itemUsedOnBlockTriggerRegistered();
+void registerItemUsedOnBlockTrigger(Entry& mod);
+void unregisterItemUsedOnBlockTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();
