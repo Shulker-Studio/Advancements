@@ -11,6 +11,7 @@
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
+#include "mod/event/player/PlayerEffectsChangedEvent.h"
 #include "mod/event/player/PlayerKilledByEntityEvent.h"
 #include "mod/event/player/PlayerSleptInBedEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
@@ -19,6 +20,7 @@
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
 #include "mod/trigger/triggers/ConsumeItemTrigger.h"
+#include "mod/trigger/triggers/EffectsChangedTrigger.h"
 #include "mod/trigger/triggers/EnchantedItemTrigger.h"
 #include "mod/trigger/triggers/EntityHurtPlayerTrigger.h"
 #include "mod/trigger/triggers/EntityKilledPlayerTrigger.h"
@@ -177,6 +179,7 @@ bool anyRuntimeRegistered() {
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
         || consumeItemTriggerRegistered() || inventoryChangedTriggerRegistered() || filledBucketTriggerRegistered()
         || fishingRodHookedTriggerRegistered() || shotCrossbowTriggerRegistered() || sleptInBedTriggerRegistered()
+        || effectsChangedTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
@@ -186,6 +189,7 @@ bool anyRuntimeRegistered() {
         || event::item::playerShotCrossbowEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
+        || event::player::playerEffectsChangedEventSourceRegistered()
         || event::player::playerSleptInBedEventSourceRegistered()
         || event::player::playerUsedTotemEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
@@ -225,6 +229,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerInventoryChangedEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
+    event::player::registerPlayerEffectsChangedEventSource();
     event::player::registerPlayerKilledByEntityEventSource();
     event::player::registerPlayerSleptInBedEventSource();
     event::player::registerPlayerTickEventSource();
@@ -241,6 +246,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerVillagerTradeTrigger(mod);
     registerUsedTotemTrigger(mod);
     registerConsumeItemTrigger(mod);
+    registerEffectsChangedTrigger(mod);
     registerInventoryChangedTrigger(mod);
     registerFilledBucketTrigger(mod);
     registerFishingRodHookedTrigger(mod);
@@ -265,6 +271,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterVillagerTradeTrigger();
     unregisterUsedTotemTrigger();
     unregisterConsumeItemTrigger();
+    unregisterEffectsChangedTrigger();
     unregisterInventoryChangedTrigger();
     unregisterFilledBucketTrigger();
     unregisterFishingRodHookedTrigger();
@@ -282,6 +289,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerInventoryChangedEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
+    event::player::unregisterPlayerEffectsChangedEventSource();
     event::player::unregisterPlayerKilledByEntityEventSource();
     event::player::unregisterPlayerSleptInBedEventSource();
     event::player::unregisterPlayerTickEventSource();

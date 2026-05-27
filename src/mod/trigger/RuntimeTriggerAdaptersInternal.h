@@ -77,6 +77,10 @@ bool sleptInBedTriggerRegistered();
 void registerSleptInBedTrigger(Entry& mod);
 void unregisterSleptInBedTrigger();
 
+bool effectsChangedTriggerRegistered();
+void registerEffectsChangedTrigger(Entry& mod);
+void unregisterEffectsChangedTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();
