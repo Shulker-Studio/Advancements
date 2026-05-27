@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- 新增 `husbandry/leash_all_frog_variants` 数据、文案与 `minecraft:player_interacted_with_entity` 的窄实现；当前仅支持玩家手持 `lead` 成功拴住三种青蛙变体的本地形状。
+
 ## [0.1.1]
 
 ### Added

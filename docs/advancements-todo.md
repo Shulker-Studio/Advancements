@@ -88,7 +88,7 @@
 | `placed_block` | missing-trigger | |
 | `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
 | `player_hurt_entity` | done | 当前窄实现：基于 `ll::event::ActorHurtEvent`，仅支持 `damage.type.direct_entity.type = #minecraft:arrows` + `damage.type.tags` 含 `minecraft:is_projectile` 这一已核 condition surface |
-| `player_interacted_with_entity` | missing-trigger | |
+| `player_interacted_with_entity` | partial | 当前窄实现：仅支持 `husbandry/leash_all_frog_variants` 已核 shape（玩家成功使用 `minecraft:lead` 与 `minecraft:frog` 交互，并按 `Actor::getVariant()` 的 Bedrock 取值 `0=temperate` / `1=cold` / `2=warm` 匹配三种青蛙变种）；不泛化其他 entity/item/type_specific 条件 |
 | `player_killed_entity` | done | 当前窄实现：保留 `conditions.entity`，并额外支持 `adventure/sniper_duel` 已核窄形状（骷髅 + 50m horizontal + projectile killing blow）与 `nether/return_to_sender` 已核窄形状（恶魂 + direct fireball + projectile killing blow）；不泛化其他 nested predicates |
 | `player_sheared_equipment` | missing-trigger | |
 | `recipe_crafted` | missing-trigger | |
@@ -244,9 +244,9 @@
 | `husbandry/wax_on` | other | missing-trigger | |
 | `husbandry/wax_off` | other | missing-trigger | |
 | `husbandry/tadpole_in_a_bucket` | `filled_bucket` | done | 已按填充后的蝌蚪桶 item 匹配 |
-| `husbandry/leash_all_frog_variants` | other | missing-trigger | |
+| `husbandry/leash_all_frog_variants` | `player_interacted_with_entity` | done | 已补本地 JSON + lang，并接入窄实现：仅支持玩家成功用 `minecraft:lead` 拴住 `minecraft:frog`，且按当前 Bedrock `variant` 值映射 `minecraft:temperate`/`minecraft:cold`/`minecraft:warm` 三种 criterion；青蛙不需要同时被拴住 |
 | `husbandry/froglights` | `inventory_changed` | missing-data | |
-| `husbandry/silk_touch_nest` | `inventory_changed` | missing-data | |
+| `husbandry/silk_touch_nest` | silk-touch bee-nest break family | missing-trigger | wiki 语义要求“用精准采集破坏且巢内有 3 只蜜蜂”，并非单纯 `inventory_changed`；后续需要先找可验证 Bedrock seam |
 | `husbandry/ride_a_boat_with_a_goat` | other | missing-trigger | |
 | `husbandry/make_a_sign_glow` | other | missing-trigger | |
 | `husbandry/allay_deliver_item_to_player` | other | missing-trigger | |
@@ -272,5 +272,5 @@
 
 1. `adventure/kill_all_mobs` 用当前已支持敌对怪集合正式建成原版 ID，而不是 demo
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. 基于 `inventory_changed` / `consume_item` 继续补其他 husbandry 原版条目（如 `froglights`，在父级与语义明确后）
+3. husbandry 下一小步可直接补 `froglights` 数据；若继续交互类，再为 `silk_touch_nest` 找到可靠 runtime seam
 4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
