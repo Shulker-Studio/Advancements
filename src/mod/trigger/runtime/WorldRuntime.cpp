@@ -1,6 +1,7 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
 #include "mod/Entry.h"
+#include "mod/event/player/PlayerDimensionChangedEvent.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/memory/Hook.h"
@@ -38,30 +39,6 @@ constexpr float BeaconHorizontalRange            = 10.0F;
 constexpr float BeaconVerticalRangeBelow         = 9.0F;
 constexpr float BeaconVerticalRangeAbove         = 5.0F;
 std::unordered_map<mce::UUID, Vec3> gNetherTravelStartPositions;
-
-std::string dimensionId(DimensionType dimension) {
-    if (dimension == VanillaDimensions::Overworld()) {
-        return "minecraft:overworld";
-    }
-    if (dimension == VanillaDimensions::Nether()) {
-        return "minecraft:the_nether";
-    }
-    if (dimension == VanillaDimensions::TheEnd()) {
-        return "minecraft:the_end";
-    }
-    return std::to_string(static_cast<int>(dimension));
-}
-
-void dispatchChangedDimension(Entry& mod, Player& player, DimensionType fromDimension, DimensionType toDimension) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:changed_dimension",
-            DimensionTriggerPayload{dimensionId(fromDimension), dimensionId(toDimension)},
-        }
-    );
-}
 
 float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
     auto const dx = lhs.x - rhs.x;
@@ -135,45 +112,6 @@ void dispatchRespawnDragon(Entry& mod, Level& level) {
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    PlayerFireDimensionChangedEventHook,
-    HookPriority::Normal,
-    Player,
-    &Player::fireDimensionChangedEvent,
-    void,
-    DimensionType fromDimension,
-    DimensionType toDimension
-) {
-    auto const positionBeforeChange = this->getPosition();
-    origin(fromDimension, toDimension);
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod == nullptr) {
-        return;
-    }
-
-    if (fromDimension != toDimension) {
-        dispatchChangedDimension(*mod, *this, fromDimension, toDimension);
-
-        auto const playerId = this->getUuid();
-        if (fromDimension == VanillaDimensions::Overworld() && toDimension == VanillaDimensions::Nether()) {
-            gNetherTravelStartPositions[playerId] = positionBeforeChange;
-            return;
-        }
-
-        if (fromDimension == VanillaDimensions::Nether()) {
-            auto const found = gNetherTravelStartPositions.find(playerId);
-            if (found != gNetherTravelStartPositions.end()) {
-                if (toDimension == VanillaDimensions::Overworld()) {
-                    auto const travelled = horizontalDistance(found->second, this->getPosition());
-                    dispatchNetherTravel(*mod, *this, travelled);
-                }
-                gNetherTravelStartPositions.erase(found);
-            }
-        }
-    }
-}
-
-LL_TYPE_INSTANCE_HOOK(
     SkullBlockCheckMobSpawnHook,
     HookPriority::Normal,
     SkullBlock,
@@ -215,26 +153,46 @@ LL_TYPE_INSTANCE_HOOK(EndDragonFightTryRespawnHook, HookPriority::Normal, EndDra
 }
 
 struct WorldRuntimeHookState {
-    ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
     ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
 };
 
 std::unique_ptr<WorldRuntimeHookState> gWorldRuntimeHookState;
+ll::event::ListenerPtr                  gDimensionChangedListener;
 
 } // namespace
 
-bool worldRuntimeRegistered() { return gDestroyBlockListener || gWorldRuntimeHookState != nullptr; }
+bool worldRuntimeRegistered() { return gDestroyBlockListener || gWorldRuntimeHookState != nullptr || gDimensionChangedListener != nullptr; }
 
 void registerWorldRuntime(Entry& mod) {
     if (worldRuntimeRegistered()) {
         return;
     }
 
-    (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
+
+    gDimensionChangedListener = ll::event::EventBus::getInstance().emplaceListener<event::player::PlayerDimensionChangedEvent>([&mod](auto& event) {
+        auto const fromDimension = event.fromDimension();
+        auto const toDimension = event.toDimension();
+        auto const playerId = event.self().getUuid();
+        if (fromDimension == VanillaDimensions::Overworld() && toDimension == VanillaDimensions::Nether()) {
+            gNetherTravelStartPositions[playerId] = event.positionBeforeChange();
+            return;
+        }
+
+        if (fromDimension == VanillaDimensions::Nether()) {
+            auto const found = gNetherTravelStartPositions.find(playerId);
+            if (found != gNetherTravelStartPositions.end()) {
+                if (toDimension == VanillaDimensions::Overworld()) {
+                    auto const travelled = horizontalDistance(found->second, event.self().getPosition());
+                    dispatchNetherTravel(mod, event.self(), travelled);
+                }
+                gNetherTravelStartPositions.erase(found);
+            }
+        }
+    });
 
     auto& eventBus = ll::event::EventBus::getInstance();
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
@@ -254,6 +212,11 @@ void registerWorldRuntime(Entry& mod) {
 void unregisterWorldRuntime() {
     gNetherTravelStartPositions.clear();
     gWorldRuntimeHookState.reset();
+
+    if (gDimensionChangedListener) {
+        ll::event::EventBus::getInstance().removeListener(gDimensionChangedListener);
+        gDimensionChangedListener.reset();
+    }
 
     auto& eventBus = ll::event::EventBus::getInstance();
     if (gDestroyBlockListener) {
