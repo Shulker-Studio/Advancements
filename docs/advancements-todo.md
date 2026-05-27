@@ -188,7 +188,7 @@
 | `adventure/spyglass_at_parrot` | other | missing-trigger | |
 | `adventure/spyglass_at_ghast` | other | missing-trigger | |
 | `adventure/spyglass_at_dragon` | other | missing-trigger | |
-| `adventure/throw_trident` | other | missing-trigger | |
+| `adventure/throw_trident` | `player_hurt_entity` | done | 已补本地 JSON + lang，并接入窄实现：按已核本地运行时形状复用 `minecraft:player_hurt_entity`，仅支持 `damage.type.direct_entity.type = minecraft:thrown_trident` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组条件，不泛化其他投射物或近战三叉戟伤害形状 |
 | `adventure/very_very_frightening` | other | missing-trigger | |
 | `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
 | `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
@@ -196,7 +196,7 @@
 | `adventure/bullseye` | `target_hit` | done | 已落地本地 JSON + lang；runtime/条件解析仅支持该行已核窄形状（`signal_strength = 15` 与 projectile 水平距离 `>= 30`） |
 | `adventure/kill_all_mobs` | `player_killed_entity` | done | 已补齐当前本地 hostile 集合窄切片，继续复用现有 `player_killed_entity` 简单实体匹配；本波次补入 `bogged`、`breeze`、`creaking`、`evoker`、`wither`、`zoglin` 六项，并与本地历史已跑通清单对齐 |
 | `adventure/totem_of_undying` | `used_totem` | done | 已补数据，复用现有 `used_totem` |
-| `adventure/ol_betsy` | `shot_crossbow` | missing-trigger | |
+| `adventure/ol_betsy` | `shot_crossbow` | done | 已补数据并接入窄实现：仅支持 `conditions.item.items = minecraft:crossbow` 这组已核 shape，复用当前 `shot_crossbow` 窄触发 |
 | `adventure/trade` | `villager_trade` | done | 已补数据，复用当前完成交易语义的 `villager_trade` |
 | `adventure/trade_at_world_height` | `villager_trade` | done | 已按原版 raw JSON 形状补数据：父级 `minecraft:adventure/trade`，`minecraft:villager_trade` + `player[0].predicate.location.position.y.min = 319.0`；当前窄实现按玩家交易完成时脚部位置 `Y >= 319` 匹配 |
 | `adventure/salvage_sherd` | other | missing-trigger | |
