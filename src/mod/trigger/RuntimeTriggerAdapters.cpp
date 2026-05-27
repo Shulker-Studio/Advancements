@@ -12,6 +12,7 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
+#include "mod/trigger/triggers/EnchantedItemTrigger.h"
 #include "mod/trigger/triggers/EntityHurtPlayerTrigger.h"
 #include "mod/trigger/triggers/EntityKilledPlayerTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
@@ -160,7 +161,7 @@ bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
-        || usedTotemTriggerRegistered()
+        || enchantedItemTriggerRegistered() || usedTotemTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered()
@@ -209,6 +210,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
     registerBrewedPotionTrigger(mod);
+    registerEnchantedItemTrigger(mod);
     registerUsedTotemTrigger(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
@@ -225,6 +227,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
     unregisterBrewedPotionTrigger();
+    unregisterEnchantedItemTrigger();
     unregisterUsedTotemTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();

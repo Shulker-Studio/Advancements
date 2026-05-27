@@ -41,6 +41,10 @@ bool brewedPotionTriggerRegistered();
 void registerBrewedPotionTrigger(Entry& mod);
 void unregisterBrewedPotionTrigger();
 
+bool enchantedItemTriggerRegistered();
+void registerEnchantedItemTrigger(Entry& mod);
+void unregisterEnchantedItemTrigger();
+
 bool usedTotemTriggerRegistered();
 void registerUsedTotemTrigger(Entry& mod);
 void unregisterUsedTotemTrigger();
