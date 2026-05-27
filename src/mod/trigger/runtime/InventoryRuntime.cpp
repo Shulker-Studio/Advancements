@@ -6,7 +6,6 @@
 #include "ll/api/memory/Hook.h"
 
 #include "mc/entity/components_json_legacy/TransformationComponent.h"
-#include "mc/deps/shared_types/legacy/ContainerType.h"
 #include "mc/world/Container.h"
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/FishingHook.h"
@@ -14,14 +13,7 @@
 #include "mc/world/actor/monster/ZombieVillager.h"
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
-#include "mc/world/containers/FullContainerName.h"
 #include "mc/world/gamemode/InteractionResult.h"
-#include "mc/world/inventory/network/ContainerScreenContext.h"
-#include "mc/world/inventory/network/ItemStackNetManagerServer.h"
-#include "mc/world/inventory/network/ItemStackNetResult.h"
-#include "mc/world/inventory/network/ItemStackRequestActionHandler.h"
-#include "mc/world/inventory/network/ItemStackRequestActionTransferBase.h"
-#include "mc/world/inventory/network/ItemStackRequestSlotInfo.h"
 #include "mc/world/item/BucketItem.h"
 #include "mc/world/item/ItemStack.h"
 #include "mc/world/item/ItemStackBase.h"
@@ -38,7 +30,6 @@
 namespace advancements {
 namespace {
 
-constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
 constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 constexpr int  TemperateFrogVariant                 = 0;
 constexpr int  ColdFrogVariant                      = 1;
@@ -112,17 +103,6 @@ void dispatchFilledBucket(Entry& mod, Player& player, std::string const& itemId)
             player,
             "minecraft:filled_bucket",
             ItemTriggerPayload{itemId, std::nullopt},
-        }
-    );
-}
-
-void dispatchVillagerTrade(Entry& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:villager_trade",
-            NoTriggerPayload{},
         }
     );
 }
@@ -222,34 +202,6 @@ std::optional<std::string> bucketItemIdForBucketedEntity(ActorType actorType) {
     default:
         return std::nullopt;
     }
-}
-
-LL_TYPE_INSTANCE_HOOK(
-    VillagerTradeTransferHook,
-    HookPriority::Normal,
-    ItemStackRequestActionHandler,
-    &ItemStackRequestActionHandler::_handleTransfer,
-    ::ItemStackNetResult,
-    ::ItemStackRequestActionTransferBase const& requestAction,
-    bool                                        isSrcHintSlot,
-    bool                                        isDstHintSlot,
-    bool                                        isSwap
-) {
-    auto const& sourceSlot      = *requestAction.mSrc;
-    auto const  sourceContainer = sourceSlot.mFullContainerName.mName;
-    auto const  screenType      = mItemStackNetManager.getScreenContext().mScreenContainerType;
-
-    auto const result = origin(requestAction, isSrcHintSlot, isDstHintSlot, isSwap);
-    auto*      mod    = currentRuntimeTriggerMod();
-    if (result != ItemStackNetResult::Success || mod == nullptr) {
-        return result;
-    }
-
-    if (screenType == SharedTypes::Legacy::ContainerType::Trade && sourceContainer == SuccessfulOutputContainer) {
-        dispatchVillagerTrade(*mod, mPlayer);
-    }
-
-    return result;
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -455,7 +407,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 struct InventoryRuntimeHookState {
-    ll::memory::HookRegistrar<VillagerTradeTransferHook> villagerTradeTransferHook;
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
     ll::memory::HookRegistrar<PullFishingHookHook>        pullFishingHook;
@@ -475,7 +426,6 @@ void registerInventoryRuntime() {
         return;
     }
 
-    (void)VillagerTradeTransferHook::_AutoHookCount;
     (void)PlayerInventoryChangedHook::_AutoHookCount;
     (void)PlayerUseItemHook::_AutoHookCount;
     (void)PullFishingHookHook::_AutoHookCount;
