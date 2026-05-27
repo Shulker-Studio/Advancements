@@ -52,17 +52,6 @@ struct LevitationPlayerState {
 std::unordered_map<mce::UUID, Vec3>                         gNetherTravelStartPositions;
 std::unordered_map<mce::UUID, LevitationPlayerState>         gLevitationPlayerStates;
 
-void dispatchEnterBlock(Entry& mod, Player& player, std::string const& blockId) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:enter_block",
-            EnterBlockPayload{blockId},
-        }
-    );
-}
-
 void dispatchLevitation(Entry& mod, Player& player, float verticalDistance) {
     dispatchTrigger(
         mod,
@@ -235,25 +224,6 @@ void dispatchRespawnAnchorCharged(Entry& mod, Player& player) {
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    EndGatewayBlockActorTeleportEntityHook,
-    HookPriority::Normal,
-    EndGatewayBlockActor,
-    &EndGatewayBlockActor::teleportEntity,
-    void,
-    Actor& entity
-) {
-    auto* mod = currentRuntimeTriggerMod();
-    auto const isPlayer = entity.isPlayer();
-    auto const positionBeforeTeleport = entity.getPosition();
-
-    origin(entity);
-
-    if (mod != nullptr && isPlayer && positionChanged(positionBeforeTeleport, entity.getPosition())) {
-        dispatchEnterBlock(*mod, static_cast<Player&>(entity), "minecraft:end_gateway");
-    }
-}
-
-LL_TYPE_INSTANCE_HOOK(
     PlayerFireDimensionChangedEventHook,
     HookPriority::Normal,
     Player,
@@ -396,7 +366,6 @@ struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
     ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
-    ll::memory::HookRegistrar<EndGatewayBlockActorTeleportEntityHook> endGatewayTeleportEntityHook;
     ll::memory::HookRegistrar<BeaconBlockActorCheckShapeHook>      beaconBlockActorCheckShapeHook;
     ll::memory::HookRegistrar<RespawnAnchorBumpChargeHook>         respawnAnchorBumpChargeHook;
 };
@@ -415,7 +384,6 @@ void registerWorldRuntime(Entry& mod) {
     (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
-    (void)EndGatewayBlockActorTeleportEntityHook::_AutoHookCount;
     (void)BeaconBlockActorCheckShapeHook::_AutoHookCount;
     (void)RespawnAnchorBumpChargeHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
