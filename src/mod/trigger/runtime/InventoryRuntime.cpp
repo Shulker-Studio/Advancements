@@ -14,7 +14,6 @@
 #include "mc/world/gamemode/InteractionResult.h"
 #include "mc/world/item/BucketItem.h"
 #include "mc/world/item/ItemStack.h"
-#include "mc/world/item/ItemStackBase.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/Level.h"
 
@@ -66,21 +65,6 @@ void dispatchInventoryChangedForItem(Entry& mod, Player& player, std::string con
             ItemTriggerPayload{itemId, countMatchingItems(player, itemId)},
         }
     );
-}
-
-void dispatchConsumeItem(Entry& mod, Player& player, std::string const& itemId) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:consume_item",
-            ItemTriggerPayload{itemId, std::nullopt},
-        }
-    );
-}
-
-bool isConsumeItemUseMethod(ItemUseMethod useMethod) {
-    return useMethod == ItemUseMethod::Eat || useMethod == ItemUseMethod::Consume;
 }
 
 void dispatchFilledBucket(Entry& mod, Player& player, std::string const& itemId) {
@@ -224,28 +208,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    PlayerUseItemHook,
-    HookPriority::Normal,
-    Player,
-    &Player::$useItem,
-    void,
-    ItemStackBase& item,
-    ItemUseMethod  useMethod,
-    bool           consumeItem
-) {
-    auto const itemId = item.isNull() ? std::string{} : item.getTypeName();
-
-    origin(item, useMethod, consumeItem);
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod == nullptr || !consumeItem || itemId.empty() || !isConsumeItemUseMethod(useMethod)) {
-        return;
-    }
-
-    dispatchConsumeItem(*mod, *this, itemId);
-}
-
-LL_TYPE_INSTANCE_HOOK(
     BucketUseOnEntityHook,
     HookPriority::Normal,
     BucketItem,
@@ -367,7 +329,6 @@ LL_TYPE_INSTANCE_HOOK(
 
 struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
-    ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
     ll::memory::HookRegistrar<BucketUseOnEntityHook>      bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
     ll::memory::HookRegistrar<ZombieVillagerMaintainOldDataHook> zombieVillagerMaintainOldDataHook;
@@ -385,7 +346,6 @@ void registerInventoryRuntime() {
     }
 
     (void)PlayerInventoryChangedHook::_AutoHookCount;
-    (void)PlayerUseItemHook::_AutoHookCount;
     (void)BucketUseOnEntityHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
