@@ -245,7 +245,7 @@
 | `husbandry/wax_off` | other | missing-trigger | |
 | `husbandry/tadpole_in_a_bucket` | `filled_bucket` | done | 已按填充后的蝌蚪桶 item 匹配 |
 | `husbandry/leash_all_frog_variants` | `player_interacted_with_entity` | done | 已补本地 JSON + lang，并接入窄实现：仅支持玩家成功用 `minecraft:lead` 拴住 `minecraft:frog`，且按当前 Bedrock `variant` 值映射 `minecraft:temperate`/`minecraft:cold`/`minecraft:warm` 三种 criterion；青蛙不需要同时被拴住 |
-| `husbandry/froglights` | `inventory_changed` | missing-data | |
+| `husbandry/froglights` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed`；父级 `minecraft:husbandry/leash_all_frog_variants`，要求同时在物品栏中拥有 `pearlescent_froglight`、`verdant_froglight`、`ochre_froglight` |
 | `husbandry/silk_touch_nest` | silk-touch bee-nest break family | missing-trigger | wiki 语义要求“用精准采集破坏且巢内有 3 只蜜蜂”，并非单纯 `inventory_changed`；后续需要先找可验证 Bedrock seam |
 | `husbandry/ride_a_boat_with_a_goat` | other | missing-trigger | |
 | `husbandry/make_a_sign_glow` | other | missing-trigger | |
@@ -263,6 +263,8 @@
 - `husbandry/fishy_business`
 - `husbandry/tactical_fishing`
 - `husbandry/tadpole_in_a_bucket`
+- `husbandry/leash_all_frog_variants`
+- `husbandry/froglights`
 - `husbandry/axolotl_in_a_bucket`
 - `husbandry/balanced_diet`
 - `husbandry/obtain_sniffer_egg`

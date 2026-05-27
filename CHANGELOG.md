@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - 新增 `husbandry/leash_all_frog_variants` 数据、文案与 `minecraft:player_interacted_with_entity` 的窄实现；当前仅支持玩家手持 `lead` 成功拴住三种青蛙变体的本地形状。
+- 新增 `husbandry/froglights` 数据与中英文文案，复用现有 `inventory_changed` 完成三种蛙明灯的同持有判定。
 
 ## [0.1.1]
 
