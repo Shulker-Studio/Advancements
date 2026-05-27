@@ -21,6 +21,18 @@ bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();
 
+bool playerHurtEntityTriggerRegistered();
+void registerPlayerHurtEntityTrigger(Entry& mod);
+void unregisterPlayerHurtEntityTrigger();
+
+bool playerKilledEntityTriggerRegistered();
+void registerPlayerKilledEntityTrigger(Entry& mod);
+void unregisterPlayerKilledEntityTrigger();
+
+bool entityKilledPlayerTriggerRegistered();
+void registerEntityKilledPlayerTrigger(Entry& mod);
+void unregisterEntityKilledPlayerTrigger();
+
 bool targetHitTriggerRegistered();
 void registerTargetHitTrigger(Entry& mod);
 void unregisterTargetHitTrigger();
