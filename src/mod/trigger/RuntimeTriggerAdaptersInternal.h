@@ -73,6 +73,10 @@ bool shotCrossbowTriggerRegistered();
 void registerShotCrossbowTrigger(Entry& mod);
 void unregisterShotCrossbowTrigger();
 
+bool sleptInBedTriggerRegistered();
+void registerSleptInBedTrigger(Entry& mod);
+void unregisterSleptInBedTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();
