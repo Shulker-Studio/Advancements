@@ -127,17 +127,6 @@ void dispatchVillagerTrade(Entry& mod, Player& player) {
     );
 }
 
-void dispatchEnchantedItem(Entry& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:enchanted_item",
-            NoTriggerPayload{},
-        }
-    );
-}
-
 void dispatchCuredZombieVillager(Entry& mod, Player& player) {
     dispatchTrigger(
         mod,
@@ -258,10 +247,6 @@ LL_TYPE_INSTANCE_HOOK(
 
     if (screenType == SharedTypes::Legacy::ContainerType::Trade && sourceContainer == SuccessfulOutputContainer) {
         dispatchVillagerTrade(*mod, mPlayer);
-    }
-
-    if (screenType == SharedTypes::Legacy::ContainerType::Enchantment && sourceContainer == SuccessfulOutputContainer) {
-        dispatchEnchantedItem(*mod, mPlayer);
     }
 
     return result;
