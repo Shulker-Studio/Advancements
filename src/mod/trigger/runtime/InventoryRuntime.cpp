@@ -94,17 +94,6 @@ bool isConsumeItemUseMethod(ItemUseMethod useMethod) {
     return useMethod == ItemUseMethod::Eat || useMethod == ItemUseMethod::Consume;
 }
 
-void dispatchUsedTotem(Entry& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:used_totem",
-            ItemTriggerPayload{"minecraft:totem_of_undying", std::nullopt},
-        }
-    );
-}
-
 void dispatchFishingRodHooked(Entry& mod, Player& player, std::string const& itemId) {
     dispatchTrigger(
         mod,
@@ -332,20 +321,6 @@ LL_TYPE_INSTANCE_HOOK(
     dispatchConsumeItem(*mod, *this, itemId);
 }
 
-LL_TYPE_INSTANCE_HOOK(PlayerConsumeTotemHook, HookPriority::Normal, Player, &Player::$consumeTotem, bool) {
-    auto const consumed = origin();
-    if (!consumed) {
-        return false;
-    }
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod != nullptr) {
-        dispatchUsedTotem(*mod, *this);
-    }
-
-    return true;
-}
-
 LL_TYPE_INSTANCE_HOOK(
     PullFishingHookHook,
     HookPriority::Normal,
@@ -498,7 +473,6 @@ struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<VillagerTradeTransferHook> villagerTradeTransferHook;
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
     ll::memory::HookRegistrar<PlayerUseItemHook>          useItemHook;
-    ll::memory::HookRegistrar<PlayerConsumeTotemHook>     consumeTotemHook;
     ll::memory::HookRegistrar<PullFishingHookHook>        pullFishingHook;
     ll::memory::HookRegistrar<BucketUseOnEntityHook>      bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
@@ -519,7 +493,6 @@ void registerInventoryRuntime() {
     (void)VillagerTradeTransferHook::_AutoHookCount;
     (void)PlayerInventoryChangedHook::_AutoHookCount;
     (void)PlayerUseItemHook::_AutoHookCount;
-    (void)PlayerConsumeTotemHook::_AutoHookCount;
     (void)PullFishingHookHook::_AutoHookCount;
     (void)BucketUseOnEntityHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
