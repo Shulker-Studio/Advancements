@@ -23,10 +23,8 @@
 #include "mc/world/level/dimension/VanillaDimensions.h"
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 namespace advancements {
 namespace {
@@ -38,24 +36,6 @@ constexpr float RespawnDragonHorizontalRange     = 192.0F;
 constexpr float BeaconHorizontalRange            = 10.0F;
 constexpr float BeaconVerticalRangeBelow         = 9.0F;
 constexpr float BeaconVerticalRangeAbove         = 5.0F;
-std::unordered_map<mce::UUID, Vec3> gNetherTravelStartPositions;
-
-float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
-    auto const dx = lhs.x - rhs.x;
-    auto const dz = lhs.z - rhs.z;
-    return std::sqrt(dx * dx + dz * dz);
-}
-
-void dispatchNetherTravel(Entry& mod, Player& player, float horizontalTravelDistance) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:nether_travel",
-            NetherTravelTriggerPayload{horizontalTravelDistance},
-        }
-    );
-}
 
 bool isWithinWitherSummonRange(Player const& player, BlockSource const& region, Vec3 const& pos) {
     if (player.getDimensionId() != region.getDimensionId()) {
@@ -158,11 +138,10 @@ struct WorldRuntimeHookState {
 };
 
 std::unique_ptr<WorldRuntimeHookState> gWorldRuntimeHookState;
-ll::event::ListenerPtr                  gDimensionChangedListener;
 
 } // namespace
 
-bool worldRuntimeRegistered() { return gDestroyBlockListener || gWorldRuntimeHookState != nullptr || gDimensionChangedListener != nullptr; }
+bool worldRuntimeRegistered() { return gDestroyBlockListener || gWorldRuntimeHookState != nullptr; }
 
 void registerWorldRuntime(Entry& mod) {
     if (worldRuntimeRegistered()) {
@@ -172,27 +151,6 @@ void registerWorldRuntime(Entry& mod) {
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
-
-    gDimensionChangedListener = ll::event::EventBus::getInstance().emplaceListener<event::player::PlayerDimensionChangedEvent>([&mod](auto& event) {
-        auto const fromDimension = event.fromDimension();
-        auto const toDimension = event.toDimension();
-        auto const playerId = event.self().getUuid();
-        if (fromDimension == VanillaDimensions::Overworld() && toDimension == VanillaDimensions::Nether()) {
-            gNetherTravelStartPositions[playerId] = event.positionBeforeChange();
-            return;
-        }
-
-        if (fromDimension == VanillaDimensions::Nether()) {
-            auto const found = gNetherTravelStartPositions.find(playerId);
-            if (found != gNetherTravelStartPositions.end()) {
-                if (toDimension == VanillaDimensions::Overworld()) {
-                    auto const travelled = horizontalDistance(found->second, event.self().getPosition());
-                    dispatchNetherTravel(mod, event.self(), travelled);
-                }
-                gNetherTravelStartPositions.erase(found);
-            }
-        }
-    });
 
     auto& eventBus = ll::event::EventBus::getInstance();
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
@@ -210,13 +168,7 @@ void registerWorldRuntime(Entry& mod) {
 }
 
 void unregisterWorldRuntime() {
-    gNetherTravelStartPositions.clear();
     gWorldRuntimeHookState.reset();
-
-    if (gDimensionChangedListener) {
-        ll::event::EventBus::getInstance().removeListener(gDimensionChangedListener);
-        gDimensionChangedListener.reset();
-    }
 
     auto& eventBus = ll::event::EventBus::getInstance();
     if (gDestroyBlockListener) {
