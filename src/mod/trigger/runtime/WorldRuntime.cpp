@@ -1,8 +1,6 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
 #include "mod/Entry.h"
-#include "mod/event/player/PlayerTickEvent.h"
-
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/memory/Hook.h"
@@ -10,7 +8,6 @@
 
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/player/Player.h"
-#include "mc/world/effect/MobEffect.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
@@ -34,45 +31,13 @@ namespace advancements {
 namespace {
 
 ll::event::ListenerPtr gDestroyBlockListener;
-ll::event::ListenerPtr gLevitationTickListener;
 
 constexpr float WitherSummonChebyshevRange       = 50.0F;
 constexpr float RespawnDragonHorizontalRange     = 192.0F;
 constexpr float BeaconHorizontalRange            = 10.0F;
 constexpr float BeaconVerticalRangeBelow         = 9.0F;
 constexpr float BeaconVerticalRangeAbove         = 5.0F;
-struct LevitationPlayerState {
-    Vec3 startPosition;
-};
-
-std::unordered_map<mce::UUID, Vec3>                         gNetherTravelStartPositions;
-std::unordered_map<mce::UUID, LevitationPlayerState>         gLevitationPlayerStates;
-
-void dispatchLevitation(Entry& mod, Player& player, float verticalDistance) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:levitation",
-            LevitationTriggerPayload{verticalDistance},
-        }
-    );
-}
-
-void checkLevitation(Entry& mod, Player& player) {
-    auto* levitation = MobEffect::LEVITATION();
-    if (levitation == nullptr || !player.hasEffect(*levitation)) {
-        auto const found = gLevitationPlayerStates.find(player.getUuid());
-        if (found != gLevitationPlayerStates.end()) {
-            auto const endPosition = player.getPosition();
-            dispatchLevitation(mod, player, endPosition.y - found->second.startPosition.y);
-            gLevitationPlayerStates.erase(found);
-        }
-        return;
-    }
-
-    gLevitationPlayerStates.try_emplace(player.getUuid(), LevitationPlayerState{player.getPosition()});
-}
+std::unordered_map<mce::UUID, Vec3> gNetherTravelStartPositions;
 
 std::string dimensionId(DimensionType dimension) {
     if (dimension == VanillaDimensions::Overworld()) {
@@ -271,10 +236,6 @@ void registerWorldRuntime(Entry& mod) {
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
 
-    gLevitationTickListener = ll::event::EventBus::getInstance().emplaceListener<event::player::PlayerTickEvent>([&mod](auto& event) {
-        checkLevitation(mod, event.self());
-    });
-
     auto& eventBus = ll::event::EventBus::getInstance();
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
         auto const& block = event.self().getDimensionBlockSource().getBlock(event.pos());
@@ -292,13 +253,7 @@ void registerWorldRuntime(Entry& mod) {
 
 void unregisterWorldRuntime() {
     gNetherTravelStartPositions.clear();
-    gLevitationPlayerStates.clear();
     gWorldRuntimeHookState.reset();
-
-    if (gLevitationTickListener) {
-        ll::event::EventBus::getInstance().removeListener(gLevitationTickListener);
-        gLevitationTickListener.reset();
-    }
 
     auto& eventBus = ll::event::EventBus::getInstance();
     if (gDestroyBlockListener) {
