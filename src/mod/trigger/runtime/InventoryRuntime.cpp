@@ -12,9 +12,7 @@
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/gamemode/InteractionResult.h"
-#include "mc/world/item/BucketItem.h"
 #include "mc/world/item/ItemStack.h"
-#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/Level.h"
 
 #include <mc/legacy/ActorUniqueID.h>
@@ -31,8 +29,6 @@ constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 constexpr int  TemperateFrogVariant                 = 0;
 constexpr int  ColdFrogVariant                      = 1;
 constexpr int  WarmFrogVariant                      = 2;
-
-std::unordered_map<uint64_t, std::string> gPendingBucketedEntities;
 
 struct PendingZombieVillagerCure {
     ActorUniqueID zombieVillagerId;
@@ -63,17 +59,6 @@ void dispatchInventoryChangedForItem(Entry& mod, Player& player, std::string con
             player,
             "minecraft:inventory_changed",
             ItemTriggerPayload{itemId, countMatchingItems(player, itemId)},
-        }
-    );
-}
-
-void dispatchFilledBucket(Entry& mod, Player& player, std::string const& itemId) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:filled_bucket",
-            ItemTriggerPayload{itemId, std::nullopt},
         }
     );
 }
@@ -156,25 +141,6 @@ void checkPendingZombieVillagerCures(Player& player) {
     }
 }
 
-std::optional<std::string> bucketItemIdForBucketedEntity(ActorType actorType) {
-    switch (actorType) {
-    case ActorType::Fish:
-        return "minecraft:cod_bucket";
-    case ActorType::Salmon:
-        return "minecraft:salmon_bucket";
-    case ActorType::Tropicalfish:
-        return "minecraft:tropical_fish_bucket";
-    case ActorType::Pufferfish:
-        return "minecraft:pufferfish_bucket";
-    case ActorType::Tadpole:
-        return "minecraft:tadpole_bucket";
-    case ActorType::Axolotl:
-        return "minecraft:axolotl_bucket";
-    default:
-        return std::nullopt;
-    }
-}
-
 LL_TYPE_INSTANCE_HOOK(
     PlayerInventoryChangedHook,
     HookPriority::Normal,
@@ -208,31 +174,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    BucketUseOnEntityHook,
-    HookPriority::Normal,
-    BucketItem,
-    &BucketItem::$_useOn,
-    InteractionResult,
-    ItemStack&  instance,
-    Actor&      entity,
-    BlockPos    pos,
-    uchar       face,
-    Vec3 const& clickPos
-) {
-    auto const bucketItemId = bucketItemIdForBucketedEntity(entity.getEntityTypeId());
-    if (!bucketItemId) {
-        return origin(instance, entity, pos, face, clickPos);
-    }
-
-    auto const entityId = entity.getOrCreateUniqueID().getHash();
-    auto result = origin(instance, entity, pos, face, clickPos);
-    if (result.mSwing) {
-        gPendingBucketedEntities[entityId] = *bucketItemId;
-    }
-    return result;
-}
-
-LL_TYPE_INSTANCE_HOOK(
     PlayerInteractEntityHook,
     HookPriority::Normal,
     Player,
@@ -252,7 +193,6 @@ LL_TYPE_INSTANCE_HOOK(
     auto const leashHolderBefore = actor.getLeashHolder();
     auto const frogVariantId = actorTypeName == "minecraft:frog" ? frogVariantIdForVariant(actor.getVariant())
                                                                   : std::nullopt;
-    auto const entityId = actor.getOrCreateUniqueID().getHash();
     auto result = origin(actor, location);
 
     auto* mod = currentRuntimeTriggerMod();
@@ -274,15 +214,6 @@ LL_TYPE_INSTANCE_HOOK(
         }
     }
 
-    auto pending = gPendingBucketedEntities.find(entityId);
-    if (pending == gPendingBucketedEntities.end()) {
-        return result;
-    }
-
-    if (mod != nullptr) {
-        dispatchFilledBucket(*mod, *this, pending->second);
-    }
-    gPendingBucketedEntities.erase(pending);
     return result;
 }
 
@@ -329,7 +260,6 @@ LL_TYPE_INSTANCE_HOOK(
 
 struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
-    ll::memory::HookRegistrar<BucketUseOnEntityHook>      bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
     ll::memory::HookRegistrar<ZombieVillagerMaintainOldDataHook> zombieVillagerMaintainOldDataHook;
 };
@@ -346,7 +276,6 @@ void registerInventoryRuntime() {
     }
 
     (void)PlayerInventoryChangedHook::_AutoHookCount;
-    (void)BucketUseOnEntityHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
     gInventoryRuntimeHookState = std::make_unique<InventoryRuntimeHookState>();
@@ -359,7 +288,6 @@ void registerInventoryRuntime() {
 }
 
 void unregisterInventoryRuntime() {
-    gPendingBucketedEntities.clear();
     gPendingZombieVillagerCures.clear();
     gInventoryRuntimeHookState.reset();
     if (gPlayerTickListener) {
