@@ -140,6 +140,7 @@
 | `nether/return_to_sender` | `player_killed_entity` / ghast fireball narrow slice | done | 已核原版 JSON：`minecraft:player_killed_entity` + `entity[0].predicate.type = minecraft:ghast` + `killing_blow.direct_entity.type = minecraft:fireball` + `killing_blow.tags` 含 `minecraft:is_projectile`；当前 runtime 复用 MobDieEvent/player attribution，并从 ActorDamageSource 记录 direct damager type；需 live-server QA 证明 Bedrock 反弹恶魂火球击杀时 direct damager 为 `minecraft:fireball` |
 | `nether/find_bastion` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:bastion_remnant`；当前窄实现基于玩家所在结构触发 |
 | `nether/obtain_ancient_debris` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
+| `nether/netherite_armor` | `inventory_changed` | done | 已补数据，复用 `inventory_changed` 的窄 `required_items` 形状；父级 `minecraft:nether/obtain_ancient_debris`，仅在当前物品栏同时拥有四件下界合金盔甲时完成，奖励 100 XP |
 | `nether/fast_travel` | `nether_travel` | done | 已核原版 JSON：`minecraft:nether_travel` + `conditions.distance.horizontal.min = 7000.0` + `rewards.experience = 100`；当前窄 runtime 使用下界进出切维 seam 记录/结算水平距离，仍需 live-server QA 验证跨 portal 往返链路时序 |
 | `nether/find_fortress` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:fortress`；当前窄实现基于玩家所在结构触发 |
 | `nether/uneasy_alliance` | complex entity transport / kill family | missing-trigger | |
