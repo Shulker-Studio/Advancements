@@ -37,6 +37,10 @@ bool targetHitTriggerRegistered();
 void registerTargetHitTrigger(Entry& mod);
 void unregisterTargetHitTrigger();
 
+bool brewedPotionTriggerRegistered();
+void registerBrewedPotionTrigger(Entry& mod);
+void unregisterBrewedPotionTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();

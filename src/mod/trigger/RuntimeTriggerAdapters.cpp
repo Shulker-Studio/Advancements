@@ -4,11 +4,13 @@
 #include "mod/event/block/TargetBlockHitEvent.h"
 #include "mod/event/entity/EntityHurtByPlayerEvent.h"
 #include "mod/event/entity/EntityKilledByPlayerEvent.h"
+#include "mod/event/item/ContainerOutputTakenEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerKilledByEntityEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
+#include "mod/trigger/triggers/BrewedPotionTrigger.h"
 #include "mod/trigger/triggers/EntityHurtPlayerTrigger.h"
 #include "mod/trigger/triggers/EntityKilledPlayerTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
@@ -155,9 +157,10 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
-        || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered()
+        || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
+        || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
         || lootRuntimeRegistered() || projectileRuntimeRegistered()
@@ -189,6 +192,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::block::registerTargetBlockHitEventSource();
     event::entity::registerEntityHurtByPlayerEventSource();
     event::entity::registerEntityKilledByPlayerEventSource();
+    event::item::registerContainerOutputTakenEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerKilledByEntityEventSource();
     event::player::registerPlayerTickEventSource();
@@ -199,6 +203,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
+    registerBrewedPotionTrigger(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
     registerLootRuntime();
@@ -213,11 +218,13 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
+    unregisterBrewedPotionTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();
     event::block::unregisterTargetBlockHitEventSource();
     event::entity::unregisterEntityHurtByPlayerEventSource();
     event::entity::unregisterEntityKilledByPlayerEventSource();
+    event::item::unregisterContainerOutputTakenEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerKilledByEntityEventSource();
     event::player::unregisterPlayerTickEventSource();
