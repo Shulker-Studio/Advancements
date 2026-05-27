@@ -69,6 +69,10 @@ bool fishingRodHookedTriggerRegistered();
 void registerFishingRodHookedTrigger(Entry& mod);
 void unregisterFishingRodHookedTrigger();
 
+bool shotCrossbowTriggerRegistered();
+void registerShotCrossbowTrigger(Entry& mod);
+void unregisterShotCrossbowTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();
