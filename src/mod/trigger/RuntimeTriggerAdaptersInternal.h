@@ -81,6 +81,10 @@ bool effectsChangedTriggerRegistered();
 void registerEffectsChangedTrigger(Entry& mod);
 void unregisterEffectsChangedTrigger();
 
+bool playerGeneratedContainerLootTriggerRegistered();
+void registerPlayerGeneratedContainerLootTrigger(Entry& mod);
+void unregisterPlayerGeneratedContainerLootTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();

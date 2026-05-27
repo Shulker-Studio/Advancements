@@ -6,6 +6,7 @@
 #include "mod/event/entity/EntityKilledByPlayerEvent.h"
 #include "mod/event/item/ContainerOutputTakenEvent.h"
 #include "mod/event/item/FishingRodHookedItemEvent.h"
+#include "mod/event/item/PlayerGeneratedContainerLootEvent.h"
 #include "mod/event/item/PlayerConsumedItemEvent.h"
 #include "mod/event/item/PlayerFilledBucketEvent.h"
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
@@ -28,6 +29,7 @@
 #include "mod/trigger/triggers/FishingRodHookedTrigger.h"
 #include "mod/trigger/triggers/InventoryChangedTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
+#include "mod/trigger/triggers/PlayerGeneratedContainerLootTrigger.h"
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerHurtEntityTrigger.h"
 #include "mod/trigger/triggers/ShotCrossbowTrigger.h"
@@ -180,12 +182,14 @@ bool anyRuntimeRegistered() {
         || consumeItemTriggerRegistered() || inventoryChangedTriggerRegistered() || filledBucketTriggerRegistered()
         || fishingRodHookedTriggerRegistered() || shotCrossbowTriggerRegistered() || sleptInBedTriggerRegistered()
         || effectsChangedTriggerRegistered()
+        || playerGeneratedContainerLootTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
         || event::item::playerInventoryChangedEventSourceRegistered()
         || event::item::playerFilledBucketEventSourceRegistered()
         || event::item::fishingRodHookedItemEventSourceRegistered()
+        || event::item::playerGeneratedContainerLootEventSourceRegistered()
         || event::item::playerShotCrossbowEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
@@ -225,6 +229,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerContainerOutputTakenEventSource();
     event::item::registerPlayerFilledBucketEventSource();
     event::item::registerFishingRodHookedItemEventSource();
+    event::item::registerPlayerGeneratedContainerLootEventSource();
     event::item::registerPlayerConsumedItemEventSource();
     event::item::registerPlayerInventoryChangedEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
@@ -250,6 +255,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerInventoryChangedTrigger(mod);
     registerFilledBucketTrigger(mod);
     registerFishingRodHookedTrigger(mod);
+    registerPlayerGeneratedContainerLootTrigger(mod);
     registerShotCrossbowTrigger(mod);
     registerSleptInBedTrigger(mod);
     registerProjectileRuntime();
@@ -275,6 +281,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterInventoryChangedTrigger();
     unregisterFilledBucketTrigger();
     unregisterFishingRodHookedTrigger();
+    unregisterPlayerGeneratedContainerLootTrigger();
     unregisterShotCrossbowTrigger();
     unregisterSleptInBedTrigger();
     unregisterLocationTrigger();
@@ -285,6 +292,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterContainerOutputTakenEventSource();
     event::item::unregisterPlayerFilledBucketEventSource();
     event::item::unregisterFishingRodHookedItemEventSource();
+    event::item::unregisterPlayerGeneratedContainerLootEventSource();
     event::item::unregisterPlayerConsumedItemEventSource();
     event::item::unregisterPlayerInventoryChangedEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
