@@ -5,6 +5,7 @@
 #include "mod/event/entity/EntityHurtByPlayerEvent.h"
 #include "mod/event/entity/EntityKilledByPlayerEvent.h"
 #include "mod/event/item/ContainerOutputTakenEvent.h"
+#include "mod/event/item/FishingRodHookedItemEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerKilledByEntityEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
@@ -15,6 +16,7 @@
 #include "mod/trigger/triggers/EnchantedItemTrigger.h"
 #include "mod/trigger/triggers/EntityHurtPlayerTrigger.h"
 #include "mod/trigger/triggers/EntityKilledPlayerTrigger.h"
+#include "mod/trigger/triggers/FishingRodHookedTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerHurtEntityTrigger.h"
@@ -163,8 +165,10 @@ bool anyRuntimeRegistered() {
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
+        || fishingRodHookedTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
+        || event::item::fishingRodHookedItemEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
         || event::player::playerUsedTotemEventSourceRegistered()
@@ -199,6 +203,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::entity::registerEntityHurtByPlayerEventSource();
     event::entity::registerEntityKilledByPlayerEventSource();
     event::item::registerContainerOutputTakenEventSource();
+    event::item::registerFishingRodHookedItemEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerKilledByEntityEventSource();
     event::player::registerPlayerTickEventSource();
@@ -214,6 +219,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerEnchantedItemTrigger(mod);
     registerVillagerTradeTrigger(mod);
     registerUsedTotemTrigger(mod);
+    registerFishingRodHookedTrigger(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
     registerLootRuntime();
@@ -232,12 +238,14 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterEnchantedItemTrigger();
     unregisterVillagerTradeTrigger();
     unregisterUsedTotemTrigger();
+    unregisterFishingRodHookedTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();
     event::block::unregisterTargetBlockHitEventSource();
     event::entity::unregisterEntityHurtByPlayerEventSource();
     event::entity::unregisterEntityKilledByPlayerEventSource();
     event::item::unregisterContainerOutputTakenEventSource();
+    event::item::unregisterFishingRodHookedItemEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerKilledByEntityEventSource();
     event::player::unregisterPlayerTickEventSource();
