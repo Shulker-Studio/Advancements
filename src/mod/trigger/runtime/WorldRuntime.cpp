@@ -52,17 +52,6 @@ struct LevitationPlayerState {
 std::unordered_map<mce::UUID, Vec3>                         gNetherTravelStartPositions;
 std::unordered_map<mce::UUID, LevitationPlayerState>         gLevitationPlayerStates;
 
-void dispatchSleptInBed(Entry& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:slept_in_bed",
-            NoTriggerPayload{},
-        }
-    );
-}
-
 void dispatchEnterBlock(Entry& mod, Player& player, std::string const& blockId) {
     dispatchTrigger(
         mod,
@@ -304,27 +293,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 LL_TYPE_INSTANCE_HOOK(
-    PlayerStartSleepInBedHook,
-    HookPriority::Normal,
-    Player,
-    &Player::$startSleepInBed,
-    BedSleepingResult,
-    BlockPos const& pos
-) {
-    auto const result = origin(pos);
-    if (result != BedSleepingResult::Ok) {
-        return result;
-    }
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod != nullptr) {
-        dispatchSleptInBed(*mod, *this);
-    }
-
-    return result;
-}
-
-LL_TYPE_INSTANCE_HOOK(
     SkullBlockCheckMobSpawnHook,
     HookPriority::Normal,
     SkullBlock,
@@ -426,7 +394,6 @@ LL_TYPE_STATIC_HOOK(
 
 struct WorldRuntimeHookState {
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
-    ll::memory::HookRegistrar<PlayerStartSleepInBedHook>           startSleepInBedHook;
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
     ll::memory::HookRegistrar<EndDragonFightTryRespawnHook>        endDragonFightTryRespawnHook;
     ll::memory::HookRegistrar<EndGatewayBlockActorTeleportEntityHook> endGatewayTeleportEntityHook;
@@ -446,7 +413,6 @@ void registerWorldRuntime(Entry& mod) {
     }
 
     (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
-    (void)PlayerStartSleepInBedHook::_AutoHookCount;
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
     (void)EndDragonFightTryRespawnHook::_AutoHookCount;
     (void)EndGatewayBlockActorTeleportEntityHook::_AutoHookCount;
