@@ -8,6 +8,7 @@
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerKilledByEntityEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
+#include "mod/event/player/PlayerUsedTotemEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
@@ -17,6 +18,7 @@
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerHurtEntityTrigger.h"
 #include "mod/trigger/triggers/TargetHitTrigger.h"
+#include "mod/trigger/triggers/UsedTotemTrigger.h"
 
 #include "mc/world/actor/player/Player.h"
 
@@ -158,10 +160,12 @@ bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
+        || usedTotemTriggerRegistered()
         || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
         || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
+        || event::player::playerUsedTotemEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
         || lootRuntimeRegistered() || projectileRuntimeRegistered()
         || effectRuntimeRegistered();
@@ -196,6 +200,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerKilledByEntityEventSource();
     event::player::registerPlayerTickEventSource();
+    event::player::registerPlayerUsedTotemEventSource();
     registerInventoryRuntime();
     registerEntityHurtPlayerTrigger(mod);
     registerEntityKilledPlayerTrigger(mod);
@@ -204,6 +209,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
     registerBrewedPotionTrigger(mod);
+    registerUsedTotemTrigger(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
     registerLootRuntime();
@@ -219,6 +225,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
     unregisterBrewedPotionTrigger();
+    unregisterUsedTotemTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();
     event::block::unregisterTargetBlockHitEventSource();
@@ -228,6 +235,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerKilledByEntityEventSource();
     event::player::unregisterPlayerTickEventSource();
+    event::player::unregisterPlayerUsedTotemEventSource();
     unregisterProjectileRuntime();
     unregisterWorldRuntime();
     unregisterLootRuntime();
