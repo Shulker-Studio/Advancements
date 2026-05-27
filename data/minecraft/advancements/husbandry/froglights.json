@@ -17,27 +17,16 @@
     "hidden": false
   },
   "criteria": {
-    "pearlescent_froglight": {
+    "froglights": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
-        "item": "minecraft:pearlescent_froglight",
-        "count": 1
-      }
-    },
-    "verdant_froglight": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "item": "minecraft:verdant_froglight",
-        "count": 1
-      }
-    },
-    "ochre_froglight": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "item": "minecraft:ochre_froglight",
-        "count": 1
+        "required_items": [
+          "minecraft:pearlescent_froglight",
+          "minecraft:verdant_froglight",
+          "minecraft:ochre_froglight"
+        ]
       }
     }
   },
-  "requirements": [["pearlescent_froglight"], ["verdant_froglight"], ["ochre_froglight"]]
+  "requirements": [["froglights"]]
 }

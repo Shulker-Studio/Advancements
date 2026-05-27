@@ -131,6 +131,10 @@ struct ItemTriggerCondition {
     std::optional<int> count;
 };
 
+struct InventoryItemsCondition {
+    std::vector<std::string> requiredItemIds;
+};
+
 struct EntityTriggerCondition {
     std::string entityTypeId;
 };
@@ -216,6 +220,7 @@ using TriggerCondition = std::variant<
     NoTriggerCondition,
     InvalidTriggerCondition,
     ItemTriggerCondition,
+    InventoryItemsCondition,
     EntityTriggerCondition,
     PlayerInteractedWithEntityCondition,
     BlockTriggerCondition,

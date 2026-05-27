@@ -2,10 +2,33 @@
 
 #include "mod/trigger/criteria/Common.h"
 
+#include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
 
 namespace advancements::criteria {
 namespace {
+
+TriggerCondition compileRequiredInventoryItemsCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"required_items"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("required_items") || !conditions.at("required_items").is_array()) {
+        return InvalidTriggerCondition{};
+    }
+
+    std::vector<std::string> requiredItemIds;
+    for (auto const& entry : conditions.at("required_items")) {
+        if (!entry.is_string()) {
+            return InvalidTriggerCondition{};
+        }
+        requiredItemIds.push_back(entry.get<std::string>());
+    }
+
+    if (requiredItemIds.empty()) {
+        return InvalidTriggerCondition{};
+    }
+    return InventoryItemsCondition{std::move(requiredItemIds)};
+}
 
 TriggerCondition compileItemCondition(nlohmann::json const& conditions, bool allowCount) {
     if (!hasOnlyKeys(conditions, allowCount ? std::initializer_list<char const*>{"item", "count"}
@@ -76,6 +99,10 @@ std::optional<float> parseVillagerTradePlayerYMin(nlohmann::json const& conditio
 } // namespace
 
 TriggerCondition compileInventoryItemCondition(nlohmann::json const& conditions) {
+    auto requiredItems = compileRequiredInventoryItemsCondition(conditions);
+    if (!std::holds_alternative<InvalidTriggerCondition>(requiredItems)) {
+        return requiredItems;
+    }
     return compileItemCondition(conditions, true);
 }
 
@@ -131,6 +158,29 @@ TriggerCondition compileVillagerTradeCondition(nlohmann::json const& conditions)
 }
 
 bool matchesInventoryItemCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    if (auto const* compiledItems = std::get_if<InventoryItemsCondition>(&condition)) {
+        auto const* payload = payloadAs<ItemTriggerPayload>(context);
+        if (payload == nullptr) {
+            return false;
+        }
+
+        auto const& inventory = context.player.getInventory();
+        for (auto const& requiredItemId : compiledItems->requiredItemIds) {
+            bool found = false;
+            for (int slot = 0; slot < inventory.getContainerSize(); ++slot) {
+                auto const& item = inventory.getItem(slot);
+                if (!item.isNull() && item.getTypeName() == requiredItemId && item.mCount > 0) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     auto const* compiled = std::get_if<ItemTriggerCondition>(&condition);
     auto const* payload  = payloadAs<ItemTriggerPayload>(context);
     if (compiled == nullptr || payload == nullptr) {
