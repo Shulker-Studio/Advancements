@@ -273,7 +273,7 @@
 
 ## Immediate Alignment Fixes
 
-1. `adventure/kill_all_mobs` 用当前已支持敌对怪集合正式建成原版 ID，而不是 demo
+1. `adventure/kill_all_mobs` 已用当前已支持敌对怪集合正式建成原版 ID
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. husbandry 下一小步可直接补 `froglights` 数据；若继续交互类，再为 `silk_touch_nest` 找到可靠 runtime seam
+3. `husbandry/froglights` 已补数据；若继续交互类，再为 `silk_touch_nest` 找到可靠 runtime seam
 4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
