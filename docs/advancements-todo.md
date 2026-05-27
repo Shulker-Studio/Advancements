@@ -215,7 +215,7 @@
 | `adventure/blowback` | other | missing-trigger | |
 | `adventure/under_lock_and_key` | other | missing-trigger | |
 | `adventure/revaulting` | other | missing-trigger | |
-| `adventure/overoverkill` | `player_hurt_entity` / damage family | missing-trigger | |
+| `adventure/overoverkill` | `player_hurt_entity` / damage family | done | 已补本地 JSON + lang，并接入窄实现：仅支持父级 `minecraft:adventure/minecraft_trials_edition`、`minecraft:player_hurt_entity` 下 `damage.dealt.min = 100.0` 与 `damage.type.tags = [{ id: minecraft:mace_smash, expected: true }]`、`direct_entity.equipment.mainhand.items = minecraft:mace` 这组已核本地 shape；runtime 以玩家当前主手为 `minecraft:mace` 且本次 `ActorHurtEvent.damage() >= 100.0` 的单击伤害作为最小匹配面，不泛化其他 damage predicate 形状 |
 | `adventure/brush_armadillo` | other | missing-trigger | |
 | `adventure/minecart_improvements` | other | missing-trigger | |
 | `adventure/spyglass_at_ghast` | other | missing-trigger | duplicate name check from wiki if needed |
