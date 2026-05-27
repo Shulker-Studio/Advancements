@@ -1,5 +1,7 @@
 #include "mod/trigger/criteria/ProjectileCriteria.h"
 
+#include "mod/predicate/DistancePredicate.h"
+#include "mod/predicate/EntityPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
 namespace advancements::criteria {
@@ -17,47 +19,11 @@ TriggerCondition compileTargetHitCondition(nlohmann::json const& conditions) {
         return InvalidTriggerCondition{};
     }
 
-    if (!conditions.contains("projectile") || !conditions.at("projectile").is_array()) {
+    auto const projectilePredicate = predicate::parseSingleThisEntityDistancePredicate(conditions, "projectile");
+    if (!projectilePredicate || !projectilePredicate->horizontalDistance) {
         return InvalidTriggerCondition{};
     }
-    auto const& projectile = conditions.at("projectile");
-    if (projectile.size() != 1) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& projectileEntry = projectile.at(0);
-    if (!projectileEntry.is_object() || !hasOnlyKeys(projectileEntry, {"condition", "entity", "predicate"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!projectileEntry.contains("condition") || !projectileEntry.at("condition").is_string()
-        || projectileEntry.at("condition").get<std::string>() != "minecraft:entity_properties") {
-        return InvalidTriggerCondition{};
-    }
-    if (!projectileEntry.contains("entity") || !projectileEntry.at("entity").is_string()
-        || projectileEntry.at("entity").get<std::string>() != "this") {
-        return InvalidTriggerCondition{};
-    }
-    if (!projectileEntry.contains("predicate") || !projectileEntry.at("predicate").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& predicate = projectileEntry.at("predicate");
-    if (!hasOnlyKeys(predicate, {"distance"}) || !predicate.contains("distance") || !predicate.at("distance").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& distance = predicate.at("distance");
-    if (!hasOnlyKeys(distance, {"horizontal"}) || !distance.contains("horizontal")
-        || !distance.at("horizontal").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& horizontal = distance.at("horizontal");
-    if (!hasOnlyKeys(horizontal, {"min"}) || !horizontal.contains("min") || !horizontal.at("min").is_number()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const horizontalMin = horizontal.at("min").get<float>();
+    auto const horizontalMin = projectilePredicate->horizontalDistance->min;
     if (horizontalMin != 30.0F) {
         return InvalidTriggerCondition{};
     }

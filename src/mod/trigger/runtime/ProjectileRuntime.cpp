@@ -7,12 +7,8 @@
 #include "mc/world/actor/ActorDamageSource.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/item/CrossbowItem.h"
-#include "mc/world/level/BlockPos.h"
-#include "mc/world/level/BlockSource.h"
 #include "mc/world/level/Level.h"
-#include "mc/world/level/block/TargetBlock.h"
 
-#include <cmath>
 #include <memory>
 
 namespace advancements {
@@ -43,47 +39,6 @@ bool damageSourceDirectEntityIsArrow(ActorDamageSource const& source) {
 
 bool damageSourceIsSupportedProjectile(ActorDamageSource const& source) {
     return source.isChildEntitySource() || damageSourceDirectEntityIsArrow(source);
-}
-
-float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
-    auto const dx = lhs.x - rhs.x;
-    auto const dz = lhs.z - rhs.z;
-    return std::sqrt(dx * dx + dz * dz);
-}
-
-LL_TYPE_INSTANCE_HOOK(
-    TargetBlockOnProjectileHitHook,
-    HookPriority::Normal,
-    TargetBlock,
-    &TargetBlock::$onProjectileHit,
-    void,
-    ::BlockSource&    region,
-    ::BlockPos const& pos,
-    ::Actor const&    projectile
-) {
-    origin(region, pos, projectile);
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod == nullptr) {
-        return;
-    }
-
-    auto* owner = projectile.getPlayerOwner();
-    if (owner == nullptr) {
-        return;
-    }
-
-    auto const projectileDistance = horizontalDistance(owner->getPosition(), projectile.getPosition());
-    auto const signalStrength     = projectileDistance >= 30.0F ? 15 : 0;
-
-    dispatchTrigger(
-        *mod,
-        TriggerContext{
-            *owner,
-            "minecraft:target_hit",
-            TargetHitPayload{signalStrength, projectileDistance},
-        }
-    );
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -140,7 +95,6 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 struct ProjectileRuntimeHookState {
-    ll::memory::HookRegistrar<TargetBlockOnProjectileHitHook> targetBlockOnProjectileHitHook;
     ll::memory::HookRegistrar<PlayerBlockUsingShieldHook>     playerBlockUsingShieldHook;
     ll::memory::HookRegistrar<CrossbowShootArrowHook>         crossbowShootArrowHook;
 };
@@ -156,7 +110,6 @@ void registerProjectileRuntime() {
         return;
     }
 
-    (void)TargetBlockOnProjectileHitHook::_AutoHookCount;
     (void)PlayerBlockUsingShieldHook::_AutoHookCount;
     (void)CrossbowShootArrowHook::_AutoHookCount;
     gProjectileRuntimeHookState = std::make_unique<ProjectileRuntimeHookState>();
