@@ -1,5 +1,8 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
+#include "mod/event/player/PlayerTickEvent.h"
+
+#include "ll/api/event/EventBus.h"
 #include "ll/api/memory/Hook.h"
 
 #include "mc/entity/components_json_legacy/TransformationComponent.h"
@@ -51,6 +54,7 @@ struct PendingZombieVillagerCure {
 };
 
 std::unordered_map<int64, PendingZombieVillagerCure> gPendingZombieVillagerCures;
+ll::event::ListenerPtr                               gPlayerTickListener;
 
 int countMatchingItems(Player const& player, std::string const& itemId) {
     auto const& inventory = player.getInventory();
@@ -506,15 +510,6 @@ LL_TYPE_INSTANCE_HOOK(
     gPendingZombieVillagerCures.erase(maybeTrackedCure);
 }
 
-LL_TYPE_INSTANCE_HOOK(PlayerTickInventoryRuntimeHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
-    origin(currentTick);
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod != nullptr && !gPendingZombieVillagerCures.empty()) {
-        checkPendingZombieVillagerCures(*this);
-    }
-}
-
 struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<VillagerTradeTransferHook> villagerTradeTransferHook;
     ll::memory::HookRegistrar<PlayerInventoryChangedHook> inventoryChangedHook;
@@ -524,7 +519,6 @@ struct InventoryRuntimeHookState {
     ll::memory::HookRegistrar<BucketUseOnEntityHook>      bucketUseOnEntityHook;
     ll::memory::HookRegistrar<PlayerInteractEntityHook>   playerInteractEntityHook;
     ll::memory::HookRegistrar<ZombieVillagerMaintainOldDataHook> zombieVillagerMaintainOldDataHook;
-    ll::memory::HookRegistrar<PlayerTickInventoryRuntimeHook> playerTickInventoryRuntimeHook;
 };
 
 std::unique_ptr<InventoryRuntimeHookState> gInventoryRuntimeHookState;
@@ -546,14 +540,23 @@ void registerInventoryRuntime() {
     (void)BucketUseOnEntityHook::_AutoHookCount;
     (void)PlayerInteractEntityHook::_AutoHookCount;
     (void)ZombieVillagerMaintainOldDataHook::_AutoHookCount;
-    (void)PlayerTickInventoryRuntimeHook::_AutoHookCount;
     gInventoryRuntimeHookState = std::make_unique<InventoryRuntimeHookState>();
+    gPlayerTickListener = ll::event::EventBus::getInstance().emplaceListener<event::player::PlayerTickEvent>([](auto& event) {
+        auto* mod = currentRuntimeTriggerMod();
+        if (mod != nullptr && !gPendingZombieVillagerCures.empty()) {
+            checkPendingZombieVillagerCures(event.self());
+        }
+    });
 }
 
 void unregisterInventoryRuntime() {
     gPendingBucketedEntities.clear();
     gPendingZombieVillagerCures.clear();
     gInventoryRuntimeHookState.reset();
+    if (gPlayerTickListener) {
+        ll::event::EventBus::getInstance().removeListener(gPlayerTickListener);
+        gPlayerTickListener.reset();
+    }
 }
 
 } // namespace advancements

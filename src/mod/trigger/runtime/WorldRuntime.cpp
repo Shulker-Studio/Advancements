@@ -1,6 +1,7 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
 #include "mod/Entry.h"
+#include "mod/event/player/PlayerTickEvent.h"
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
@@ -23,7 +24,6 @@
 #include "mc/world/level/dimension/end/EndDragonFight.h"
 #include "mc/world/level/dimension/end/RespawnAnimation.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
-#include "mc/world/level/levelgen/structure/VanillaStructureFeatureType.h"
 
 #include <algorithm>
 #include <cmath>
@@ -36,8 +36,8 @@ namespace advancements {
 namespace {
 
 ll::event::ListenerPtr gDestroyBlockListener;
+ll::event::ListenerPtr gLevitationTickListener;
 
-constexpr int LocationStructureCheckIntervalTicks = 20;
 constexpr float WitherSummonChebyshevRange       = 50.0F;
 constexpr float RespawnDragonHorizontalRange     = 192.0F;
 constexpr float BeaconHorizontalRange            = 10.0F;
@@ -45,16 +45,10 @@ constexpr float BeaconVerticalRangeBelow         = 9.0F;
 constexpr float BeaconVerticalRangeAbove         = 5.0F;
 constexpr int RespawnAnchorFullCharge            = 4;
 
-struct LocationStructurePlayerState {
-    int                        ticksUntilCheck{LocationStructureCheckIntervalTicks};
-    std::optional<std::string> lastStructureId;
-};
-
 struct LevitationPlayerState {
     Vec3 startPosition;
 };
 
-std::unordered_map<mce::UUID, LocationStructurePlayerState> gLocationStructurePlayerStates;
 std::unordered_map<mce::UUID, Vec3>                         gNetherTravelStartPositions;
 std::unordered_map<mce::UUID, LevitationPlayerState>         gLevitationPlayerStates;
 
@@ -65,17 +59,6 @@ void dispatchSleptInBed(Entry& mod, Player& player) {
             player,
             "minecraft:slept_in_bed",
             NoTriggerPayload{},
-        }
-    );
-}
-
-void dispatchLocationStructure(Entry& mod, Player& player, std::string const& structureId) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:location",
-            LocationStructurePayload{structureId},
         }
     );
 }
@@ -104,47 +87,6 @@ void dispatchLevitation(Entry& mod, Player& player, float verticalDistance) {
 
 bool positionChanged(Vec3 const& before, Vec3 const& after) {
     return before.x != after.x || before.y != after.y || before.z != after.z;
-}
-
-std::optional<std::string> currentSupportedLocationStructure(Player& player) {
-    auto const& currentStructure = player.getCurrentStructureFeature();
-    if (currentStructure == VanillaStructureFeatureType::Bastion()) {
-        return "minecraft:bastion_remnant";
-    }
-    if (currentStructure == VanillaStructureFeatureType::Fortress()) {
-        return "minecraft:fortress";
-    }
-    if (currentStructure == VanillaStructureFeatureType::EndCity()) {
-        return "minecraft:end_city";
-    }
-    if (currentStructure == VanillaStructureFeatureType::Stronghold()) {
-        return "minecraft:stronghold";
-    }
-    if (currentStructure == VanillaStructureFeatureType::TrialChambers()) {
-        return "minecraft:trial_chambers";
-    }
-    return std::nullopt;
-}
-
-void checkLocationStructure(Entry& mod, Player& player) {
-    auto& state = gLocationStructurePlayerStates[player.getUuid()];
-    --state.ticksUntilCheck;
-    if (state.ticksUntilCheck > 0) {
-        return;
-    }
-    state.ticksUntilCheck = LocationStructureCheckIntervalTicks;
-
-    auto const structureId = currentSupportedLocationStructure(player);
-    if (!structureId) {
-        state.lastStructureId.reset();
-        return;
-    }
-    if (state.lastStructureId && *state.lastStructureId == *structureId) {
-        return;
-    }
-
-    state.lastStructureId = structureId;
-    dispatchLocationStructure(mod, player, *structureId);
 }
 
 void checkLevitation(Entry& mod, Player& player) {
@@ -301,16 +243,6 @@ void dispatchRespawnAnchorCharged(Entry& mod, Player& player) {
             ItemUsedOnBlockPayload{"minecraft:glowstone", "minecraft:respawn_anchor"},
         }
     );
-}
-
-LL_TYPE_INSTANCE_HOOK(PlayerTickWorldHook, HookPriority::Normal, Player, &Player::$tickWorld, void, Tick const& currentTick) {
-    origin(currentTick);
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod != nullptr) {
-        checkLocationStructure(*mod, *this);
-        checkLevitation(*mod, *this);
-    }
 }
 
 LL_TYPE_INSTANCE_HOOK(
@@ -493,7 +425,6 @@ LL_TYPE_STATIC_HOOK(
 }
 
 struct WorldRuntimeHookState {
-    ll::memory::HookRegistrar<PlayerTickWorldHook>                 tickWorldHook;
     ll::memory::HookRegistrar<PlayerFireDimensionChangedEventHook> dimensionChangedEventHook;
     ll::memory::HookRegistrar<PlayerStartSleepInBedHook>           startSleepInBedHook;
     ll::memory::HookRegistrar<SkullBlockCheckMobSpawnHook>         skullBlockCheckMobSpawnHook;
@@ -514,7 +445,6 @@ void registerWorldRuntime(Entry& mod) {
         return;
     }
 
-    (void)PlayerTickWorldHook::_AutoHookCount;
     (void)PlayerFireDimensionChangedEventHook::_AutoHookCount;
     (void)PlayerStartSleepInBedHook::_AutoHookCount;
     (void)SkullBlockCheckMobSpawnHook::_AutoHookCount;
@@ -523,6 +453,10 @@ void registerWorldRuntime(Entry& mod) {
     (void)BeaconBlockActorCheckShapeHook::_AutoHookCount;
     (void)RespawnAnchorBumpChargeHook::_AutoHookCount;
     gWorldRuntimeHookState = std::make_unique<WorldRuntimeHookState>();
+
+    gLevitationTickListener = ll::event::EventBus::getInstance().emplaceListener<event::player::PlayerTickEvent>([&mod](auto& event) {
+        checkLevitation(mod, event.self());
+    });
 
     auto& eventBus = ll::event::EventBus::getInstance();
     gDestroyBlockListener = eventBus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([&mod](auto& event) {
@@ -540,10 +474,14 @@ void registerWorldRuntime(Entry& mod) {
 }
 
 void unregisterWorldRuntime() {
-    gLocationStructurePlayerStates.clear();
     gNetherTravelStartPositions.clear();
     gLevitationPlayerStates.clear();
     gWorldRuntimeHookState.reset();
+
+    if (gLevitationTickListener) {
+        ll::event::EventBus::getInstance().removeListener(gLevitationTickListener);
+        gLevitationTickListener.reset();
+    }
 
     auto& eventBus = ll::event::EventBus::getInstance();
     if (gDestroyBlockListener) {

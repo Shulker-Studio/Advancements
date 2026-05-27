@@ -13,6 +13,10 @@ bool inventoryRuntimeRegistered();
 void registerInventoryRuntime();
 void unregisterInventoryRuntime();
 
+bool locationTriggerRegistered();
+void registerLocationTrigger(Entry& mod);
+void unregisterLocationTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();

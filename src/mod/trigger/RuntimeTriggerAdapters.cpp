@@ -1,8 +1,10 @@
 #include "mod/trigger/RuntimeTriggerAdapters.h"
 
 #include "mod/Entry.h"
+#include "mod/event/player/PlayerTickEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
+#include "mod/trigger/triggers/LocationTrigger.h"
 
 #include "mc/world/actor/player/Player.h"
 
@@ -133,8 +135,9 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 }
 
 bool anyRuntimeRegistered() {
-    return inventoryRuntimeRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered() || lootRuntimeRegistered()
-        || projectileRuntimeRegistered() || effectRuntimeRegistered();
+    return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
+        || combatRuntimeRegistered() || worldRuntimeRegistered() || lootRuntimeRegistered() || projectileRuntimeRegistered()
+        || effectRuntimeRegistered();
 }
 
 } // namespace
@@ -159,7 +162,9 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     }
 
     gRuntimeTriggerMod = &mod;
+    event::player::registerPlayerTickEventSource();
     registerInventoryRuntime();
+    registerLocationTrigger(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
     registerLootRuntime();
@@ -169,7 +174,9 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
 
 void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
+    unregisterLocationTrigger();
     unregisterInventoryRuntime();
+    event::player::unregisterPlayerTickEventSource();
     unregisterProjectileRuntime();
     unregisterWorldRuntime();
     unregisterLootRuntime();
