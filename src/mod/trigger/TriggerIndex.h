@@ -68,6 +68,8 @@ struct LootTablePayload {
 struct PlayerHurtEntityPayload {
     bool directEntityIsArrow;
     bool isProjectileDamage;
+    bool mainhandItemIsMace;
+    float damageDealt;
 };
 
 struct TargetHitPayload {
@@ -174,6 +176,8 @@ struct VillagerTradeCondition {
 struct PlayerHurtEntityCondition {
     bool requireArrowDirectEntity;
     bool requireProjectileDamageTag;
+    bool requireMainhandMace;
+    std::optional<float> damageDealtMin;
 };
 
 struct TargetHitCondition {

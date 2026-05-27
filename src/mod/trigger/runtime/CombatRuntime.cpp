@@ -1,5 +1,7 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
+#include "mod/Entry.h"
+
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/entity/ActorHurtEvent.h"
 #include "ll/api/event/entity/MobDieEvent.h"
@@ -93,6 +95,11 @@ bool damageSourceIsSupportedProjectile(ActorDamageSource const& source) {
     return source.isChildEntitySource() || damageSourceDirectEntityIsArrow(source);
 }
 
+bool playerMainhandItemIsMace(Player const& player) {
+    auto const& selectedItem = player.getSelectedItem();
+    return !selectedItem.isNull() && selectedItem.getTypeName() == "minecraft:mace";
+}
+
 float horizontalDistance(Vec3 const& lhs, Vec3 const& rhs) {
     auto const dx = lhs.x - rhs.x;
     auto const dz = lhs.z - rhs.z;
@@ -154,6 +161,8 @@ void registerCombatRuntime(Entry& mod) {
             return true;
         }
 
+        auto const mainhandItemIsMace = playerMainhandItemIsMace(**hurtingPlayer);
+
         dispatchTrigger(
             mod,
             TriggerContext{
@@ -162,6 +171,8 @@ void registerCombatRuntime(Entry& mod) {
                 PlayerHurtEntityPayload{
                     damageSourceDirectEntityIsArrow(event.source()),
                     damageSourceIsSupportedProjectile(event.source()),
+                    mainhandItemIsMace,
+                    event.damage(),
                 },
             }
         );

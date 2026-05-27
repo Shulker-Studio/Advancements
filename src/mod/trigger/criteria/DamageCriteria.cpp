@@ -13,7 +13,7 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
     }
 
     auto const& damage = conditions.at("damage");
-    if (!hasOnlyKeys(damage, {"type"})) {
+    if (!hasOnlyKeys(damage, {"type", "dealt"})) {
         return InvalidTriggerCondition{};
     }
     if (!damage.contains("type") || !damage.at("type").is_object()) {
@@ -27,22 +27,52 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
 
     bool requireArrowDirectEntity   = false;
     bool requireProjectileDamageTag = false;
+    bool requireMainhandMace        = false;
+    std::optional<float> damageDealtMin;
 
     if (type.contains("direct_entity")) {
         if (!type.at("direct_entity").is_object()) {
             return InvalidTriggerCondition{};
         }
         auto const& directEntity = type.at("direct_entity");
-        if (!hasOnlyKeys(directEntity, {"type"})) {
+        if (!hasOnlyKeys(directEntity, {"type", "equipment"})) {
             return InvalidTriggerCondition{};
         }
-        if (!directEntity.contains("type") || !directEntity.at("type").is_string()) {
+        if (directEntity.contains("type")) {
+            if (!directEntity.at("type").is_string()) {
+                return InvalidTriggerCondition{};
+            }
+            if (directEntity.at("type").get<std::string>() != "#minecraft:arrows") {
+                return InvalidTriggerCondition{};
+            }
+            requireArrowDirectEntity = true;
+        }
+        if (directEntity.contains("equipment")) {
+            if (!directEntity.at("equipment").is_object()) {
+                return InvalidTriggerCondition{};
+            }
+            auto const& equipment = directEntity.at("equipment");
+            if (!hasOnlyKeys(equipment, {"mainhand"})) {
+                return InvalidTriggerCondition{};
+            }
+            if (!equipment.contains("mainhand") || !equipment.at("mainhand").is_object()) {
+                return InvalidTriggerCondition{};
+            }
+            auto const& mainhand = equipment.at("mainhand");
+            if (!hasOnlyKeys(mainhand, {"items"})) {
+                return InvalidTriggerCondition{};
+            }
+            if (!mainhand.contains("items") || !mainhand.at("items").is_string()) {
+                return InvalidTriggerCondition{};
+            }
+            if (mainhand.at("items").get<std::string>() != "minecraft:mace") {
+                return InvalidTriggerCondition{};
+            }
+            requireMainhandMace = true;
+        }
+        if (!requireArrowDirectEntity && !requireMainhandMace) {
             return InvalidTriggerCondition{};
         }
-        if (directEntity.at("type").get<std::string>() != "#minecraft:arrows") {
-            return InvalidTriggerCondition{};
-        }
-        requireArrowDirectEntity = true;
     }
 
     if (type.contains("tags")) {
@@ -63,17 +93,45 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
         if (!tagEntry.contains("expected") || !tagEntry.at("expected").is_boolean()) {
             return InvalidTriggerCondition{};
         }
-        if (tagEntry.at("id").get<std::string>() != "minecraft:is_projectile" || !tagEntry.at("expected").get<bool>()) {
+        auto const tagId = tagEntry.at("id").get<std::string>();
+        if (!tagEntry.at("expected").get<bool>()) {
             return InvalidTriggerCondition{};
         }
-        requireProjectileDamageTag = true;
+        if (tagId == "minecraft:is_projectile") {
+            requireProjectileDamageTag = true;
+        } else if (tagId == "minecraft:mace_smash") {
+            requireMainhandMace = true;
+        } else {
+            return InvalidTriggerCondition{};
+        }
     }
 
-    if (!requireArrowDirectEntity || !requireProjectileDamageTag) {
+    if (damage.contains("dealt")) {
+        if (!damage.at("dealt").is_object()) {
+            return InvalidTriggerCondition{};
+        }
+        auto const& dealt = damage.at("dealt");
+        if (!hasOnlyKeys(dealt, {"min"})) {
+            return InvalidTriggerCondition{};
+        }
+        if (!dealt.contains("min") || !dealt.at("min").is_number()) {
+            return InvalidTriggerCondition{};
+        }
+        damageDealtMin = dealt.at("min").get<float>();
+    }
+
+    if (requireArrowDirectEntity || requireProjectileDamageTag) {
+        if (!requireArrowDirectEntity || !requireProjectileDamageTag || requireMainhandMace || damageDealtMin.has_value()) {
+            return InvalidTriggerCondition{};
+        }
+        return PlayerHurtEntityCondition{true, true, false, std::nullopt};
+    }
+
+    if (!requireMainhandMace || !damageDealtMin.has_value()) {
         return InvalidTriggerCondition{};
     }
 
-    return PlayerHurtEntityCondition{requireArrowDirectEntity, requireProjectileDamageTag};
+    return PlayerHurtEntityCondition{false, false, true, damageDealtMin};
 }
 
 TriggerCondition compileEntityHurtPlayerCondition(nlohmann::json const& conditions) {
@@ -132,6 +190,12 @@ bool matchesPlayerHurtEntityCondition(TriggerCondition const& condition, Trigger
         return false;
     }
     if (compiled->requireProjectileDamageTag && !payload->isProjectileDamage) {
+        return false;
+    }
+    if (compiled->requireMainhandMace && !payload->mainhandItemIsMace) {
+        return false;
+    }
+    if (compiled->damageDealtMin.has_value() && payload->damageDealt < *compiled->damageDealtMin) {
         return false;
     }
     return true;
