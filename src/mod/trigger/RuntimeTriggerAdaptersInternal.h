@@ -17,6 +17,10 @@ bool locationTriggerRegistered();
 void registerLocationTrigger(Entry& mod);
 void unregisterLocationTrigger();
 
+bool targetHitTriggerRegistered();
+void registerTargetHitTrigger(Entry& mod);
+void unregisterTargetHitTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();

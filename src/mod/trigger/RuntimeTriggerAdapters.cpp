@@ -1,10 +1,12 @@
 #include "mod/trigger/RuntimeTriggerAdapters.h"
 
 #include "mod/Entry.h"
+#include "mod/event/block/TargetBlockHitEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
+#include "mod/trigger/triggers/TargetHitTrigger.h"
 
 #include "mc/world/actor/player/Player.h"
 
@@ -136,7 +138,8 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 
 bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
-        || combatRuntimeRegistered() || worldRuntimeRegistered() || lootRuntimeRegistered() || projectileRuntimeRegistered()
+        || targetHitTriggerRegistered() || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered()
+        || worldRuntimeRegistered() || lootRuntimeRegistered() || projectileRuntimeRegistered()
         || effectRuntimeRegistered();
 }
 
@@ -162,9 +165,11 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     }
 
     gRuntimeTriggerMod = &mod;
+    event::block::registerTargetBlockHitEventSource();
     event::player::registerPlayerTickEventSource();
     registerInventoryRuntime();
     registerLocationTrigger(mod);
+    registerTargetHitTrigger(mod);
     registerProjectileRuntime();
     registerWorldRuntime(mod);
     registerLootRuntime();
@@ -174,8 +179,10 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
 
 void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
+    unregisterTargetHitTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();
+    event::block::unregisterTargetBlockHitEventSource();
     event::player::unregisterPlayerTickEventSource();
     unregisterProjectileRuntime();
     unregisterWorldRuntime();
