@@ -29,6 +29,10 @@ bool netherTravelTriggerRegistered();
 void registerNetherTravelTrigger(Entry& mod);
 void unregisterNetherTravelTrigger();
 
+bool summonedEntityTriggerRegistered();
+void registerSummonedEntityTrigger(Entry& mod);
+void unregisterSummonedEntityTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();

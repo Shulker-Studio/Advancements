@@ -2,6 +2,7 @@
 
 #include "mod/Entry.h"
 #include "mod/event/block/TargetBlockHitEvent.h"
+#include "mod/event/block/WitherSummonedEvent.h"
 #include "mod/event/block/BeaconLevelChangedEvent.h"
 #include "mod/event/entity/EntityHurtByPlayerEvent.h"
 #include "mod/event/entity/EntityKilledByPlayerEvent.h"
@@ -14,6 +15,7 @@
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerChargedRespawnAnchorEvent.h"
+#include "mod/event/player/DragonRespawnedEvent.h"
 #include "mod/event/player/PlayerDimensionChangedEvent.h"
 #include "mod/event/player/PlayerEnteredEndGatewayEvent.h"
 #include "mod/event/player/PlayerEffectsChangedEvent.h"
@@ -44,6 +46,7 @@
 #include "mod/trigger/triggers/PlayerHurtEntityTrigger.h"
 #include "mod/trigger/triggers/ShotCrossbowTrigger.h"
 #include "mod/trigger/triggers/SleptInBedTrigger.h"
+#include "mod/trigger/triggers/SummonedEntityTrigger.h"
 #include "mod/trigger/triggers/TargetHitTrigger.h"
 #include "mod/trigger/triggers/UsedTotemTrigger.h"
 #include "mod/trigger/triggers/VillagerTradeTrigger.h"
@@ -189,6 +192,7 @@ bool anyRuntimeRegistered() {
         || levitationTriggerRegistered()
         || changedDimensionTriggerRegistered()
         || netherTravelTriggerRegistered()
+        || summonedEntityTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
@@ -216,7 +220,10 @@ bool anyRuntimeRegistered() {
         || event::player::playerSleptInBedEventSourceRegistered()
         || event::player::playerUsedTotemEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered()
-        || event::block::beaconLevelChangedEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
+        || event::block::beaconLevelChangedEventSourceRegistered()
+        || event::block::witherSummonedEventSourceRegistered()
+        || event::player::dragonRespawnedEventSourceRegistered()
+        || combatRuntimeRegistered() || worldRuntimeRegistered()
         || lootRuntimeRegistered() || projectileRuntimeRegistered()
         || effectRuntimeRegistered();
 }
@@ -245,6 +252,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     gRuntimeTriggerMod = &mod;
     event::block::registerBeaconLevelChangedEventSource();
     event::block::registerTargetBlockHitEventSource();
+    event::block::registerWitherSummonedEventSource();
     event::entity::registerEntityHurtByPlayerEventSource();
     event::entity::registerEntityKilledByPlayerEventSource();
     event::item::registerContainerOutputTakenEventSource();
@@ -256,6 +264,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerShotCrossbowEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerChargedRespawnAnchorEventSource();
+    event::player::registerDragonRespawnedEventSource();
     event::player::registerPlayerDimensionChangedEventSource();
     event::player::registerPlayerEnteredEndGatewayEventSource();
     event::player::registerPlayerEffectsChangedEventSource();
@@ -271,6 +280,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerLocationTrigger(mod);
     registerLevitationTrigger(mod);
     registerNetherTravelTrigger(mod);
+    registerSummonedEntityTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
@@ -303,6 +313,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterChangedDimensionTrigger();
     unregisterLevitationTrigger();
     unregisterNetherTravelTrigger();
+    unregisterSummonedEntityTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
@@ -324,6 +335,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterInventoryRuntime();
     event::block::unregisterBeaconLevelChangedEventSource();
     event::block::unregisterTargetBlockHitEventSource();
+    event::block::unregisterWitherSummonedEventSource();
     event::entity::unregisterEntityHurtByPlayerEventSource();
     event::entity::unregisterEntityKilledByPlayerEventSource();
     event::item::unregisterContainerOutputTakenEventSource();
@@ -335,6 +347,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerShotCrossbowEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerChargedRespawnAnchorEventSource();
+    event::player::unregisterDragonRespawnedEventSource();
     event::player::unregisterPlayerDimensionChangedEventSource();
     event::player::unregisterPlayerEnteredEndGatewayEventSource();
     event::player::unregisterPlayerEffectsChangedEventSource();
