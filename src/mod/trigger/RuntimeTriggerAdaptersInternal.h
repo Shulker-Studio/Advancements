@@ -85,6 +85,10 @@ bool playerGeneratedContainerLootTriggerRegistered();
 void registerPlayerGeneratedContainerLootTrigger(Entry& mod);
 void unregisterPlayerGeneratedContainerLootTrigger();
 
+bool enterBlockTriggerRegistered();
+void registerEnterBlockTrigger(Entry& mod);
+void unregisterEnterBlockTrigger();
+
 bool combatRuntimeRegistered();
 void registerCombatRuntime(Entry& mod);
 void unregisterCombatRuntime();
