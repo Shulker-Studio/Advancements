@@ -23,21 +23,6 @@ TriggerCondition compileDescriptorCondition(
     return descriptor.compile(conditions);
 }
 
-TriggerCondition compileLegacyCondition(std::optional<nlohmann::json> const& rawConditions) {
-    if (!rawConditions) {
-        return NoTriggerCondition{};
-    }
-
-    auto const& conditions = *rawConditions;
-    if (!conditions.is_object()) {
-        return InvalidTriggerCondition{};
-    }
-    if (conditions.empty()) {
-        return NoTriggerCondition{};
-    }
-    return InvalidTriggerCondition{};
-}
-
 } // namespace
 
 void TriggerIndex::rebuild(LoadResult const& result) {
@@ -53,7 +38,7 @@ void TriggerIndex::rebuild(LoadResult const& result) {
                 criterionName,
                 criterion.trigger,
                 descriptor,
-                descriptor == nullptr ? compileLegacyCondition(criterion.conditions)
+                descriptor == nullptr ? InvalidTriggerCondition{}
                                       : compileDescriptorCondition(*descriptor, criterion.conditions)
             });
             ++mBindingCount;

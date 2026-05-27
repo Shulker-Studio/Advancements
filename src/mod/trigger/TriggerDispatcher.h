@@ -19,8 +19,6 @@ public:
     ) const;
 
 private:
-    [[nodiscard]] bool legacyMatches(CriterionBinding const& binding, TriggerContext const& context) const;
-
     TriggerIndex const& mIndex;
     ProgressService&    mProgressService;
 };

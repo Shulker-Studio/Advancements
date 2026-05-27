@@ -31,8 +31,7 @@ void TriggerDispatcher::dispatch(
 ) const {
     auto const bindings = mIndex.find(context.triggerId);
     for (auto const& binding : bindings) {
-        auto const matched = binding.descriptor == nullptr ? legacyMatches(binding, context)
-                                                           : descriptorMatches(binding, context);
+        auto const matched = descriptorMatches(binding, context);
         if (!matched) {
             continue;
         }
@@ -75,17 +74,6 @@ void TriggerDispatcher::dispatch(
 
         ignoreResult(result);
     }
-}
-
-bool TriggerDispatcher::legacyMatches(CriterionBinding const& binding, [[maybe_unused]] TriggerContext const& context) const {
-    if (std::holds_alternative<NoTriggerCondition>(binding.condition)) {
-        return true;
-    }
-    if (std::holds_alternative<InvalidTriggerCondition>(binding.condition)) {
-        return false;
-    }
-
-    return false;
 }
 
 } // namespace advancements
