@@ -37,6 +37,10 @@ bool playerInteractedWithEntityTriggerRegistered();
 void registerPlayerInteractedWithEntityTrigger(Entry& mod);
 void unregisterPlayerInteractedWithEntityTrigger();
 
+bool curedZombieVillagerTriggerRegistered();
+void registerCuredZombieVillagerTrigger(Entry& mod);
+void unregisterCuredZombieVillagerTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();

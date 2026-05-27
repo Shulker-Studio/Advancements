@@ -15,6 +15,7 @@
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerChargedRespawnAnchorEvent.h"
+#include "mod/event/player/PlayerCuredZombieVillagerEvent.h"
 #include "mod/event/player/DragonRespawnedEvent.h"
 #include "mod/event/player/PlayerDimensionChangedEvent.h"
 #include "mod/event/player/PlayerEnteredEndGatewayEvent.h"
@@ -30,6 +31,7 @@
 #include "mod/trigger/triggers/ChangedDimensionTrigger.h"
 #include "mod/trigger/triggers/ConstructBeaconTrigger.h"
 #include "mod/trigger/triggers/ConsumeItemTrigger.h"
+#include "mod/trigger/triggers/CuredZombieVillagerTrigger.h"
 #include "mod/trigger/triggers/EnterBlockTrigger.h"
 #include "mod/trigger/triggers/EffectsChangedTrigger.h"
 #include "mod/trigger/triggers/EnchantedItemTrigger.h"
@@ -196,6 +198,7 @@ bool anyRuntimeRegistered() {
         || netherTravelTriggerRegistered()
         || summonedEntityTriggerRegistered()
         || playerInteractedWithEntityTriggerRegistered()
+        || curedZombieVillagerTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
@@ -217,6 +220,7 @@ bool anyRuntimeRegistered() {
         || event::item::containerOutputTakenEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
         || event::player::playerChargedRespawnAnchorEventSourceRegistered()
+        || event::player::playerCuredZombieVillagerEventSourceRegistered()
         || event::player::playerDimensionChangedEventSourceRegistered()
         || event::player::playerEnteredEndGatewayEventSourceRegistered()
         || event::player::playerEffectsChangedEventSourceRegistered()
@@ -268,6 +272,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerShotCrossbowEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerChargedRespawnAnchorEventSource();
+    event::player::registerPlayerCuredZombieVillagerEventSource();
     event::player::registerDragonRespawnedEventSource();
     event::player::registerPlayerDimensionChangedEventSource();
     event::player::registerPlayerEnteredEndGatewayEventSource();
@@ -287,6 +292,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerNetherTravelTrigger(mod);
     registerSummonedEntityTrigger(mod);
     registerPlayerInteractedWithEntityTrigger(mod);
+    registerCuredZombieVillagerTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
@@ -321,6 +327,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterNetherTravelTrigger();
     unregisterSummonedEntityTrigger();
     unregisterPlayerInteractedWithEntityTrigger();
+    unregisterCuredZombieVillagerTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
@@ -354,6 +361,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerShotCrossbowEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerChargedRespawnAnchorEventSource();
+    event::player::unregisterPlayerCuredZombieVillagerEventSource();
     event::player::unregisterDragonRespawnedEventSource();
     event::player::unregisterPlayerDimensionChangedEventSource();
     event::player::unregisterPlayerEnteredEndGatewayEventSource();
