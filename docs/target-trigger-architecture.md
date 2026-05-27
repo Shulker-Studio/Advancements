@@ -45,12 +45,12 @@ This keeps event ownership in the plugin while reusing the existing LeviLamina l
 
 ### Player Tick Compatibility
 
-`Player::$tickWorld` currently drives both `minecraft:location` and `minecraft:levitation`. Phase 1 moves the raw hook into `event/player/PlayerTickEvent.*`, then wires two consumers:
+`Player::$tickWorld` originally drove both `minecraft:location` and `minecraft:levitation`. Phase 1 moved the raw hook into `event/player/PlayerTickEvent.*`, then wired two consumers:
 
 - `trigger/triggers/LocationTrigger.*` consumes `PlayerTickEvent` for migrated location logic.
-- The existing world runtime keeps levitation behavior through a temporary compatibility listener that consumes the same `PlayerTickEvent` and calls the old levitation check.
+- `trigger/triggers/LevitationTrigger.*` now consumes the same `PlayerTickEvent` for the migrated levitation path.
 
-The old world runtime must not keep a second `Player::$tickWorld` hook after the event source owns that hook. This prevents duplicate hooks and prevents `minecraft:levitation` from being accidentally disabled while only `minecraft:location` is migrated.
+The old world runtime must not keep a second `Player::$tickWorld` hook after the event source owns that hook. This prevents duplicate hooks. The temporary compatibility concern described here was resolved once `minecraft:levitation` was migrated into `trigger/triggers/LevitationTrigger.*`.
 
 ### Registry Compatibility
 

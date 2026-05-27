@@ -316,7 +316,7 @@ Owns:
 - Trigger IDs.
 - Per-trigger condition parsing.
 - Per-trigger event subscriptions.
-- Per-trigger state such as location polling cadence or levitation start positions.
+- Per-trigger state such as location polling cadence, levitation start positions, or cure-tracking ownership where a Bedrock seam still needs trigger-local state.
 - Mapping event payloads into predicate contexts.
 - Calling `dispatchTrigger` or the future dispatcher entry point when a trigger is satisfied.
 
