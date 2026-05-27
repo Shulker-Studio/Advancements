@@ -33,6 +33,10 @@ bool summonedEntityTriggerRegistered();
 void registerSummonedEntityTrigger(Entry& mod);
 void unregisterSummonedEntityTrigger();
 
+bool playerInteractedWithEntityTriggerRegistered();
+void registerPlayerInteractedWithEntityTrigger(Entry& mod);
+void unregisterPlayerInteractedWithEntityTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();

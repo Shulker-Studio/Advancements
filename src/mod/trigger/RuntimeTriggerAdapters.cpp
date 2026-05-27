@@ -19,6 +19,7 @@
 #include "mod/event/player/PlayerDimensionChangedEvent.h"
 #include "mod/event/player/PlayerEnteredEndGatewayEvent.h"
 #include "mod/event/player/PlayerEffectsChangedEvent.h"
+#include "mod/event/player/PlayerInteractedWithEntityEvent.h"
 #include "mod/event/player/PlayerKilledByEntityEvent.h"
 #include "mod/event/player/PlayerSleptInBedEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
@@ -42,6 +43,7 @@
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/NetherTravelTrigger.h"
 #include "mod/trigger/triggers/PlayerGeneratedContainerLootTrigger.h"
+#include "mod/trigger/triggers/PlayerInteractedWithEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerHurtEntityTrigger.h"
 #include "mod/trigger/triggers/ShotCrossbowTrigger.h"
@@ -193,6 +195,7 @@ bool anyRuntimeRegistered() {
         || changedDimensionTriggerRegistered()
         || netherTravelTriggerRegistered()
         || summonedEntityTriggerRegistered()
+        || playerInteractedWithEntityTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
@@ -217,6 +220,7 @@ bool anyRuntimeRegistered() {
         || event::player::playerDimensionChangedEventSourceRegistered()
         || event::player::playerEnteredEndGatewayEventSourceRegistered()
         || event::player::playerEffectsChangedEventSourceRegistered()
+        || event::player::playerInteractedWithEntityEventSourceRegistered()
         || event::player::playerSleptInBedEventSourceRegistered()
         || event::player::playerUsedTotemEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered()
@@ -268,6 +272,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::player::registerPlayerDimensionChangedEventSource();
     event::player::registerPlayerEnteredEndGatewayEventSource();
     event::player::registerPlayerEffectsChangedEventSource();
+    event::player::registerPlayerInteractedWithEntityEventSource();
     event::player::registerPlayerKilledByEntityEventSource();
     event::player::registerPlayerSleptInBedEventSource();
     event::player::registerPlayerTickEventSource();
@@ -281,6 +286,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerLevitationTrigger(mod);
     registerNetherTravelTrigger(mod);
     registerSummonedEntityTrigger(mod);
+    registerPlayerInteractedWithEntityTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
@@ -314,6 +320,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterLevitationTrigger();
     unregisterNetherTravelTrigger();
     unregisterSummonedEntityTrigger();
+    unregisterPlayerInteractedWithEntityTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
@@ -351,6 +358,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::player::unregisterPlayerDimensionChangedEventSource();
     event::player::unregisterPlayerEnteredEndGatewayEventSource();
     event::player::unregisterPlayerEffectsChangedEventSource();
+    event::player::unregisterPlayerInteractedWithEntityEventSource();
     event::player::unregisterPlayerKilledByEntityEventSource();
     event::player::unregisterPlayerSleptInBedEventSource();
     event::player::unregisterPlayerTickEventSource();
