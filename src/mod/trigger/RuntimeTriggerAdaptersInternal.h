@@ -21,6 +21,10 @@ bool levitationTriggerRegistered();
 void registerLevitationTrigger(Entry& mod);
 void unregisterLevitationTrigger();
 
+bool changedDimensionTriggerRegistered();
+void registerChangedDimensionTrigger(Entry& mod);
+void unregisterChangedDimensionTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();
