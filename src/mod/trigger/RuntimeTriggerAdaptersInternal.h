@@ -53,6 +53,10 @@ bool usedTotemTriggerRegistered();
 void registerUsedTotemTrigger(Entry& mod);
 void unregisterUsedTotemTrigger();
 
+bool consumeItemTriggerRegistered();
+void registerConsumeItemTrigger(Entry& mod);
+void unregisterConsumeItemTrigger();
+
 bool fishingRodHookedTriggerRegistered();
 void registerFishingRodHookedTrigger(Entry& mod);
 void unregisterFishingRodHookedTrigger();
