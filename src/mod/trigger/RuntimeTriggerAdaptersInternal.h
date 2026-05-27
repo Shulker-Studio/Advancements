@@ -45,6 +45,10 @@ bool enchantedItemTriggerRegistered();
 void registerEnchantedItemTrigger(Entry& mod);
 void unregisterEnchantedItemTrigger();
 
+bool villagerTradeTriggerRegistered();
+void registerVillagerTradeTrigger(Entry& mod);
+void unregisterVillagerTradeTrigger();
+
 bool usedTotemTriggerRegistered();
 void registerUsedTotemTrigger(Entry& mod);
 void unregisterUsedTotemTrigger();
