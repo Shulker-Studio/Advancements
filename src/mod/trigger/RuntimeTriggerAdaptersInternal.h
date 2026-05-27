@@ -57,6 +57,10 @@ bool consumeItemTriggerRegistered();
 void registerConsumeItemTrigger(Entry& mod);
 void unregisterConsumeItemTrigger();
 
+bool inventoryChangedTriggerRegistered();
+void registerInventoryChangedTrigger(Entry& mod);
+void unregisterInventoryChangedTrigger();
+
 bool filledBucketTriggerRegistered();
 void registerFilledBucketTrigger(Entry& mod);
 void unregisterFilledBucketTrigger();
