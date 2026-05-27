@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/DamageCriteria.h"
 
+#include "mod/predicate/DamagePredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
 namespace advancements::criteria {
@@ -141,49 +142,12 @@ TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditio
 }
 
 TriggerCondition compileEntityHurtPlayerCondition(nlohmann::json const& conditions) {
-    if (!hasOnlyKeys(conditions, {"damage"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!conditions.contains("damage") || !conditions.at("damage").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& damage = conditions.at("damage");
-    if (!hasOnlyKeys(damage, {"blocked", "type"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!damage.contains("blocked") || !damage.at("blocked").is_boolean() || !damage.at("blocked").get<bool>()) {
-        return InvalidTriggerCondition{};
-    }
-    if (!damage.contains("type") || !damage.at("type").is_object()) {
+    auto const predicate = predicate::parseBlockedProjectileDamagePredicate(conditions);
+    if (!predicate) {
         return InvalidTriggerCondition{};
     }
 
-    auto const& type = damage.at("type");
-    if (!hasOnlyKeys(type, {"tags"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!type.contains("tags") || !type.at("tags").is_array()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& tags = type.at("tags");
-    if (tags.size() != 1 || !tags.at(0).is_object()) {
-        return InvalidTriggerCondition{};
-    }
-    auto const& tagEntry = tags.at(0);
-    if (!hasOnlyKeys(tagEntry, {"id", "expected"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!tagEntry.contains("id") || !tagEntry.at("id").is_string() || !tagEntry.contains("expected")
-        || !tagEntry.at("expected").is_boolean()) {
-        return InvalidTriggerCondition{};
-    }
-    if (tagEntry.at("id").get<std::string>() != "minecraft:is_projectile" || !tagEntry.at("expected").get<bool>()) {
-        return InvalidTriggerCondition{};
-    }
-
-    return EntityHurtPlayerCondition{true, true};
+    return EntityHurtPlayerCondition{predicate->requireBlockedDamage, predicate->requireProjectileDamageTag};
 }
 
 bool matchesPlayerHurtEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
