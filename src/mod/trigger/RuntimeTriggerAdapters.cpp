@@ -2,9 +2,11 @@
 
 #include "mod/Entry.h"
 #include "mod/event/block/TargetBlockHitEvent.h"
+#include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
+#include "mod/trigger/triggers/EntityHurtPlayerTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/TargetHitTrigger.h"
 
@@ -100,6 +102,14 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     payload.directEntityIsArrow,
                     payload.isProjectileDamage
                 );
+            } else if constexpr (std::is_same_v<Payload, EntityHurtPlayerPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} blocked={} projectile={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.blockedDamage,
+                    payload.isProjectileDamage
+                );
             } else if constexpr (std::is_same_v<Payload, NetherTravelTriggerPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} horizontal_distance={}",
@@ -138,8 +148,10 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 
 bool anyRuntimeRegistered() {
     return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
-        || targetHitTriggerRegistered() || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered()
-        || worldRuntimeRegistered() || lootRuntimeRegistered() || projectileRuntimeRegistered()
+        || entityHurtPlayerTriggerRegistered() || targetHitTriggerRegistered()
+        || event::player::playerBlockUsingShieldEventSourceRegistered()
+        || event::block::targetBlockHitEventSourceRegistered() || combatRuntimeRegistered() || worldRuntimeRegistered()
+        || lootRuntimeRegistered() || projectileRuntimeRegistered()
         || effectRuntimeRegistered();
 }
 
@@ -166,8 +178,10 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
 
     gRuntimeTriggerMod = &mod;
     event::block::registerTargetBlockHitEventSource();
+    event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerTickEventSource();
     registerInventoryRuntime();
+    registerEntityHurtPlayerTrigger(mod);
     registerLocationTrigger(mod);
     registerTargetHitTrigger(mod);
     registerProjectileRuntime();
@@ -179,10 +193,12 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
 
 void unregisterRuntimeTriggerAdapters() {
     gRuntimeTriggerMod = nullptr;
+    unregisterEntityHurtPlayerTrigger();
     unregisterTargetHitTrigger();
     unregisterLocationTrigger();
     unregisterInventoryRuntime();
     event::block::unregisterTargetBlockHitEventSource();
+    event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerTickEventSource();
     unregisterProjectileRuntime();
     unregisterWorldRuntime();

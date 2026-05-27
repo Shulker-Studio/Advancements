@@ -17,6 +17,10 @@ bool locationTriggerRegistered();
 void registerLocationTrigger(Entry& mod);
 void unregisterLocationTrigger();
 
+bool entityHurtPlayerTriggerRegistered();
+void registerEntityHurtPlayerTrigger(Entry& mod);
+void unregisterEntityHurtPlayerTrigger();
+
 bool targetHitTriggerRegistered();
 void registerTargetHitTrigger(Entry& mod);
 void unregisterTargetHitTrigger();
