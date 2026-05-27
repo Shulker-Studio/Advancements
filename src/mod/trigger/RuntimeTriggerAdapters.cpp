@@ -192,7 +192,7 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 }
 
 bool anyRuntimeRegistered() {
-    return inventoryRuntimeRegistered() || event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
+    return event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
         || levitationTriggerRegistered()
         || changedDimensionTriggerRegistered()
         || netherTravelTriggerRegistered()
@@ -280,7 +280,6 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::player::registerPlayerSleptInBedEventSource();
     event::player::registerPlayerTickEventSource();
     event::player::registerPlayerUsedTotemEventSource();
-    registerInventoryRuntime();
     registerEntityHurtPlayerTrigger(mod);
     registerEntityKilledPlayerTrigger(mod);
     registerConstructBeaconTrigger(mod);
@@ -340,7 +339,6 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterShotCrossbowTrigger();
     unregisterSleptInBedTrigger();
     unregisterLocationTrigger();
-    unregisterInventoryRuntime();
     event::block::unregisterBeaconLevelChangedEventSource();
     event::block::unregisterTargetBlockHitEventSource();
     event::block::unregisterWitherSummonedEventSource();

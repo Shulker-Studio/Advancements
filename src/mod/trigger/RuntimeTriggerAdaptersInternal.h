@@ -9,10 +9,6 @@ class Entry;
 Entry* currentRuntimeTriggerMod();
 void   dispatchTrigger(Entry& mod, TriggerContext const& context);
 
-bool inventoryRuntimeRegistered();
-void registerInventoryRuntime();
-void unregisterInventoryRuntime();
-
 bool locationTriggerRegistered();
 void registerLocationTrigger(Entry& mod);
 void unregisterLocationTrigger();
