@@ -39,7 +39,6 @@ namespace advancements {
 namespace {
 
 constexpr auto SuccessfulOutputContainer = ContainerEnumName::CreatedOutputContainer;
-constexpr auto BrewingStandResultContainer = ContainerEnumName::BrewingStandResultContainer;
 constexpr int  CureZombieVillagerMaxTrackedTicks    = 20 * 60 * 6;
 constexpr int  TemperateFrogVariant                 = 0;
 constexpr int  ColdFrogVariant                      = 1;
@@ -145,17 +144,6 @@ void dispatchEnchantedItem(Entry& mod, Player& player) {
         TriggerContext{
             player,
             "minecraft:enchanted_item",
-            NoTriggerPayload{},
-        }
-    );
-}
-
-void dispatchBrewedPotion(Entry& mod, Player& player) {
-    dispatchTrigger(
-        mod,
-        TriggerContext{
-            player,
-            "minecraft:brewed_potion",
             NoTriggerPayload{},
         }
     );
@@ -285,10 +273,6 @@ LL_TYPE_INSTANCE_HOOK(
 
     if (screenType == SharedTypes::Legacy::ContainerType::Enchantment && sourceContainer == SuccessfulOutputContainer) {
         dispatchEnchantedItem(*mod, mPlayer);
-    }
-
-    if (screenType == SharedTypes::Legacy::ContainerType::BrewingStand && sourceContainer == BrewingStandResultContainer) {
-        dispatchBrewedPotion(*mod, mPlayer);
     }
 
     return result;
