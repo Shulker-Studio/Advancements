@@ -59,38 +59,6 @@ bool isWithinRespawnDragonRange(Player const& player) {
     return horizontal <= RespawnDragonHorizontalRange;
 }
 
-void dispatchSummonedWither(Entry& mod, Level& level, BlockSource const& region, Vec3 const& pos) {
-    level.forEachPlayer([&](Player& player) {
-        if (isWithinWitherSummonRange(player, region, pos)) {
-            dispatchTrigger(
-                mod,
-                TriggerContext{
-                    player,
-                    "minecraft:summoned_entity",
-                    EntityTriggerPayload{"minecraft:wither"},
-                }
-            );
-        }
-        return true;
-    });
-}
-
-void dispatchRespawnDragon(Entry& mod, Level& level) {
-    level.forEachPlayer([&](Player& player) {
-        if (isWithinRespawnDragonRange(player)) {
-            dispatchTrigger(
-                mod,
-                TriggerContext{
-                    player,
-                    "minecraft:summoned_entity",
-                    EntityTriggerPayload{"minecraft:ender_dragon"},
-                }
-            );
-        }
-        return true;
-    });
-}
-
 LL_TYPE_INSTANCE_HOOK(
     SkullBlockCheckMobSpawnHook,
     HookPriority::Normal,
@@ -101,35 +69,11 @@ LL_TYPE_INSTANCE_HOOK(
     ::BlockSource& region,
     ::BlockPos const& pos
 ) {
-    auto const spawned = origin(level, region, pos);
-    auto*      mod     = currentRuntimeTriggerMod();
-    if (spawned && mod != nullptr) {
-        dispatchSummonedWither(*mod, level, region, pos.center());
-    }
-    return spawned;
+    return origin(level, region, pos);
 }
 
 LL_TYPE_INSTANCE_HOOK(EndDragonFightTryRespawnHook, HookPriority::Normal, EndDragonFight, &EndDragonFight::tryRespawn, void) {
-    auto const hadRespawnStage = this->mRespawnStage != RespawnAnimation::None;
-    auto const hadCrystals     = !this->mRespawnCrystals->empty();
     origin();
-
-    auto* mod = currentRuntimeTriggerMod();
-    if (mod == nullptr) {
-        return;
-    }
-
-    auto const enteredRespawnStage = !hadRespawnStage && this->mRespawnStage != RespawnAnimation::None;
-    auto const recordedCrystals    = !hadCrystals && !this->mRespawnCrystals->empty();
-    if (!enteredRespawnStage && !recordedCrystals) {
-        return;
-    }
-
-    auto* level = ll::service::getLevel().as_ptr();
-    if (level == nullptr) {
-        return;
-    }
-    dispatchRespawnDragon(*mod, *level);
 }
 
 struct WorldRuntimeHookState {
