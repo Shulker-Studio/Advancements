@@ -472,6 +472,46 @@ Recommended transition:
 
 During migration, behavior compatibility is more important than immediate API purity.
 
+## Phase 5 TriggerRegistry Seam Design
+
+Phase 5 starts with a compatibility seam, not a replacement of the dispatch path. The first design milestone is a `TriggerRegistry` surface that can collect trigger descriptors from trigger modules while still presenting the same `TriggerDescriptor` shape consumed by `TriggerIndex` and `TriggerDispatcher`.
+
+Current compatibility anchors:
+
+- `TriggerCriteriaRegistry.cpp` owns the static descriptor table and `findTriggerDescriptor` lookup.
+- `TriggerIndex::rebuild` resolves each criterion trigger ID to a descriptor and compiles a `TriggerCondition` once during reload.
+- `TriggerDispatcher` keeps granting through descriptor-backed bindings and `ProgressService`.
+- Runtime trigger modules keep dispatching shared `TriggerContext` values through `dispatchTrigger`.
+
+Minimal seam responsibilities:
+
+```text
+TriggerRegistry
+  registerTrigger(triggerId, compileFn, matchFn)
+  findTriggerDescriptor(triggerId) -> TriggerDescriptor const*
+  expose descriptor views with stable lifetime for TriggerIndex
+```
+
+The initial registry must preserve the current descriptor contract: compile functions still return the existing `TriggerCondition` variant, match functions still consume `TriggerCondition` plus `TriggerContext`, and unknown trigger IDs still compile to non-matching bindings. The registry does not own advancement definitions, progress mutation, event listener lifetimes, or runtime payload construction.
+
+Bridge strategy:
+
+1. Seed `TriggerRegistry` with the existing descriptors currently listed in `TriggerCriteriaRegistry.cpp`.
+2. Keep `TriggerCriteriaRegistry` as a compatibility facade that delegates lookup to the registry.
+3. Let `TriggerIndex` continue storing `TriggerDescriptor const*` and `TriggerCondition` until enough trigger families have moved.
+4. Move descriptor registration one trigger family at a time from the criteria registry table into the owning trigger module.
+5. Shrink `TriggerCondition` or localize `TriggerPayload` only after several migrated trigger families prove the seam is stable.
+
+Recommended first trial remains `minecraft:location`, because it already has a narrow trigger module, a controlled tick cadence, and existing predicate boundaries. The trial should move descriptor ownership only; it should not change player attribution, structure checks, dispatch cadence, or criterion grant behavior.
+
+Phase 5 non-goals:
+
+- Do not replace `TriggerIndex` in the first registry wave.
+- Do not change `TriggerDispatcher` or progress grant semantics.
+- Do not move or shrink `TriggerPayload` during the first registry seam.
+- Do not remove existing `TriggerCondition` alternatives while descriptors still compile to them.
+- Do not reorder runtime event source registration unless a later implementation wave explicitly requires it.
+
 ## Lifecycle
 
 Suggested lifecycle after migration:

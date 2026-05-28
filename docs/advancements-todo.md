@@ -65,7 +65,7 @@
 | `cured_zombie_villager` | partial | 当前窄实现：仅支持无 `conditions` 的 `story/cure_zombie_villager`；基于玩家对僵尸村民成功使用金苹果时记录责任玩家，并在后续 transformation seam 上确认转化；不支持未核实的 `zombie` / `villager` 条件谓词 |
 | `default_block_use` | missing-trigger | |
 | `effects_changed` | done | 当前窄实现：hook `Actor::addEffect` 后仅对玩家派发，并按当前玩家已拥有的效果快照匹配 `conditions.effects` 中每个空对象 effect；已扩到当前 Bedrock/LL 可见 effect id 集合，并接受 `hero_of_the_village -> village_hero` alias；按当前项目约定，`glowing` / `dolphins_grace` 两个 Java-only 效果不纳入 Bedrock 测试集合 |
-| `enchanted_item` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Enchantment` 后触发；不依赖打开附魔 UI |
+| `enchanted_item` | done | 当前窄实现：基于 `CraftHandlerEnchant::_handleEnchant` 成功路径触发，避开通用 UI 转移事件；事件携带附魔物品 id 与等级消耗 |
 | `enter_block` | done | 当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅当原传送逻辑执行后玩家位置发生变化时派发；仅用于 `end/enter_end_gateway` 的 `{ "block": "minecraft:end_gateway" }` 形状 |
 | `entity_hurt_player` | done | 当前仅支持 `story/deflect_arrow` 已核窄形状：`damage.blocked = true` + `damage.type.tags` 含 `minecraft:is_projectile`；runtime 使用 `Player::_blockUsingShield` 成功路径派发 |
 | `entity_killed_player` | done | 当前窄实现，支持 `conditions.entity` |
