@@ -6,10 +6,6 @@
 namespace advancements::criteria {
 namespace {
 
-bool isSupportedFrogVariantId(std::string const& variantId) {
-    return variantId == "minecraft:temperate" || variantId == "minecraft:cold" || variantId == "minecraft:warm";
-}
-
 TriggerCondition compilePlayerInteractedWithFrogCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"item", "entity"})) {
         return InvalidTriggerCondition{};
@@ -35,36 +31,16 @@ TriggerCondition compilePlayerInteractedWithFrogCondition(nlohmann::json const& 
         return InvalidTriggerCondition{};
     }
 
-    auto const& predicate = **entityPredicate;
-    if (!hasOnlyKeys(predicate, {"type", "type_specific"})) {
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type", "type_specific"})) {
         return InvalidTriggerCondition{};
     }
-    if (!predicate.contains("type") || !predicate.at("type").is_string()
-        || predicate.at("type").get<std::string>() != "minecraft:frog") {
-        return InvalidTriggerCondition{};
-    }
-    if (!predicate.contains("type_specific") || !predicate.at("type_specific").is_object()) {
+    auto const variantId = predicate::parseFrogVariantPredicate(entityPredicateJson);
+    if (!variantId) {
         return InvalidTriggerCondition{};
     }
 
-    auto const& typeSpecific = predicate.at("type_specific");
-    if (!hasOnlyKeys(typeSpecific, {"type", "variant"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!typeSpecific.contains("type") || !typeSpecific.at("type").is_string()
-        || typeSpecific.at("type").get<std::string>() != "minecraft:frog") {
-        return InvalidTriggerCondition{};
-    }
-    if (!typeSpecific.contains("variant") || !typeSpecific.at("variant").is_string()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const variantId = typeSpecific.at("variant").get<std::string>();
-    if (!isSupportedFrogVariantId(variantId)) {
-        return InvalidTriggerCondition{};
-    }
-
-    return PlayerInteractedWithEntityCondition{itemId, "minecraft:frog", variantId};
+    return PlayerInteractedWithEntityCondition{itemId, "minecraft:frog", *variantId};
 }
 
 TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json const& conditions) {
@@ -80,21 +56,20 @@ TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json con
         return InvalidTriggerCondition{};
     }
 
-    auto const& predicate = **entityPredicate;
-    if (!hasOnlyKeys(predicate, {"type", "distance"})) {
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type", "distance"})) {
         return InvalidTriggerCondition{};
     }
-    if (!predicate.contains("type") || !predicate.at("type").is_string()) {
+    auto const targetEntityTypeId = predicate::parseEntityTypePredicate(entityPredicateJson);
+    if (!targetEntityTypeId) {
         return InvalidTriggerCondition{};
     }
-
-    auto const targetEntityTypeId = predicate.at("type").get<std::string>();
     std::optional<float> horizontalMin;
-    if (predicate.contains("distance")) {
-        if (!predicate.at("distance").is_object()) {
+    if (entityPredicateJson.contains("distance")) {
+        if (!entityPredicateJson.at("distance").is_object()) {
             return InvalidTriggerCondition{};
         }
-        auto const& distance = predicate.at("distance");
+        auto const& distance = entityPredicateJson.at("distance");
         if (!hasOnlyKeys(distance, {"horizontal"}) || !distance.contains("horizontal")
             || !distance.at("horizontal").is_object()) {
             return InvalidTriggerCondition{};
@@ -149,11 +124,11 @@ TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json con
         return InvalidTriggerCondition{};
     }
 
-    if (targetEntityTypeId == "minecraft:skeleton") {
+    if (*targetEntityTypeId == "minecraft:skeleton") {
         if (!horizontalMin || *horizontalMin != 50.0F || directEntityTypeId) {
             return InvalidTriggerCondition{};
         }
-    } else if (targetEntityTypeId == "minecraft:ghast") {
+    } else if (*targetEntityTypeId == "minecraft:ghast") {
         if (horizontalMin || directEntityTypeId != "minecraft:fireball") {
             return InvalidTriggerCondition{};
         }
@@ -161,7 +136,7 @@ TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json con
         return InvalidTriggerCondition{};
     }
 
-    return PlayerKilledEntitySniperDuelCondition{targetEntityTypeId, horizontalMin, true, directEntityTypeId};
+    return PlayerKilledEntitySniperDuelCondition{*targetEntityTypeId, horizontalMin, true, directEntityTypeId};
 }
 
 bool matchesPlayerKilledEntityProjectileCondition(TriggerCondition const& condition, TriggerContext const& context) {
@@ -222,16 +197,16 @@ TriggerCondition compileSummonedEntityCondition(nlohmann::json const& conditions
         return InvalidTriggerCondition{};
     }
 
-    auto const& predicate = **entityPredicate;
-    if (!hasOnlyKeys(predicate, {"type"}) || !predicate.contains("type") || !predicate.at("type").is_string()) {
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type"})) {
         return InvalidTriggerCondition{};
     }
 
-    auto const entityTypeId = predicate.at("type").get<std::string>();
-    if (entityTypeId != "minecraft:wither" && entityTypeId != "minecraft:ender_dragon") {
+    auto const entityTypeId = predicate::parseEntityTypePredicate(entityPredicateJson);
+    if (!entityTypeId || (*entityTypeId != "minecraft:wither" && *entityTypeId != "minecraft:ender_dragon")) {
         return InvalidTriggerCondition{};
     }
-    return EntityTriggerCondition{entityTypeId};
+    return EntityTriggerCondition{*entityTypeId};
 }
 
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
