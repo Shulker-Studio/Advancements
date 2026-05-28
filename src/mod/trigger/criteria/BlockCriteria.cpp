@@ -1,17 +1,16 @@
 #include "mod/trigger/criteria/BlockCriteria.h"
 
+#include "mod/predicate/BlockPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
 namespace advancements::criteria {
 
 TriggerCondition compileBlockCondition(nlohmann::json const& conditions) {
-    if (!hasOnlyKeys(conditions, {"block"})) {
+    auto const blockPredicate = predicate::parseBlockPredicate(conditions);
+    if (!blockPredicate) {
         return InvalidTriggerCondition{};
     }
-    if (!conditions.contains("block") || !conditions.at("block").is_string()) {
-        return InvalidTriggerCondition{};
-    }
-    return BlockTriggerCondition{conditions.at("block").get<std::string>()};
+    return BlockTriggerCondition{blockPredicate->blockId};
 }
 
 bool matchesBlockCondition(TriggerCondition const& condition, TriggerContext const& context) {
@@ -20,17 +19,15 @@ bool matchesBlockCondition(TriggerCondition const& condition, TriggerContext con
     if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    return payload->blockId == compiled->blockId;
+    return predicate::matchesBlockPredicate(predicate::BlockPredicate{compiled->blockId}, payload->blockId);
 }
 
 TriggerCondition compileEnterBlockCondition(nlohmann::json const& conditions) {
-    if (!hasOnlyKeys(conditions, {"block"})) {
+    auto const blockPredicate = predicate::parseBlockPredicate(conditions);
+    if (!blockPredicate) {
         return InvalidTriggerCondition{};
     }
-    if (!conditions.contains("block") || !conditions.at("block").is_string()) {
-        return InvalidTriggerCondition{};
-    }
-    return EnterBlockCondition{conditions.at("block").get<std::string>()};
+    return EnterBlockCondition{blockPredicate->blockId};
 }
 
 bool matchesEnterBlockCondition(TriggerCondition const& condition, TriggerContext const& context) {
@@ -39,7 +36,7 @@ bool matchesEnterBlockCondition(TriggerCondition const& condition, TriggerContex
     if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    return payload->blockId == compiled->blockId;
+    return predicate::matchesBlockPredicate(predicate::BlockPredicate{compiled->blockId}, payload->blockId);
 }
 
 } // namespace advancements::criteria
