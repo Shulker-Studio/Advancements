@@ -28,8 +28,12 @@
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
 - `minecraft:player_hurt_entity`
+- `minecraft:entity_hurt_player`
+- `minecraft:shot_crossbow`
+- `minecraft:target_hit`（当前窄实现：仅 `adventure/bullseye` 已核形状）
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
+- `minecraft:location`（当前窄实现：结构进入类 location 条件）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `minecraft:player_generates_container_loot`
@@ -40,6 +44,8 @@
 - `minecraft:construct_beacon`
 - `minecraft:effects_changed`
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
+- `minecraft:item_used_on_block`（当前窄实现：仅 `nether/charge_respawn_anchor`）
+- `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
 
