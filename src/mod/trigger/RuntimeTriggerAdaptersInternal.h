@@ -117,8 +117,4 @@ bool constructBeaconTriggerRegistered();
 void registerConstructBeaconTrigger(Entry& mod);
 void unregisterConstructBeaconTrigger();
 
-bool worldRuntimeRegistered();
-void registerWorldRuntime(Entry& mod);
-void unregisterWorldRuntime();
-
 } // namespace advancements

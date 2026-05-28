@@ -20,7 +20,6 @@ namespace advancements::criteria {
 namespace {
 
 constexpr TriggerDescriptor MigratedDescriptors[]{
-    {"bedrock:player_destroy_block", compileBlockCondition, matchesBlockCondition},
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
     {"minecraft:brewed_potion", compileNoCondition, matchesNoCondition},
     {"minecraft:construct_beacon", compileConstructBeaconCondition, matchesConstructBeaconCondition},
