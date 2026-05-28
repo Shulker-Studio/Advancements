@@ -61,6 +61,7 @@
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 - `minecraft:channeled_lightning`（当前为窄实现，仅 `adventure/very_very_frightening`）
+- `minecraft:kill_mob_near_sculk_catalyst`（当前为窄实现，基于幽匿催发体消耗死亡经验路径）
 
 ## 安装
 

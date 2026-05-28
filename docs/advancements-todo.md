@@ -46,6 +46,7 @@
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
 - `minecraft:item_used_on_block`（当前窄实现：仅 `nether/charge_respawn_anchor`）
 - `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
+- `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
 
@@ -84,7 +85,7 @@
 | `inventory_changed` | partial | 当前实现支持 `item` + `count`，并新增窄形状 `required_items` 供 `husbandry/froglights` 检查“当前物品栏同时拥有多种指定物品”；不泛化槽位、NBT 或更复杂 inventory predicate |
 | `item_durability_changed` | missing-trigger | |
 | `item_used_on_block` | done | 当前窄实现：仅支持 `nether/charge_respawn_anchor` 形状 `conditions.item = minecraft:glowstone` + `conditions.block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge`，只在玩家触发的正向充能把 `RespawnAnchorCharge` 从小于 4 提升到 4 时派发；保留 `Advancements debug: respawn_anchor_bump_charge ...` 日志供 live-server QA |
-| `kill_mob_near_sculk_catalyst` | missing-trigger | |
+| `kill_mob_near_sculk_catalyst` | done | 当前窄实现：hook `SculkCatalystBlockActor::_tryConsumeOnDeathExperience(Level&, Actor&)`，用 `Actor::getLastHurtByPlayer()` 解析 `mLastHurtByPlayerId` 玩家归因，并通过同一调用内的 `SculkSpreader::addCursors(charge > 0)` 与 XP drop 被关闭确认幽匿催发体已消费死亡经验；使用无条件 descriptor，对应原版无 conditions JSON；live-server QA 已验证玩家在幽匿催发体附近击杀 skeleton 可完成，命令击杀未误触发 |
 | `killed_by_arrow` | missing-trigger | |
 | `levitation` | done | 当前窄实现：基于 `Player::$tickWorld` 观察玩家 `MobEffect::LEVITATION()` 状态，仅支持已核 wiki 语义/本地 JSON 形状 `conditions.distance.y.min = 50.0`；效果开始时记录起始 Y，效果结束时用结束 Y 结算一次绝对垂直位移；仍需 live-server QA 验证潜影贝弹丸给予的 Bedrock levitation 状态与 Java 完成时机严格对齐 |
 | `lightning_strike` | missing-trigger | |
@@ -196,7 +197,7 @@
 | `adventure/spyglass_at_dragon` | other | missing-trigger | |
 | `adventure/throw_trident` | `player_hurt_entity` | done | 已补本地 JSON + lang，并接入窄实现：按已核本地运行时形状复用 `minecraft:player_hurt_entity`，仅支持 `damage.type.direct_entity.type = minecraft:thrown_trident` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组条件，不泛化其他投射物或近战三叉戟伤害形状 |
 | `adventure/very_very_frightening` | `channeled_lightning` | done | 已补数据并接入当前窄实现：仅支持 `victims[0].predicate.type = minecraft:villager`，runtime 要求玩家拥有的引雷三叉戟在雷暴且命中位置可见天空时实际进入 lightning-on-hit 处理；live-server 正向 QA 已通过 |
-| `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
+| `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | done | 已按原版 1.21.3 无 conditions 形状补数据并接入当前催发体 XP 消耗窄实现；live-server QA 已验证玩家在幽匿催发体附近击杀 skeleton 可完成，命令击杀未误触发 |
 | `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
 | `adventure/sniper_duel` | `player_killed_entity` | done | 已补本地 JSON + lang，并接入已核窄实现：仅支持 skeleton + 水平距离 `>= 50.0` + projectile killing_blow tags；保持非泛化 |
 | `adventure/bullseye` | `target_hit` | done | 已落地本地 JSON + lang；runtime/条件解析仅支持该行已核窄形状（`signal_strength = 15` 与 projectile 水平距离 `>= 30`） |
