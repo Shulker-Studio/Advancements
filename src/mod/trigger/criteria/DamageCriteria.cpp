@@ -6,139 +6,35 @@
 namespace advancements::criteria {
 
 TriggerCondition compilePlayerHurtEntityCondition(nlohmann::json const& conditions) {
-    if (!hasOnlyKeys(conditions, {"damage"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!conditions.contains("damage") || !conditions.at("damage").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& damage = conditions.at("damage");
-    if (!hasOnlyKeys(damage, {"type", "dealt"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!damage.contains("type") || !damage.at("type").is_object()) {
+    auto const predicate = predicate::parsePlayerHurtEntityDamagePredicate(conditions);
+    if (!predicate) {
         return InvalidTriggerCondition{};
     }
 
-    auto const& type = damage.at("type");
-    if (!hasOnlyKeys(type, {"direct_entity", "tags"})) {
+    bool requireArrowDirectEntity   = predicate->directEntityTypeId == "#minecraft:arrows";
+    bool requireTridentDirectEntity = predicate->directEntityTypeId == "minecraft:thrown_trident";
+    bool requireMainhandMace        = predicate->directEntityMainhandItemId == "minecraft:mace" || predicate->requireMaceSmashDamageTag;
+
+    if (predicate->directEntityTypeId && !requireArrowDirectEntity && !requireTridentDirectEntity) {
+        return InvalidTriggerCondition{};
+    }
+    if (predicate->directEntityMainhandItemId && predicate->directEntityMainhandItemId != "minecraft:mace") {
         return InvalidTriggerCondition{};
     }
 
-    bool requireArrowDirectEntity    = false;
-    bool requireTridentDirectEntity  = false;
-    bool requireProjectileDamageTag  = false;
-    bool requireMainhandMace         = false;
-    std::optional<float> damageDealtMin;
-
-    if (type.contains("direct_entity")) {
-        if (!type.at("direct_entity").is_object()) {
-            return InvalidTriggerCondition{};
-        }
-        auto const& directEntity = type.at("direct_entity");
-        if (!hasOnlyKeys(directEntity, {"type", "equipment"})) {
-            return InvalidTriggerCondition{};
-        }
-        if (directEntity.contains("type")) {
-            if (!directEntity.at("type").is_string()) {
-                return InvalidTriggerCondition{};
-            }
-            auto const directEntityType = directEntity.at("type").get<std::string>();
-            if (directEntityType == "#minecraft:arrows") {
-                requireArrowDirectEntity = true;
-            } else if (directEntityType == "minecraft:thrown_trident") {
-                requireTridentDirectEntity = true;
-            } else {
-                return InvalidTriggerCondition{};
-            }
-        }
-        if (directEntity.contains("equipment")) {
-            if (!directEntity.at("equipment").is_object()) {
-                return InvalidTriggerCondition{};
-            }
-            auto const& equipment = directEntity.at("equipment");
-            if (!hasOnlyKeys(equipment, {"mainhand"})) {
-                return InvalidTriggerCondition{};
-            }
-            if (!equipment.contains("mainhand") || !equipment.at("mainhand").is_object()) {
-                return InvalidTriggerCondition{};
-            }
-            auto const& mainhand = equipment.at("mainhand");
-            if (!hasOnlyKeys(mainhand, {"items"})) {
-                return InvalidTriggerCondition{};
-            }
-            if (!mainhand.contains("items") || !mainhand.at("items").is_string()) {
-                return InvalidTriggerCondition{};
-            }
-            if (mainhand.at("items").get<std::string>() != "minecraft:mace") {
-                return InvalidTriggerCondition{};
-            }
-            requireMainhandMace = true;
-        }
-        if (!requireArrowDirectEntity && !requireTridentDirectEntity && !requireMainhandMace) {
-            return InvalidTriggerCondition{};
-        }
-    }
-
-    if (type.contains("tags")) {
-        if (!type.at("tags").is_array()) {
-            return InvalidTriggerCondition{};
-        }
-        auto const& tags = type.at("tags");
-        if (tags.size() != 1 || !tags.at(0).is_object()) {
-            return InvalidTriggerCondition{};
-        }
-        auto const& tagEntry = tags.at(0);
-        if (!hasOnlyKeys(tagEntry, {"id", "expected"})) {
-            return InvalidTriggerCondition{};
-        }
-        if (!tagEntry.contains("id") || !tagEntry.at("id").is_string()) {
-            return InvalidTriggerCondition{};
-        }
-        if (!tagEntry.contains("expected") || !tagEntry.at("expected").is_boolean()) {
-            return InvalidTriggerCondition{};
-        }
-        auto const tagId = tagEntry.at("id").get<std::string>();
-        if (!tagEntry.at("expected").get<bool>()) {
-            return InvalidTriggerCondition{};
-        }
-        if (tagId == "minecraft:is_projectile") {
-            requireProjectileDamageTag = true;
-        } else if (tagId == "minecraft:mace_smash") {
-            requireMainhandMace = true;
-        } else {
-            return InvalidTriggerCondition{};
-        }
-    }
-
-    if (damage.contains("dealt")) {
-        if (!damage.at("dealt").is_object()) {
-            return InvalidTriggerCondition{};
-        }
-        auto const& dealt = damage.at("dealt");
-        if (!hasOnlyKeys(dealt, {"min"})) {
-            return InvalidTriggerCondition{};
-        }
-        if (!dealt.contains("min") || !dealt.at("min").is_number()) {
-            return InvalidTriggerCondition{};
-        }
-        damageDealtMin = dealt.at("min").get<float>();
-    }
-
-    if (requireArrowDirectEntity || requireTridentDirectEntity || requireProjectileDamageTag) {
-        if ((!requireArrowDirectEntity && !requireTridentDirectEntity) || !requireProjectileDamageTag || requireMainhandMace
-            || damageDealtMin.has_value()) {
+    if (requireArrowDirectEntity || requireTridentDirectEntity || predicate->requireProjectileDamageTag) {
+        if ((!requireArrowDirectEntity && !requireTridentDirectEntity) || !predicate->requireProjectileDamageTag || requireMainhandMace
+            || predicate->dealtMin.has_value()) {
             return InvalidTriggerCondition{};
         }
         return PlayerHurtEntityCondition{requireArrowDirectEntity, requireTridentDirectEntity, true, false, std::nullopt};
     }
 
-    if (!requireMainhandMace || !damageDealtMin.has_value()) {
+    if (!requireMainhandMace || !predicate->dealtMin.has_value()) {
         return InvalidTriggerCondition{};
     }
 
-    return PlayerHurtEntityCondition{false, false, false, true, damageDealtMin};
+    return PlayerHurtEntityCondition{false, false, false, true, predicate->dealtMin};
 }
 
 TriggerCondition compileEntityHurtPlayerCondition(nlohmann::json const& conditions) {
