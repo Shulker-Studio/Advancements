@@ -17,6 +17,10 @@ bool levitationTriggerRegistered();
 void registerLevitationTrigger(Entry& mod);
 void unregisterLevitationTrigger();
 
+bool channeledLightningTriggerRegistered();
+void registerChanneledLightningTrigger(Entry& mod);
+void unregisterChanneledLightningTrigger();
+
 bool changedDimensionTriggerRegistered();
 void registerChangedDimensionTrigger(Entry& mod);
 void unregisterChangedDimensionTrigger();

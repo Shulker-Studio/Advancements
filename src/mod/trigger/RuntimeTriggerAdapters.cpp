@@ -12,6 +12,7 @@
 #include "mod/event/item/PlayerFilledBucketEvent.h"
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
+#include "mod/event/entity/PlayerProjectileLightningHitEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerChargedRespawnAnchorEvent.h"
 #include "mod/event/player/PlayerCuredZombieVillagerEvent.h"
@@ -27,6 +28,7 @@
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
 #include "mod/trigger/triggers/ChangedDimensionTrigger.h"
+#include "mod/trigger/triggers/ChanneledLightningTrigger.h"
 #include "mod/trigger/triggers/ConstructBeaconTrigger.h"
 #include "mod/trigger/triggers/ConsumeItemTrigger.h"
 #include "mod/trigger/triggers/CuredZombieVillagerTrigger.h"
@@ -192,6 +194,7 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
 bool anyRuntimeRegistered() {
     return event::player::playerTickEventSourceRegistered() || locationTriggerRegistered()
         || levitationTriggerRegistered()
+        || channeledLightningTriggerRegistered()
         || changedDimensionTriggerRegistered()
         || netherTravelTriggerRegistered()
         || summonedEntityTriggerRegistered()
@@ -226,6 +229,7 @@ bool anyRuntimeRegistered() {
         || event::block::targetBlockHitEventSourceRegistered()
         || event::block::beaconLevelChangedEventSourceRegistered()
         || event::block::witherSummonedEventSourceRegistered()
+        || event::entity::playerProjectileLightningHitEventSourceRegistered()
         || event::player::dragonRespawnedEventSourceRegistered();
 }
 
@@ -262,6 +266,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerConsumedItemEventSource();
     event::item::registerPlayerInventoryChangedEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
+    event::entity::registerPlayerProjectileLightningHitEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerChargedRespawnAnchorEventSource();
     event::player::registerPlayerCuredZombieVillagerEventSource();
@@ -276,6 +281,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerEntityHurtPlayerTrigger(mod);
     registerEntityKilledPlayerTrigger(mod);
     registerConstructBeaconTrigger(mod);
+    registerChanneledLightningTrigger(mod);
     registerChangedDimensionTrigger(mod);
     registerLocationTrigger(mod);
     registerLevitationTrigger(mod);
@@ -307,6 +313,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterEntityHurtPlayerTrigger();
     unregisterEntityKilledPlayerTrigger();
     unregisterConstructBeaconTrigger();
+    unregisterChanneledLightningTrigger();
     unregisterChangedDimensionTrigger();
     unregisterLevitationTrigger();
     unregisterNetherTravelTrigger();
@@ -342,6 +349,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerConsumedItemEventSource();
     event::item::unregisterPlayerInventoryChangedEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
+    event::entity::unregisterPlayerProjectileLightningHitEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerChargedRespawnAnchorEventSource();
     event::player::unregisterPlayerCuredZombieVillagerEventSource();

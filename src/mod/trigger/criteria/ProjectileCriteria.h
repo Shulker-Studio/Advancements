@@ -5,6 +5,8 @@
 namespace advancements::criteria {
 
 TriggerCondition compileTargetHitCondition(nlohmann::json const& conditions);
+TriggerCondition compileChanneledLightningCondition(nlohmann::json const& conditions);
 bool matchesTargetHitCondition(TriggerCondition const& condition, TriggerContext const& context);
+bool matchesChanneledLightningCondition(TriggerCondition const& condition, TriggerContext const& context);
 
 } // namespace advancements::criteria

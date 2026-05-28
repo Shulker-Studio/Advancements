@@ -20,6 +20,7 @@ namespace {
 
 constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
+    {"minecraft:channeled_lightning", compileChanneledLightningCondition, matchesChanneledLightningCondition},
     {"minecraft:brewed_potion", compileNoCondition, matchesNoCondition},
     {"minecraft:construct_beacon", compileConstructBeaconCondition, matchesConstructBeaconCondition},
     {"minecraft:consume_item", compileSimpleItemCondition, matchesSimpleItemCondition},

@@ -43,4 +43,36 @@ bool matchesTargetHitCondition(TriggerCondition const& condition, TriggerContext
     return payload->projectileHorizontalDistance >= compiled->projectileHorizontalDistanceMin;
 }
 
+
+TriggerCondition compileChanneledLightningCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"victims"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "victims");
+    if (!entityPredicate) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityTypeId = predicate::parseEntityTypePredicate(entityPredicateJson);
+    if (!entityTypeId || *entityTypeId != "minecraft:villager") {
+        return InvalidTriggerCondition{};
+    }
+
+    return EntityTriggerCondition{*entityTypeId};
+}
+
+bool matchesChanneledLightningCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
+    auto const* payload  = payloadAs<EntityTriggerPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->entityTypeId == compiled->entityTypeId;
+}
 } // namespace advancements::criteria
