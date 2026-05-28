@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/ItemCriteria.h"
 
+#include "mod/predicate/ItemPredicate.h"
 #include "mod/predicate/PlayerPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
@@ -32,21 +33,11 @@ TriggerCondition compileRequiredInventoryItemsCondition(nlohmann::json const& co
 }
 
 TriggerCondition compileItemCondition(nlohmann::json const& conditions, bool allowCount) {
-    if (!hasOnlyKeys(conditions, allowCount ? std::initializer_list<char const*>{"item", "count"}
-                                             : std::initializer_list<char const*>{"item"})) {
+    auto const itemPredicate = predicate::parseItemPredicate(conditions, allowCount);
+    if (!itemPredicate) {
         return InvalidTriggerCondition{};
     }
-    if (!conditions.contains("item") || !conditions.at("item").is_string()) {
-        return InvalidTriggerCondition{};
-    }
-    std::optional<int> count;
-    if (conditions.contains("count")) {
-        if (!allowCount || !conditions.at("count").is_number_integer()) {
-            return InvalidTriggerCondition{};
-        }
-        count = conditions.at("count").get<int>();
-    }
-    return ItemTriggerCondition{conditions.at("item").get<std::string>(), count};
+    return ItemTriggerCondition{itemPredicate->itemId, itemPredicate->count};
 }
 
 std::optional<float> parseVillagerTradePlayerYMin(nlohmann::json const& conditions) {
@@ -96,15 +87,12 @@ TriggerCondition compileShotCrossbowCondition(nlohmann::json const& conditions) 
         return InvalidTriggerCondition{};
     }
 
-    auto const& item = conditions.at("item");
-    if (!hasOnlyKeys(item, {"items"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!item.contains("items") || !item.at("items").is_string()) {
+    auto const itemPredicate = predicate::parseItemObjectPredicate(conditions.at("item"));
+    if (!itemPredicate) {
         return InvalidTriggerCondition{};
     }
 
-    auto const itemId = item.at("items").get<std::string>();
+    auto const& itemId = itemPredicate->itemId;
     if (itemId != "minecraft:crossbow") {
         return InvalidTriggerCondition{};
     }
@@ -148,16 +136,7 @@ bool matchesInventoryItemCondition(TriggerCondition const& condition, TriggerCon
     if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    if (payload->itemId != compiled->itemId) {
-        return false;
-    }
-    if (!compiled->count) {
-        return true;
-    }
-    if (!payload->itemCount) {
-        return false;
-    }
-    return *payload->itemCount >= *compiled->count;
+    return predicate::matchesItemPredicate(predicate::ItemPredicate{compiled->itemId, compiled->count}, payload->itemId, payload->itemCount);
 }
 
 bool matchesSimpleItemCondition(TriggerCondition const& condition, TriggerContext const& context) {
