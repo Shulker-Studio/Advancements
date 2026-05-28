@@ -1,7 +1,7 @@
 #include "mod/trigger/triggers/EnchantedItemTrigger.h"
 
 #include "mod/Entry.h"
-#include "mod/event/item/ContainerOutputTakenEvent.h"
+#include "mod/event/item/EnchantedItemEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 
 #include "ll/api/event/EventBus.h"
@@ -9,24 +9,19 @@
 namespace advancements {
 namespace {
 
-ll::event::ListenerPtr gContainerOutputTakenListener;
+ll::event::ListenerPtr gEnchantedItemListener;
 
 } // namespace
 
-bool enchantedItemTriggerRegistered() { return gContainerOutputTakenListener != nullptr; }
+bool enchantedItemTriggerRegistered() { return gEnchantedItemListener != nullptr; }
 
 void registerEnchantedItemTrigger(Entry& mod) {
     if (enchantedItemTriggerRegistered()) {
         return;
     }
 
-    gContainerOutputTakenListener = ll::event::EventBus::getInstance().emplaceListener<event::item::ContainerOutputTakenEvent>(
+    gEnchantedItemListener = ll::event::EventBus::getInstance().emplaceListener<event::item::EnchantedItemEvent>(
         [&mod](auto& event) {
-            if (event.screenType() != SharedTypes::Legacy::ContainerType::Enchantment
-                || event.sourceContainer() != ContainerEnumName::CreatedOutputContainer) {
-                return;
-            }
-
             dispatchTrigger(
                 mod,
                 TriggerContext{
@@ -40,9 +35,9 @@ void registerEnchantedItemTrigger(Entry& mod) {
 }
 
 void unregisterEnchantedItemTrigger() {
-    if (gContainerOutputTakenListener) {
-        ll::event::EventBus::getInstance().removeListener(gContainerOutputTakenListener);
-        gContainerOutputTakenListener.reset();
+    if (gEnchantedItemListener) {
+        ll::event::EventBus::getInstance().removeListener(gEnchantedItemListener);
+        gEnchantedItemListener.reset();
     }
 }
 

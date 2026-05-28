@@ -28,6 +28,7 @@ constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:entity_killed_player", compileEntityCondition, matchesEntityCondition},
     {"minecraft:entity_hurt_player", compileEntityHurtPlayerCondition, matchesEntityHurtPlayerCondition},
     {"minecraft:effects_changed", compileEffectsChangedCondition, matchesEffectsChangedCondition},
+    {"minecraft:enchanted_item", compileNoCondition, matchesNoCondition},
     {"minecraft:filled_bucket", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:fishing_rod_hooked", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:inventory_changed", compileInventoryItemCondition, matchesInventoryItemCondition},

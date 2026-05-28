@@ -4,9 +4,8 @@
 #include "mod/event/block/TargetBlockHitEvent.h"
 #include "mod/event/block/WitherSummonedEvent.h"
 #include "mod/event/block/BeaconLevelChangedEvent.h"
-#include "mod/event/entity/EntityHurtByPlayerEvent.h"
-#include "mod/event/entity/EntityKilledByPlayerEvent.h"
 #include "mod/event/item/ContainerOutputTakenEvent.h"
+#include "mod/event/item/EnchantedItemEvent.h"
 #include "mod/event/item/FishingRodHookedItemEvent.h"
 #include "mod/event/item/PlayerGeneratedContainerLootEvent.h"
 #include "mod/event/item/PlayerConsumedItemEvent.h"
@@ -21,7 +20,6 @@
 #include "mod/event/player/PlayerEnteredEndGatewayEvent.h"
 #include "mod/event/player/PlayerEffectsChangedEvent.h"
 #include "mod/event/player/PlayerInteractedWithEntityEvent.h"
-#include "mod/event/player/PlayerKilledByEntityEvent.h"
 #include "mod/event/player/PlayerSleptInBedEvent.h"
 #include "mod/event/player/PlayerTickEvent.h"
 #include "mod/event/player/PlayerUsedTotemEvent.h"
@@ -209,15 +207,13 @@ bool anyRuntimeRegistered() {
         || enterBlockTriggerRegistered()
         || itemUsedOnBlockTriggerRegistered()
         || constructBeaconTriggerRegistered()
-        || event::entity::entityHurtByPlayerEventSourceRegistered() || event::entity::entityKilledByPlayerEventSourceRegistered()
-        || event::player::playerKilledByEntityEventSourceRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
         || event::item::playerInventoryChangedEventSourceRegistered()
         || event::item::playerFilledBucketEventSourceRegistered()
         || event::item::fishingRodHookedItemEventSourceRegistered()
         || event::item::playerGeneratedContainerLootEventSourceRegistered()
         || event::item::playerShotCrossbowEventSourceRegistered()
-        || event::item::containerOutputTakenEventSourceRegistered()
+        || event::item::containerOutputTakenEventSourceRegistered() || event::item::enchantedItemEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
         || event::player::playerChargedRespawnAnchorEventSourceRegistered()
         || event::player::playerCuredZombieVillagerEventSourceRegistered()
@@ -258,9 +254,8 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::block::registerBeaconLevelChangedEventSource();
     event::block::registerTargetBlockHitEventSource();
     event::block::registerWitherSummonedEventSource();
-    event::entity::registerEntityHurtByPlayerEventSource();
-    event::entity::registerEntityKilledByPlayerEventSource();
     event::item::registerContainerOutputTakenEventSource();
+    event::item::registerEnchantedItemEventSource();
     event::item::registerPlayerFilledBucketEventSource();
     event::item::registerFishingRodHookedItemEventSource();
     event::item::registerPlayerGeneratedContainerLootEventSource();
@@ -275,7 +270,6 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::player::registerPlayerEnteredEndGatewayEventSource();
     event::player::registerPlayerEffectsChangedEventSource();
     event::player::registerPlayerInteractedWithEntityEventSource();
-    event::player::registerPlayerKilledByEntityEventSource();
     event::player::registerPlayerSleptInBedEventSource();
     event::player::registerPlayerTickEventSource();
     event::player::registerPlayerUsedTotemEventSource();
@@ -340,9 +334,8 @@ void unregisterRuntimeTriggerAdapters() {
     event::block::unregisterBeaconLevelChangedEventSource();
     event::block::unregisterTargetBlockHitEventSource();
     event::block::unregisterWitherSummonedEventSource();
-    event::entity::unregisterEntityHurtByPlayerEventSource();
-    event::entity::unregisterEntityKilledByPlayerEventSource();
     event::item::unregisterContainerOutputTakenEventSource();
+    event::item::unregisterEnchantedItemEventSource();
     event::item::unregisterPlayerFilledBucketEventSource();
     event::item::unregisterFishingRodHookedItemEventSource();
     event::item::unregisterPlayerGeneratedContainerLootEventSource();
@@ -357,7 +350,6 @@ void unregisterRuntimeTriggerAdapters() {
     event::player::unregisterPlayerEnteredEndGatewayEventSource();
     event::player::unregisterPlayerEffectsChangedEventSource();
     event::player::unregisterPlayerInteractedWithEntityEventSource();
-    event::player::unregisterPlayerKilledByEntityEventSource();
     event::player::unregisterPlayerSleptInBedEventSource();
     event::player::unregisterPlayerTickEventSource();
     event::player::unregisterPlayerUsedTotemEventSource();
