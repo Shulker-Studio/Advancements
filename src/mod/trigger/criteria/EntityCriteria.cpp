@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/EntityCriteria.h"
 
+#include "mod/predicate/DistancePredicate.h"
 #include "mod/predicate/EntityPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
@@ -66,20 +67,11 @@ TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json con
     }
     std::optional<float> horizontalMin;
     if (entityPredicateJson.contains("distance")) {
-        if (!entityPredicateJson.at("distance").is_object()) {
+        auto const distance = predicate::parseHorizontalDistancePredicate(entityPredicateJson.at("distance"));
+        if (!distance) {
             return InvalidTriggerCondition{};
         }
-        auto const& distance = entityPredicateJson.at("distance");
-        if (!hasOnlyKeys(distance, {"horizontal"}) || !distance.contains("horizontal")
-            || !distance.at("horizontal").is_object()) {
-            return InvalidTriggerCondition{};
-        }
-
-        auto const& horizontal = distance.at("horizontal");
-        if (!hasOnlyKeys(horizontal, {"min"}) || !horizontal.contains("min") || !horizontal.at("min").is_number()) {
-            return InvalidTriggerCondition{};
-        }
-        horizontalMin = horizontal.at("min").get<float>();
+        horizontalMin = distance->min;
     }
 
     if (!conditions.contains("killing_blow") || !conditions.at("killing_blow").is_object()) {
