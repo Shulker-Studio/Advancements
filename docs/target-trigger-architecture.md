@@ -6,7 +6,7 @@ This document defines the target trigger architecture for the Advancements plugi
 
 ## Summary
 
-The target architecture splits the current `trigger/runtime` and `trigger/criteria` responsibilities into three explicit layers:
+The target architecture split the older `trigger/runtime` and `trigger/criteria` responsibilities into three explicit layers, which are now mostly present in the post-0.1.2 source tree:
 
 ```text
 src/mod/event       -> game fact event sources
@@ -22,6 +22,18 @@ Predicate layer answers whether facts satisfy common predicates.
 Trigger layer decides whether a Minecraft advancement trigger fired.
 Progress layer still grants, notifies, and persists.
 ```
+
+## Implementation Status After 0.1.2
+
+This document started as the target design. Most of the structural migration it describes is now implemented:
+
+- `src/mod/event/**` exists and owns plugin event sources for player, item, entity, and block facts.
+- `src/mod/predicate/**` owns the currently supported reusable block, item, entity, damage, distance, location, and player predicate helpers.
+- `src/mod/trigger/triggers/**` owns per-trigger modules and listener lifetimes.
+- `TriggerRegistry.*` exists as the trigger descriptor registration surface.
+- The old `src/mod/trigger/runtime/**` directory is no longer present in the current source tree.
+
+Treat the phase sections below as historical design notes unless they explicitly describe unfinished cleanup. New work should follow the implemented event + predicate + trigger-module architecture and should not reintroduce broad runtime shells or placeholder trigger modules.
 
 ## Non-Goals
 
@@ -54,9 +66,7 @@ The old world runtime must not keep a second `Player::$tickWorld` hook after the
 
 ### Registry Compatibility
 
-Phase 1 does not introduce the final `TriggerRegistry` abstraction. The migrated `minecraft:location` parser/matcher can live with `LocationTrigger`, but it must still be visible to the current `TriggerCriteriaRegistry` / `TriggerIndex` path. The dispatcher and progress grant path remain unchanged.
-
-The full `TriggerRegistry` cleanup belongs to a later registry/variant cleanup wave, after at least one migrated trigger has proven the new event and predicate boundaries.
+Phase 1 originally did not introduce the final `TriggerRegistry` abstraction. In the current post-0.1.2 source tree, `TriggerRegistry.*` exists and `TriggerCriteriaRegistry` acts as compatibility-facing glue for descriptor lookup. `TriggerIndex` and `TriggerDispatcher` still own reload-time binding and grant dispatch.
 
 ### Predicate API Compatibility
 
@@ -68,10 +78,10 @@ For `minecraft:location`, this means parsing only the existing `player[0].predic
 
 The current code works, but its responsibilities are becoming crowded:
 
-- `trigger/runtime/*.cpp` files mix hook registration, LL event consumption, game-fact extraction, trigger-specific state, and calls to `dispatchTrigger`.
-- `trigger/criteria/*.cpp` files mix trigger-specific condition parsing with reusable vanilla/wiki predicate parsing.
-- `TriggerIndex.h` carries a growing `TriggerPayload` and `TriggerCondition` variant.
-- Common shapes such as `entity_properties`, `player`, `item`, `block`, `location`, `distance`, and `damage` are parsed directly inside individual criteria files.
+- Historical `trigger/runtime/*.cpp` files mixed hook registration, LL event consumption, game-fact extraction, trigger-specific state, and calls to `dispatchTrigger`. That directory has since been removed.
+- `trigger/criteria/*.cpp` files should remain descriptor-facing glue and should delegate reusable vanilla/wiki predicate parsing to `src/mod/predicate/**`.
+- `TriggerIndex.h` still carries compatibility state for reload-time binding; avoid growing it except for concrete advancement slices.
+- Common shapes such as `entity_properties`, `player`, `item`, `block`, `location`, `distance`, and `damage` should stay in predicate helpers.
 
 This is manageable now, but it will become harder as broader Adventure and Husbandry rows require more shared predicate coverage.
 
@@ -460,25 +470,26 @@ TradeCompletedEvent
 
 ## Registry and Index Strategy
 
-The current `TriggerIndex` can remain during migration. New trigger modules should not require an immediate big-bang replacement.
+The current `TriggerIndex` remains as the reload-time binding layer. New trigger modules should not require an immediate big-bang replacement.
 
 Recommended transition:
 
-1. Keep current descriptor-based `TriggerIndex` as the compatibility path.
-2. Add `TriggerRegistry` as the new registration surface for per-trigger modules.
-3. Let migrated triggers register parse/match handlers through `TriggerRegistry`.
-4. Let unmigrated triggers continue through the existing descriptor registry.
-5. Once enough triggers migrate, reduce or remove the old large `TriggerCondition` variant.
+1. Keep descriptor-based `TriggerIndex` as the compatibility path.
+2. Use `TriggerRegistry` as the registration surface for per-trigger modules.
+3. Let trigger modules register parse/match handlers through `TriggerRegistry`.
+4. Keep `TriggerCriteriaRegistry` as descriptor-facing compatibility glue while it remains useful.
+5. Reduce compatibility variants only when a concrete cleanup wave can preserve behavior.
 
 During migration, behavior compatibility is more important than immediate API purity.
 
 ## Phase 5 TriggerRegistry Seam Design
 
-Phase 5 starts with a compatibility seam, not a replacement of the dispatch path. The first design milestone is a `TriggerRegistry` surface that can collect trigger descriptors from trigger modules while still presenting the same `TriggerDescriptor` shape consumed by `TriggerIndex` and `TriggerDispatcher`.
+Phase 5 started with a compatibility seam, not a replacement of the dispatch path. The `TriggerRegistry` surface now exists and collects trigger descriptors while still presenting the same `TriggerDescriptor` shape consumed by `TriggerIndex` and `TriggerDispatcher`.
 
 Current compatibility anchors:
 
-- `TriggerCriteriaRegistry.cpp` owns the static descriptor table and `findTriggerDescriptor` lookup.
+- `TriggerRegistry.*` owns descriptor registration and lookup.
+- `TriggerCriteriaRegistry.cpp` remains as compatibility-facing registration/lookup glue.
 - `TriggerIndex::rebuild` resolves each criterion trigger ID to a descriptor and compiles a `TriggerCondition` once during reload.
 - `TriggerDispatcher` keeps granting through descriptor-backed bindings and `ProgressService`.
 - Runtime trigger modules keep dispatching shared `TriggerContext` values through `dispatchTrigger`.

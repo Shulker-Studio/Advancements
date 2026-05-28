@@ -4,7 +4,7 @@ This document keeps both the current architecture and the proposed target archit
 
 ## Current Architecture
 
-The current implementation is reload-centered. Advancement JSON is parsed on reload, indexes are rebuilt, runtime hooks/events create `TriggerContext`, and `TriggerDispatcher` grants progress through `ProgressService`.
+The current implementation is reload-centered. Advancement JSON is parsed on reload, indexes are rebuilt, plugin-owned event sources publish typed game facts, trigger modules create `TriggerContext`, and `TriggerDispatcher` grants progress through `ProgressService`.
 
 ```mermaid
 flowchart TD
@@ -22,20 +22,24 @@ flowchart TD
         TriggerIndex["TriggerIndex"]
     end
 
-    subgraph Criteria["Criteria Layer"]
-        Registry["TriggerCriteriaRegistry"]
+    subgraph Criteria["Criteria / Registry Layer"]
+        Registry["TriggerRegistry"]
+        CriteriaFacade["TriggerCriteriaRegistry facade"]
         Descriptor["TriggerDescriptor"]
         Compile["compile conditions"]
         Match["match TriggerContext"]
     end
 
-    subgraph Runtime["Runtime Event Sources"]
-        InventoryRuntime["InventoryRuntime"]
-        CombatRuntime["CombatRuntime"]
-        WorldRuntime["WorldRuntime"]
-        ProjectileRuntime["ProjectileRuntime"]
-        LootRuntime["LootRuntime"]
-        EffectRuntime["EffectRuntime"]
+    subgraph EventSources["Event Sources"]
+        PlayerEvents["src/mod/event/player"]
+        ItemEvents["src/mod/event/item"]
+        EntityEvents["src/mod/event/entity"]
+        BlockEvents["src/mod/event/block"]
+    end
+
+    subgraph TriggerModules["Trigger Modules"]
+        Triggers["src/mod/trigger/triggers/*Trigger"]
+        Predicates["src/mod/predicate/*Predicate"]
     end
 
     subgraph Dispatch["Dispatch Pipeline"]
@@ -64,16 +68,17 @@ flowchart TD
     Definitions --> CommandIndex
     Definitions --> TriggerIndex
 
-    Registry --> Descriptor
+    Registry --> CriteriaFacade
+    CriteriaFacade --> Descriptor
     Descriptor --> Compile
     Compile --> TriggerIndex
 
-    InventoryRuntime --> Context
-    CombatRuntime --> Context
-    WorldRuntime --> Context
-    ProjectileRuntime --> Context
-    LootRuntime --> Context
-    EffectRuntime --> Context
+    PlayerEvents --> Triggers
+    ItemEvents --> Triggers
+    EntityEvents --> Triggers
+    BlockEvents --> Triggers
+    Triggers --> Predicates
+    Triggers --> Context
 
     Context --> Adapter
     Adapter --> Dispatcher
@@ -96,7 +101,8 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant Runtime as Runtime Hook/Event
+    participant EventSource as src/mod/event source
+    participant Trigger as Trigger module
     participant Adapter as dispatchTrigger()
     participant Index as TriggerIndex
     participant Dispatcher as TriggerDispatcher
@@ -105,7 +111,9 @@ sequenceDiagram
     participant Store as ProgressStore
     participant Notifier as AdvancementNotifier
 
-    Runtime->>Adapter: create TriggerContext
+    EventSource->>Trigger: publish typed game fact
+    Trigger->>Trigger: match trigger-specific conditions
+    Trigger->>Adapter: create TriggerContext
     Adapter->>Index: find(triggerId)
     Index-->>Adapter: CriterionBinding[]
     Adapter->>Dispatcher: dispatch(context)
@@ -120,16 +128,16 @@ sequenceDiagram
             Dispatcher->>Notifier: notifyAdvancementCompleted()
         end
     else not matched
-        Dispatcher-->>Runtime: no-op
+        Dispatcher-->>Trigger: no-op
     end
 ```
 
 ### Current Pain Points
 
-- `trigger/runtime/*` mixes hook registration, LL event consumption, game-fact extraction, trigger-specific state, and `dispatchTrigger` calls.
-- `trigger/criteria/*` mixes trigger condition parsing with reusable vanilla/wiki predicate parsing.
-- `TriggerIndex.h` owns a growing `TriggerPayload` / `TriggerCondition` variant that becomes harder to extend as more triggers are added.
-- Common predicate shapes such as player, entity, item, block, location, distance, and damage are repeated across trigger-specific criteria files.
+- The old `trigger/runtime/*` layer has been removed; keep future runtime seams in `src/mod/event/**` and trigger-specific logic in `src/mod/trigger/triggers/**`.
+- `trigger/criteria/*` remains descriptor-facing glue and should not regain reusable vanilla/wiki predicate parsing that now belongs in `src/mod/predicate/**`.
+- `TriggerIndex.h` still stores compiled descriptor-backed bindings; avoid expanding compatibility variants unless a concrete advancement requires it.
+- Common predicate shapes such as player, entity, item, block, location, distance, and damage should stay centralized in predicate helpers.
 
 ## Target Architecture
 
@@ -215,7 +223,7 @@ flowchart TD
 sequenceDiagram
     participant Bedrock as Bedrock / LL Signal
     participant EventSource as src/mod/event source
-    participant EventBus as Project Event Bus
+    participant EventBus as LeviLamina EventBus
     participant Trigger as Per-Trigger Module
     participant Predicate as Predicate Module
     participant Dispatcher as TriggerDispatcher
@@ -366,32 +374,32 @@ Examples:
 ```mermaid
 flowchart TD
     subgraph Current["Current files"]
-        RuntimeOld["trigger/runtime/*.cpp"]
-        CriteriaOld["trigger/criteria/*.cpp"]
-        VariantOld["TriggerIndex.h variant"]
+        EventCurrent["event/<domain>/*Event.*"]
+        TriggerCurrent["trigger/triggers/*Trigger.*"]
+        PredicateCurrent["predicate/*Predicate.*"]
+        RegistryCurrent["TriggerRegistry / TriggerIndex"]
     end
 
-    subgraph Target["Target files"]
+    subgraph Future["Future cleanup"]
         EventNew["event/<domain>/*Event.*"]
         PredicateNew["predicate/*Predicate.*"]
         TriggerNew["trigger/triggers/*Trigger.*"]
         RegistryNew["TriggerRegistry / TriggerIndex"]
     end
 
-    RuntimeOld --> EventNew
-    RuntimeOld --> TriggerNew
-    CriteriaOld --> PredicateNew
-    CriteriaOld --> TriggerNew
-    VariantOld --> RegistryNew
+    EventCurrent --> EventNew
+    TriggerCurrent --> TriggerNew
+    PredicateCurrent --> PredicateNew
+    RegistryCurrent --> RegistryNew
 ```
 
-Recommended first wave:
+Current post-0.1.2 state:
 
-1. Add `event/player/PlayerTickEvent.*` as the event-source seam for `Player::$tickWorld`.
-2. Add minimal `predicate/PlayerPredicate.*` and `predicate/LocationPredicate.*` for the currently supported `player[0].predicate.location.structures` shape.
-3. Move `minecraft:location` into `trigger/triggers/LocationTrigger.*` as the first per-trigger module.
-4. Keep `TriggerDispatcher` and `ProgressService` behavior unchanged.
-5. Verify the same trigger IDs, same player attribution, same 20-tick cadence, and same advancement completion behavior before migrating another trigger.
+1. `trigger/runtime/*` has been removed from the current source tree.
+2. Existing migrated triggers consume plugin-owned events from `src/mod/event/**`.
+3. Reusable predicate helpers live under `src/mod/predicate/**`.
+4. Trigger descriptors are registered through `TriggerRegistry` while `TriggerIndex` and `TriggerDispatcher` still own reload-time binding and grant dispatch.
+5. Future work should add one concrete event/trigger slice at a time and avoid broad generic trigger scaffolding.
 
 ## Stable Rules
 
