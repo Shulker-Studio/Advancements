@@ -64,7 +64,7 @@
 | `bred_animals` | missing-trigger | |
 | `brewed_potion` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `BrewingStandResultContainer` 成功转移且当前 screen type 为 `ContainerType::BrewingStand` 后触发；不检查输出物品类型，匹配 wiki/原版“从酿造台输出栏获取任意物品”的语义 |
 | `changed_dimension` | done | 当前窄实现，支持 `conditions.from` / `conditions.to`；通知时机仍有 caveat |
-| `channeled_lightning` | missing-trigger | |
+| `channeled_lightning` | partial | 当前窄实现：基于玩家拥有的弹射物进入 `ProjectileComponent::_handleLightningOnHit` 后派发事件；trigger 层仅接受 `minecraft:thrown_trident` + `mChanneling` + 雷暴天气快照 + 命中位置可见天空 + 被击中实体为 villager/villager_v2 的 `victims` 单实体形状，用于 `adventure/very_very_frightening`；不泛化 lightning 实体谓词、多 victims 或非村民目标 |
 | `construct_beacon` | done | 当前窄实现：hook `BeaconBlockActor::checkShape` 关键刷新函数，在当前 `mNumLevels` 从低层级提升为更高层级时触发；仅支持裸条件和 `conditions.level.min`，并按 wiki 语义派发给同维度、信标中心水平切比雪夫距离 10 格内、垂直向下 9 格到向上 5 格内的玩家；实测该关键函数约每 80 tick / 4 秒进入一次，避免直接监听每 tick 热路径；仍需 live-server QA 验证 Bedrock 层级刷新时机与 Java 激活语义严格对齐 |
 | `consume_item` | done | 当前窄实现，仅 `conditions.item` |
 | `crafter_recipe_crafted` | missing-trigger | |
@@ -195,7 +195,7 @@
 | `adventure/spyglass_at_ghast` | other | missing-trigger | |
 | `adventure/spyglass_at_dragon` | other | missing-trigger | |
 | `adventure/throw_trident` | `player_hurt_entity` | done | 已补本地 JSON + lang，并接入窄实现：按已核本地运行时形状复用 `minecraft:player_hurt_entity`，仅支持 `damage.type.direct_entity.type = minecraft:thrown_trident` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组条件，不泛化其他投射物或近战三叉戟伤害形状 |
-| `adventure/very_very_frightening` | other | missing-trigger | |
+| `adventure/very_very_frightening` | `channeled_lightning` | done | 已补数据并接入当前窄实现：仅支持 `victims[0].predicate.type = minecraft:villager`，runtime 要求玩家拥有的引雷三叉戟在雷暴且命中位置可见天空时实际进入 lightning-on-hit 处理；live-server 正向 QA 已通过 |
 | `adventure/kill_mob_near_sculk_catalyst` | `kill_mob_near_sculk_catalyst` | missing-trigger | |
 | `adventure/shoot_arrow` | `player_hurt_entity` | done | 已补数据并接入窄实现：仅支持 `damage.type.direct_entity.type = #minecraft:arrows` 与 `damage.type.tags` 含 `minecraft:is_projectile` 这组已核 surface；保持非泛化 |
 | `adventure/sniper_duel` | `player_killed_entity` | done | 已补本地 JSON + lang，并接入已核窄实现：仅支持 skeleton + 水平距离 `>= 50.0` + projectile killing_blow tags；保持非泛化 |

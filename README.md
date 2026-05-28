@@ -60,6 +60,7 @@
 - `minecraft:player_interacted_with_entity`（当前为窄实现，仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
+- `minecraft:channeled_lightning`（当前为窄实现，仅 `adventure/very_very_frightening`）
 
 ## 安装
 
