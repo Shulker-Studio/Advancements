@@ -4,10 +4,7 @@
 
 namespace advancements::predicate {
 
-std::optional<EntityPredicate> parseSingleThisEntityDistancePredicate(nlohmann::json const& conditions, char const* rootKey) {
-    if (!hasOnlyKeys(conditions, {rootKey, "signal_strength"})) {
-        return std::nullopt;
-    }
+std::optional<nlohmann::json const*> parseSingleThisEntityPredicateRoot(nlohmann::json const& conditions, char const* rootKey) {
     if (!conditions.contains(rootKey) || !conditions.at(rootKey).is_array()) {
         return std::nullopt;
     }
@@ -33,7 +30,20 @@ std::optional<EntityPredicate> parseSingleThisEntityDistancePredicate(nlohmann::
         return std::nullopt;
     }
 
-    auto const& predicate = entityEntry.at("predicate");
+    return &entityEntry.at("predicate");
+}
+
+std::optional<EntityPredicate> parseSingleThisEntityDistancePredicate(nlohmann::json const& conditions, char const* rootKey) {
+    if (!hasOnlyKeys(conditions, {rootKey, "signal_strength"})) {
+        return std::nullopt;
+    }
+
+    auto entityPredicate = parseSingleThisEntityPredicateRoot(conditions, rootKey);
+    if (!entityPredicate) {
+        return std::nullopt;
+    }
+
+    auto const& predicate = **entityPredicate;
     if (!hasOnlyKeys(predicate, {"distance"}) || !predicate.contains("distance") || !predicate.at("distance").is_object()) {
         return std::nullopt;
     }
