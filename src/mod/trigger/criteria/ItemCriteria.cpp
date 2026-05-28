@@ -145,7 +145,7 @@ bool matchesSimpleItemCondition(TriggerCondition const& condition, TriggerContex
     if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    return payload->itemId == compiled->itemId;
+    return predicate::matchesItemPredicate(predicate::ItemPredicate{compiled->itemId, compiled->count}, payload->itemId, payload->itemCount);
 }
 
 bool matchesItemUsedOnBlockCondition(TriggerCondition const& condition, TriggerContext const& context) {
@@ -154,7 +154,8 @@ bool matchesItemUsedOnBlockCondition(TriggerCondition const& condition, TriggerC
     if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    return payload->itemId == compiled->itemId && payload->blockId == compiled->blockId;
+    return predicate::matchesItemPredicate(predicate::ItemPredicate{compiled->itemId, std::nullopt}, payload->itemId, std::nullopt)
+        && payload->blockId == compiled->blockId;
 }
 
 bool matchesVillagerTradeCondition(TriggerCondition const& condition, TriggerContext const& context) {
