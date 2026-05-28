@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/TriggerCriteriaRegistry.h"
 
+#include "mod/trigger/TriggerRegistry.h"
 #include "mod/trigger/criteria/BeaconCriteria.h"
 #include "mod/trigger/criteria/BlockCriteria.h"
 #include "mod/trigger/criteria/DamageCriteria.h"
@@ -14,12 +15,10 @@
 #include "mod/trigger/criteria/ProjectileCriteria.h"
 #include "mod/trigger/criteria/StructureCriteria.h"
 
-#include <algorithm>
-
 namespace advancements::criteria {
 namespace {
 
-constexpr TriggerDescriptor MigratedDescriptors[]{
+constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:changed_dimension", compileChangedDimensionCondition, matchesChangedDimensionCondition},
     {"minecraft:brewed_potion", compileNoCondition, matchesNoCondition},
     {"minecraft:construct_beacon", compileConstructBeaconCondition, matchesConstructBeaconCondition},
@@ -48,16 +47,21 @@ constexpr TriggerDescriptor MigratedDescriptors[]{
     {"minecraft:villager_trade", compileVillagerTradeCondition, matchesVillagerTradeCondition},
 };
 
+TriggerRegistry const& currentTriggerRegistry() {
+    static TriggerRegistry registry = [] {
+        TriggerRegistry seededRegistry;
+        for (auto const& descriptor : MigratedDescriptors) {
+            seededRegistry.registerTrigger(descriptor);
+        }
+        return seededRegistry;
+    }();
+    return registry;
+}
+
 } // namespace
 
 TriggerDescriptor const* findTriggerDescriptor(std::string_view triggerId) {
-    auto const found = std::ranges::find_if(MigratedDescriptors, [triggerId](TriggerDescriptor const& descriptor) {
-        return descriptor.id == triggerId;
-    });
-    if (found == std::end(MigratedDescriptors)) {
-        return nullptr;
-    }
-    return &*found;
+    return currentTriggerRegistry().find(triggerId);
 }
 
 } // namespace advancements::criteria
