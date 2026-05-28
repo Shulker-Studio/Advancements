@@ -299,8 +299,6 @@ PlayerPredicate
 EntityPredicate
   - type
   - type_specific.frog.variant
-  - equipment.mainhand delegation
-  - location delegation
   - distance delegation
 
 ItemPredicate
@@ -318,10 +316,11 @@ LocationPredicate
   - future: biome, dimension, full position ranges
 
 DamagePredicate
-  - direct_entity
-  - tags
-  - dealt
-  - blocked
+  - blocked projectile damage
+  - direct_entity.type
+  - direct_entity.equipment.mainhand.items
+  - damage tags used by current rows
+  - dealt.min
 
 DistancePredicate
   - horizontal.min
