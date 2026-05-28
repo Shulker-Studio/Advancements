@@ -33,6 +33,41 @@ std::optional<nlohmann::json const*> parseSingleThisEntityPredicateRoot(nlohmann
     return &entityEntry.at("predicate");
 }
 
+std::optional<std::string> parseEntityTypePredicate(nlohmann::json const& predicate) {
+    if (!predicate.contains("type") || !predicate.at("type").is_string()) {
+        return std::nullopt;
+    }
+    return predicate.at("type").get<std::string>();
+}
+
+std::optional<std::string> parseFrogVariantPredicate(nlohmann::json const& predicate) {
+    auto const typeId = parseEntityTypePredicate(predicate);
+    if (!typeId || *typeId != "minecraft:frog") {
+        return std::nullopt;
+    }
+    if (!predicate.contains("type_specific") || !predicate.at("type_specific").is_object()) {
+        return std::nullopt;
+    }
+
+    auto const& typeSpecific = predicate.at("type_specific");
+    if (!hasOnlyKeys(typeSpecific, {"type", "variant"})) {
+        return std::nullopt;
+    }
+    if (!typeSpecific.contains("type") || !typeSpecific.at("type").is_string()
+        || typeSpecific.at("type").get<std::string>() != "minecraft:frog") {
+        return std::nullopt;
+    }
+    if (!typeSpecific.contains("variant") || !typeSpecific.at("variant").is_string()) {
+        return std::nullopt;
+    }
+
+    auto variantId = typeSpecific.at("variant").get<std::string>();
+    if (variantId != "minecraft:temperate" && variantId != "minecraft:cold" && variantId != "minecraft:warm") {
+        return std::nullopt;
+    }
+    return variantId;
+}
+
 std::optional<EntityPredicate> parseSingleThisEntityDistancePredicate(nlohmann::json const& conditions, char const* rootKey) {
     if (!hasOnlyKeys(conditions, {rootKey, "signal_strength"})) {
         return std::nullopt;
@@ -53,7 +88,7 @@ std::optional<EntityPredicate> parseSingleThisEntityDistancePredicate(nlohmann::
         return std::nullopt;
     }
 
-    return EntityPredicate{horizontalDistance};
+    return EntityPredicate{std::nullopt, horizontalDistance, std::nullopt};
 }
 
 } // namespace advancements::predicate
