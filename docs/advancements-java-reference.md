@@ -160,10 +160,10 @@ Java 原版根进度普遍依赖极轻量的“进入游戏后自然成立”的
 - Java 原版对应的是“获得/挖掘相关语义”
 - 当前项目样例为：
   - `story/mine_stone`
-  - trigger: `bedrock:player_destroy_block`
-  - condition: `{ "block": "minecraft:stone" }`
+  - trigger: `minecraft:inventory_changed`
+  - condition: 任一 `minecraft:cobblestone` / `minecraft:blackstone` / `minecraft:cobbled_deepslate`
 
-这说明在基岩/LeviLamina 环境里，我们可以接受“以方块破坏事件去近似 Java 行为”，但命名、显示字段和条件结构尽量继续贴近 Java 风格。
+这说明当前项目已经回到更接近 Java 的“获得早期石质资源”语义，而不是继续依赖单独的方块破坏近似 trigger。
 
 ### 3. 战斗类
 
@@ -304,7 +304,7 @@ Java 原版根进度普遍依赖极轻量的“进入游戏后自然成立”的
   - Java 对齐目标：根 advancement + `minecraft:tick`
 - `story/mine_stone.json`
   - Java 对齐目标：故事线中的早期资源获取/方块交互类 advancement
-  - 当前基岩侧近似实现：`bedrock:player_destroy_block` + `block` 条件
+  - 当前基岩侧实现：`minecraft:inventory_changed`，对齐早期石质资源获取语义
 
 后续新增示例建议继续按 Java 原版标签推进：
 
