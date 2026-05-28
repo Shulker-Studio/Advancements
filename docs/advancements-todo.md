@@ -40,7 +40,6 @@
 - `minecraft:construct_beacon`
 - `minecraft:effects_changed`
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
-- `bedrock:player_destroy_block`
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
 

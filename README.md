@@ -51,7 +51,6 @@
 - `minecraft:construct_beacon`（当前为窄实现，仅 `nether/create_beacon` / `nether/create_full_beacon`）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
-- `bedrock:player_destroy_block`
 
 ## 安装
 
