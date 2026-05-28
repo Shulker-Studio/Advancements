@@ -4,6 +4,7 @@
 #include "mod/event/block/TargetBlockHitEvent.h"
 #include "mod/event/block/WitherSummonedEvent.h"
 #include "mod/event/block/BeaconLevelChangedEvent.h"
+#include "mod/event/block/SculkCatalystMobKilledEvent.h"
 #include "mod/event/item/ContainerOutputTakenEvent.h"
 #include "mod/event/item/EnchantedItemEvent.h"
 #include "mod/event/item/FishingRodHookedItemEvent.h"
@@ -41,6 +42,7 @@
 #include "mod/trigger/triggers/FishingRodHookedTrigger.h"
 #include "mod/trigger/triggers/InventoryChangedTrigger.h"
 #include "mod/trigger/triggers/ItemUsedOnBlockTrigger.h"
+#include "mod/trigger/triggers/KillMobNearSculkCatalystTrigger.h"
 #include "mod/trigger/triggers/LevitationTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/NetherTravelTrigger.h"
@@ -210,6 +212,7 @@ bool anyRuntimeRegistered() {
         || enterBlockTriggerRegistered()
         || itemUsedOnBlockTriggerRegistered()
         || constructBeaconTriggerRegistered()
+        || killMobNearSculkCatalystTriggerRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
         || event::item::playerInventoryChangedEventSourceRegistered()
         || event::item::playerFilledBucketEventSourceRegistered()
@@ -228,6 +231,7 @@ bool anyRuntimeRegistered() {
         || event::player::playerUsedTotemEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered()
         || event::block::beaconLevelChangedEventSourceRegistered()
+        || event::block::sculkCatalystMobKilledEventSourceRegistered()
         || event::block::witherSummonedEventSourceRegistered()
         || event::entity::playerProjectileLightningHitEventSourceRegistered()
         || event::player::dragonRespawnedEventSourceRegistered();
@@ -256,6 +260,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
 
     gRuntimeTriggerMod = &mod;
     event::block::registerBeaconLevelChangedEventSource();
+    event::block::registerSculkCatalystMobKilledEventSource();
     event::block::registerTargetBlockHitEventSource();
     event::block::registerWitherSummonedEventSource();
     event::item::registerContainerOutputTakenEventSource();
@@ -281,6 +286,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerEntityHurtPlayerTrigger(mod);
     registerEntityKilledPlayerTrigger(mod);
     registerConstructBeaconTrigger(mod);
+    registerKillMobNearSculkCatalystTrigger(mod);
     registerChanneledLightningTrigger(mod);
     registerChangedDimensionTrigger(mod);
     registerLocationTrigger(mod);
@@ -313,6 +319,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterEntityHurtPlayerTrigger();
     unregisterEntityKilledPlayerTrigger();
     unregisterConstructBeaconTrigger();
+    unregisterKillMobNearSculkCatalystTrigger();
     unregisterChanneledLightningTrigger();
     unregisterChangedDimensionTrigger();
     unregisterLevitationTrigger();
@@ -339,6 +346,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterSleptInBedTrigger();
     unregisterLocationTrigger();
     event::block::unregisterBeaconLevelChangedEventSource();
+    event::block::unregisterSculkCatalystMobKilledEventSource();
     event::block::unregisterTargetBlockHitEventSource();
     event::block::unregisterWitherSummonedEventSource();
     event::item::unregisterContainerOutputTakenEventSource();

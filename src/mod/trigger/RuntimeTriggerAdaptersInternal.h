@@ -121,4 +121,8 @@ bool constructBeaconTriggerRegistered();
 void registerConstructBeaconTrigger(Entry& mod);
 void unregisterConstructBeaconTrigger();
 
+bool killMobNearSculkCatalystTriggerRegistered();
+void registerKillMobNearSculkCatalystTrigger(Entry& mod);
+void unregisterKillMobNearSculkCatalystTrigger();
+
 } // namespace advancements
