@@ -34,6 +34,7 @@ constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:fishing_rod_hooked", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:inventory_changed", compileInventoryItemCondition, matchesInventoryItemCondition},
     {"minecraft:item_used_on_block", compileItemUsedOnBlockCondition, matchesItemUsedOnBlockCondition},
+    {"minecraft:kill_mob_near_sculk_catalyst", compileNoCondition, matchesNoCondition},
     {"minecraft:levitation", compileLevitationCondition, matchesLevitationCondition},
     {"minecraft:location", compileLocationStructureCondition, matchesLocationStructureCondition},
     {"minecraft:nether_travel", compileNetherTravelCondition, matchesNetherTravelCondition},
