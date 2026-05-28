@@ -90,11 +90,13 @@ TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json con
             return InvalidTriggerCondition{};
         }
         auto const& directEntity = killingBlow.at("direct_entity");
-        if (!hasOnlyKeys(directEntity, {"type"}) || !directEntity.contains("type")
-            || !directEntity.at("type").is_string()) {
+        if (!hasOnlyKeys(directEntity, {"type"})) {
             return InvalidTriggerCondition{};
         }
-        directEntityTypeId = directEntity.at("type").get<std::string>();
+        directEntityTypeId = predicate::parseEntityTypePredicate(directEntity);
+        if (!directEntityTypeId) {
+            return InvalidTriggerCondition{};
+        }
     }
 
     auto const& tags = killingBlow.at("tags");
