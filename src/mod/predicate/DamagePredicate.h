@@ -8,9 +8,9 @@
 namespace advancements::predicate {
 
 struct DamagePredicate {
-    bool requireBlockedDamage;
-    bool requireProjectileDamageTag;
-    bool requireMaceSmashDamageTag;
+    bool requireBlockedDamage{};
+    bool requireProjectileDamageTag{};
+    bool requireMaceSmashDamageTag{};
     std::optional<std::string> directEntityTypeId;
     std::optional<std::string> directEntityMainhandItemId;
     std::optional<float>       dealtMin;
