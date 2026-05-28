@@ -7,10 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2]
+
 ### Added
 
+- 新增 `adventure/overoverkill`、`adventure/throw_trident`、`nether/netherite_armor`、`husbandry/froglights` 数据与中英文文案。
+- 新增 `minecraft:target_hit` 的窄实现与 target block hit 事件源，用于支持 `adventure/bullseye`。
+- 新增 `minecraft:entity_hurt_player` 的窄实现与 shield block 事件源，用于支持盾牌格挡弹射物类进度。
+- 新增 `minecraft:item_used_on_block` 的窄实现与 respawn anchor 充能事件源，用于支持 `nether/charge_respawn_anchor`。
 - 新增 `husbandry/leash_all_frog_variants` 数据、文案与 `minecraft:player_interacted_with_entity` 的窄实现；当前仅支持玩家手持 `lead` 成功拴住三种青蛙变体的本地形状。
-- 新增 `husbandry/froglights` 数据与中英文文案，复用现有 `inventory_changed` 完成三种蛙明灯的同持有判定。
+- 新增一批独立 runtime event source，并将物品、玩家、实体、方块相关触发器逐步接入事件层。
+
+### Fixed
+
+- 修复 `minecraft:enchanted_item` 未从附魔成功 hook 正确派发的问题。
+- 修复 `husbandry/froglights` 判定，要求三种蛙明灯同时在玩家物品栏中出现。
+- 修复 release workflow 配置与 xmake `after_build` 资源复制脚本。
+
+### Changed
+
+- 将触发器架构迁移到 trigger registry + native event source 路径，移除 legacy descriptor fallback 和多处旧 runtime dispatch shell。
+- 拆分并模块化已有 trigger family，覆盖 inventory、consume、bucket、fishing、crossbow、bed、effects、loot、beacon、dimension、summon、levitation、villager trade、enchanted item 等触发路径。
+- 将 block、item、entity、damage、distance、killing blow 等条件解析逐步委托给 predicate helper，提升 criteria 匹配一致性。
+- 迁移并加固 location trigger 架构，补充 target hit 距离与 blocked projectile damage 等谓词解析。
+- 更新 architecture、target trigger architecture、advancements TODO 与 Java reference 文档，使文档与当前事件层/registry 架构保持一致。
 
 ## [0.1.1]
 

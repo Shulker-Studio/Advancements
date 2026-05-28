@@ -2,13 +2,13 @@
 
 一个面向 LeviLamina 的 Java 风格进度（Advancements）插件。
 
-当前版本：`0.1.1`
+当前版本：`0.1.2`
 
 ## 项目状态
 
 > 当前仍在开发中（WIP / Work in Progress）。
 
-`0.1.1` 在 `0.1.0` 的基础上修复了一批关键触发与 GUI 体验问题，已经更适合继续分发测试与日常游玩使用，但距离完整覆盖 Java 原版进度系统仍有不少工作要做。
+`0.1.2` 在 `0.1.1` 的基础上继续扩展进度数据与窄实现 trigger，并将运行时触发路径进一步收敛到事件源 + trigger registry 架构。当前版本新增三叉戟、超越极限、下界合金盔甲、蛙明灯、拴住所有青蛙变种等进度，已经更适合继续分发测试与日常游玩使用，但距离完整覆盖 Java 原版进度系统仍有不少工作要做。
 
 ## 关于 GPT Vibe Coding
 
@@ -35,20 +35,29 @@
 
 - `minecraft:inventory_changed`
 - `minecraft:consume_item`
+- `minecraft:cured_zombie_villager`
 - `minecraft:used_totem`
 - `minecraft:filled_bucket`
 - `minecraft:fishing_rod_hooked`
 - `minecraft:player_killed_entity`
 - `minecraft:entity_killed_player`
+- `minecraft:player_hurt_entity`
+- `minecraft:entity_hurt_player`
+- `minecraft:shot_crossbow`
+- `minecraft:target_hit`（当前为窄实现，主要覆盖 `adventure/bullseye`）
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
-- `minecraft:location`（当前为窄实现，仅结构进入类）
+- `minecraft:location`（当前为窄实现，主要覆盖结构进入类）
 - `minecraft:player_generates_container_loot`（当前为窄实现，仅 `nether/loot_bastion`）
+- `minecraft:nether_travel`
 - `minecraft:summoned_entity`（当前为窄实现，仅 `nether/summon_wither` / `end/respawn_dragon`）
 - `minecraft:levitation`（当前为窄实现，仅 `end/levitate` 的垂直位移条件）
 - `minecraft:effects_changed`（当前为窄实现，仅 `nether/all_potions` 的 required effects 快照）
 - `minecraft:brewed_potion`（当前为窄实现，仅从酿造台输出槽成功取物）
 - `minecraft:construct_beacon`（当前为窄实现，仅 `nether/create_beacon` / `nether/create_full_beacon`）
+- `minecraft:enter_block`（当前为窄实现，仅 `end/enter_end_gateway`）
+- `minecraft:item_used_on_block`（当前为窄实现，仅 `nether/charge_respawn_anchor`）
+- `minecraft:player_interacted_with_entity`（当前为窄实现，仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
 
@@ -77,7 +86,7 @@ plugins/
 如果你已经通过 release + `tooth.json` 发布，可以使用：
 
 ```bash
-lip install github.com/Shulker-Studio/Advancements@0.1.1
+lip install github.com/Shulker-Studio/Advancements@0.1.2
 ```
 
 安装目标目录为：
@@ -143,8 +152,12 @@ Advancements/
 │   └── mod/
 │       ├── advancement/
 │       ├── commands/
-│       ├── MyMod.cpp
-│       └── MyMod.h
+│       ├── event/
+│       ├── gui/
+│       ├── predicate/
+│       ├── trigger/
+│       ├── Entry.cpp
+│       └── Entry.h
 ├── tooth.json
 ├── xmake.lua
 └── README.md
@@ -154,8 +167,12 @@ Advancements/
 
 - `data/`：内置 advancement 定义
 - `lang/`：本地化文本
-- `src/mod/advancement/`：加载、存储、触发分发、GUI、通知
+- `src/mod/advancement/`：加载、解析、进度存储、进度服务与通知
 - `src/mod/commands/`：命令注册与命令执行逻辑
+- `src/mod/event/`：Bedrock / LeviLamina runtime 事件源适配
+- `src/mod/gui/`：进度 GUI 与 GUI 索引
+- `src/mod/predicate/`：条件谓词解析与匹配辅助
+- `src/mod/trigger/`：trigger registry、criteria 与触发器实现
 - `tooth.json`：LIP / release 安装元数据
 - `xmake.lua`：构建配置
 
@@ -177,7 +194,7 @@ worlds/Bedrock level/ll-data/Advancements/advancements/xxxxxxxx-xxxx-xxxx-xxxx-x
 
 - 数据按世界保存
 - 数据按玩家 UUID 分文件保存
-- 插件停用时会尝试 flush 脏数据
+- 玩家退出和插件停用时会尝试 flush 脏数据
 
 ## 更新日志
 
