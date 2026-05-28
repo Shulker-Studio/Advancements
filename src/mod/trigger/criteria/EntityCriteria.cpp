@@ -1,5 +1,6 @@
 #include "mod/trigger/criteria/EntityCriteria.h"
 
+#include "mod/predicate/EntityPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
 namespace advancements::criteria {
@@ -29,28 +30,12 @@ TriggerCondition compilePlayerInteractedWithFrogCondition(nlohmann::json const& 
         return InvalidTriggerCondition{};
     }
 
-    auto const& entity = conditions.at("entity");
-    if (entity.size() != 1 || !entity.at(0).is_object()) {
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "entity");
+    if (!entityPredicate) {
         return InvalidTriggerCondition{};
     }
 
-    auto const& entityEntry = entity.at(0);
-    if (!hasOnlyKeys(entityEntry, {"condition", "entity", "predicate"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("condition") || !entityEntry.at("condition").is_string()
-        || entityEntry.at("condition").get<std::string>() != "minecraft:entity_properties") {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("entity") || !entityEntry.at("entity").is_string()
-        || entityEntry.at("entity").get<std::string>() != "this") {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("predicate") || !entityEntry.at("predicate").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& predicate = entityEntry.at("predicate");
+    auto const& predicate = **entityPredicate;
     if (!hasOnlyKeys(predicate, {"type", "type_specific"})) {
         return InvalidTriggerCondition{};
     }
@@ -90,28 +75,12 @@ TriggerCondition compilePlayerKilledEntityProjectileCondition(nlohmann::json con
         return InvalidTriggerCondition{};
     }
 
-    auto const& entity = conditions.at("entity");
-    if (entity.size() != 1 || !entity.at(0).is_object()) {
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "entity");
+    if (!entityPredicate) {
         return InvalidTriggerCondition{};
     }
 
-    auto const& entityEntry = entity.at(0);
-    if (!hasOnlyKeys(entityEntry, {"condition", "entity", "predicate"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("condition") || !entityEntry.at("condition").is_string()
-        || entityEntry.at("condition").get<std::string>() != "minecraft:entity_properties") {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("entity") || !entityEntry.at("entity").is_string()
-        || entityEntry.at("entity").get<std::string>() != "this") {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("predicate") || !entityEntry.at("predicate").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& predicate = entityEntry.at("predicate");
+    auto const& predicate = **entityPredicate;
     if (!hasOnlyKeys(predicate, {"type", "distance"})) {
         return InvalidTriggerCondition{};
     }
@@ -248,28 +217,12 @@ TriggerCondition compileSummonedEntityCondition(nlohmann::json const& conditions
         return InvalidTriggerCondition{};
     }
 
-    auto const& entity = conditions.at("entity");
-    if (entity.size() != 1 || !entity.at(0).is_object()) {
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "entity");
+    if (!entityPredicate) {
         return InvalidTriggerCondition{};
     }
 
-    auto const& entityEntry = entity.at(0);
-    if (!hasOnlyKeys(entityEntry, {"condition", "entity", "predicate"})) {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("condition") || !entityEntry.at("condition").is_string()
-        || entityEntry.at("condition").get<std::string>() != "minecraft:entity_properties") {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("entity") || !entityEntry.at("entity").is_string()
-        || entityEntry.at("entity").get<std::string>() != "this") {
-        return InvalidTriggerCondition{};
-    }
-    if (!entityEntry.contains("predicate") || !entityEntry.at("predicate").is_object()) {
-        return InvalidTriggerCondition{};
-    }
-
-    auto const& predicate = entityEntry.at("predicate");
+    auto const& predicate = **entityPredicate;
     if (!hasOnlyKeys(predicate, {"type"}) || !predicate.contains("type") || !predicate.at("type").is_string()) {
         return InvalidTriggerCondition{};
     }
