@@ -48,7 +48,7 @@ constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:shot_crossbow", compileShotCrossbowCondition, matchesSimpleItemCondition},
     {"minecraft:slept_in_bed", compileNoCondition, matchesNoCondition},
     {"minecraft:summoned_entity", compileSummonedEntityCondition, matchesEntityCondition},
-    {"minecraft:tame_animal", compileNoCondition, matchesNoCondition},
+    {"minecraft:tame_animal", compileTameAnimalCondition, matchesTameAnimalCondition},
     {"minecraft:target_hit", compileTargetHitCondition, matchesTargetHitCondition},
     {"minecraft:used_totem", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:villager_trade", compileVillagerTradeCondition, matchesVillagerTradeCondition},

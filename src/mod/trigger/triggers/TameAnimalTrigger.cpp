@@ -27,7 +27,7 @@ void registerTameAnimalTrigger(Entry& mod) {
                 TriggerContext{
                     event.player(),
                     "minecraft:tame_animal",
-                    NoTriggerPayload{},
+                    TameAnimalPayload{event.entityTypeId(), event.entityVariantId()},
                 }
             );
         }

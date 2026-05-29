@@ -230,6 +230,41 @@ TriggerCondition compileBredAnimalsCondition(nlohmann::json const& conditions) {
     return BredAnimalsCondition{*entityTypeId};
 }
 
+TriggerCondition compileTameAnimalCondition(nlohmann::json const& conditions) {
+    if (conditions.empty()) {
+        return NoTriggerCondition{};
+    }
+
+    if (!hasOnlyKeys(conditions, {"entity"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "entity");
+    if (!entityPredicate) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type_specific"}) || !entityPredicateJson.at("type_specific").is_object()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& typeSpecific = entityPredicateJson.at("type_specific");
+    if (!hasOnlyKeys(typeSpecific, {"type", "variant"}) || !typeSpecific.contains("type")
+        || !typeSpecific.at("type").is_string() || !typeSpecific.contains("variant")
+        || !typeSpecific.at("variant").is_string()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityTypeId    = typeSpecific.at("type").get<std::string>();
+    auto const entityVariantId = typeSpecific.at("variant").get<std::string>();
+    if (entityTypeId != "minecraft:cat" && entityTypeId != "minecraft:wolf") {
+        return InvalidTriggerCondition{};
+    }
+
+    return TameAnimalCondition{entityTypeId, entityVariantId};
+}
+
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
     auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
     auto const* payload  = payloadAs<EntityTriggerPayload>(context);
@@ -256,6 +291,19 @@ bool matchesBredAnimalsCondition(TriggerCondition const& condition, TriggerConte
         return false;
     }
     return std::ranges::find(payload->childTypeIds, compiled->childTypeId) != payload->childTypeIds.end();
+}
+
+bool matchesTameAnimalCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    if (std::holds_alternative<NoTriggerCondition>(condition)) {
+        return payloadAs<TameAnimalPayload>(context) != nullptr;
+    }
+
+    auto const* compiled = std::get_if<TameAnimalCondition>(&condition);
+    auto const* payload  = payloadAs<TameAnimalPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return payload->entityTypeId == compiled->entityTypeId && payload->entityVariantId == compiled->entityVariantId;
 }
 
 bool matchesPlayerKilledEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {

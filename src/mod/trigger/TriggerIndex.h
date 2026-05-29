@@ -35,6 +35,11 @@ struct BredAnimalsPayload {
     std::vector<std::string> childTypeIds;
 };
 
+struct TameAnimalPayload {
+    std::string                entityTypeId;
+    std::string                entityVariantId;
+};
+
 struct BlockTriggerPayload {
     std::string blockId;
 };
@@ -111,6 +116,7 @@ using TriggerPayload = std::variant<
     EntityTriggerPayload,
     PlayerInteractedWithEntityPayload,
     BredAnimalsPayload,
+    TameAnimalPayload,
     BlockTriggerPayload,
     EnterBlockPayload,
     ItemUsedOnBlockPayload,
@@ -158,6 +164,11 @@ struct PlayerInteractedWithEntityCondition {
 
 struct BredAnimalsCondition {
     std::string childTypeId;
+};
+
+struct TameAnimalCondition {
+    std::string                entityTypeId;
+    std::string                entityVariantId;
 };
 
 struct BlockTriggerCondition {
@@ -246,6 +257,7 @@ using TriggerCondition = std::variant<
     EntityTriggerCondition,
     PlayerInteractedWithEntityCondition,
     BredAnimalsCondition,
+    TameAnimalCondition,
     BlockTriggerCondition,
     EnterBlockCondition,
     ItemUsedOnBlockCondition,
