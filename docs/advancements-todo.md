@@ -47,6 +47,9 @@
 - `minecraft:item_used_on_block`（当前窄实现：仅 `nether/charge_respawn_anchor`）
 - `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
+- `minecraft:bee_nest_destroyed`（当前窄实现：仅 `husbandry/silk_touch_nest` 已核形状）
+- `minecraft:bred_animals`（当前窄实现：支持无条件与 `conditions.child` 的单一 `type` 谓词，仅成功繁殖且可从 `BreedableComponent::mLoveCause` 解析到当前玩家）
+- `minecraft:tame_animal`（当前窄实现：无条件，仅 `TameableComponent::tame` 后 `ActorFlags::Tamed` 从 false 变 true）
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
 
@@ -62,7 +65,7 @@
 | `any_block_use` | missing-trigger | |
 | `avoid_vibration` | missing-trigger | |
 | `bee_nest_destroyed` | partial | 已接入窄实现：`BeehiveBlock::playerWillDestroy` 只派发破坏事实；条件匹配支持 `block`、`item.enchantments` 中的 `minecraft:silk_touch`、`num_bees_inside.min`，暂未覆盖完整 Java 物品/玩家谓词；live-server QA 已验证 `minecraft:bee_nest` 且 `bees=3` 时可授予 `husbandry/silk_touch_nest` |
-| `bred_animals` | missing-trigger | |
+| `bred_animals` | partial | 当前窄实现：成功繁殖后按 `mLoveCause` 归因给玩家；无条件 `husbandry/breed_an_animal` 已通过 live-server QA，另支持 `conditions.child` 下单个 `entity_properties` / `predicate.type` 形状；不支持 `parent`/`partner`/玩家谓词、child 变种/NBT/tags 或完整 entity predicate parity；`child.type` 条件仍需 live-server QA |
 | `brewed_potion` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `BrewingStandResultContainer` 成功转移且当前 screen type 为 `ContainerType::BrewingStand` 后触发；不检查输出物品类型，匹配 wiki/原版“从酿造台输出栏获取任意物品”的语义 |
 | `changed_dimension` | done | 当前窄实现，支持 `conditions.from` / `conditions.to`；通知时机仍有 caveat |
 | `channeled_lightning` | partial | 当前窄实现：基于玩家拥有的弹射物进入 `ProjectileComponent::_handleLightningOnHit` 后派发事件；trigger 层仅接受 `minecraft:thrown_trident` + `mChanneling` + 雷暴天气快照 + 命中位置可见天空 + 被击中实体为 villager/villager_v2 的 `victims` 单实体形状，用于 `adventure/very_very_frightening`；不泛化 lightning 实体谓词、多 victims 或非村民目标 |
@@ -106,7 +109,7 @@
 | `started_riding` | missing-trigger | |
 | `summoned_entity` | done | 当前窄实现：仅支持已核原版 `nether/summon_wither` 与 `end/respawn_dragon` 形状；Wither 走 `SkullBlock::checkMobSpawn` 成功路径并对同维度 50 格切比雪夫距离内玩家派发，Ender Dragon 走 `EndDragonFight::tryRespawn()` 进入复活流程后的窄派发 |
 | `spear_mobs` | missing-trigger | |
-| `tame_animal` | missing-trigger | |
+| `tame_animal` | partial | 当前窄实现：hook `TameableComponent::tame(Actor&, Player&)`，仅当 `ActorFlags::Tamed` 从 false 变 true 时派发；仅支持无 `conditions` 的 `husbandry/tame_an_animal`，不支持 Java entity/player 谓词、猫全目录或变种校验；仍需 live-server QA |
 | `target_hit` | partial | 当前仅支持 `adventure/bullseye` 已核窄形状：`signal_strength = 15` + `projectile[0].condition = minecraft:entity_properties` + `projectile[0].entity = this` + `projectile[0].predicate.distance.horizontal.min = 30.0` |
 | `thrown_item_picked_up_by_entity` | missing-trigger | |
 | `thrown_item_picked_up_by_player` | missing-trigger | |
@@ -238,10 +241,10 @@
 | --- | --- | --- | --- |
 | `husbandry/root` | `consume_item` | done | 已核原版 JSON：`consume_item` 且 `conditions` 为空；当前定义已回正 |
 | `husbandry/plant_seed` | other | missing-trigger | |
-| `husbandry/breed_an_animal` | `bred_animals` | missing-trigger | |
+| `husbandry/breed_an_animal` | `bred_animals` | done | 已补本地 JSON + lang；无条件 criteria 已通过 live-server QA 并可授予 `lwenk`。Trigger family 另支持窄 `conditions.child.predicate.type`，但该条件形状及 parent/partner/player predicates、child 变种/NBT/tags/full Java parity 仍未覆盖 |
 | `husbandry/balanced_diet` | `consume_item` | partial | 已补原版 ID，但当前仅实现已支持 consumable 子集，不是原版完整食物集合 |
 | `husbandry/obtain_netherite_hoe` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `husbandry/tame_an_animal` | `tame_animal` | missing-trigger | |
+| `husbandry/tame_an_animal` | `tame_animal` | done | 已补本地 JSON + lang，并接入窄实现：仅在 `TameableComponent::tame` 使目标 `ActorFlags::Tamed` 从 false 变 true 时授予；无 Java entity predicates / 全目录 / 变种条件，仍需 live-server QA |
 | `husbandry/fishy_business` | `fishing_rod_hooked` | done | 原版 JSON 已恢复，按钓起的四种鱼 item 匹配 |
 | `husbandry/tactical_fishing` | `filled_bucket` | done | 原版 JSON 已恢复，按填充后的四种鱼桶 item 匹配 |
 | `husbandry/axolotl_in_a_bucket` | `filled_bucket` | done | 已按填充后的美西螈桶 item 匹配 |

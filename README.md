@@ -63,6 +63,8 @@
 - `minecraft:channeled_lightning`（当前为窄实现，仅 `adventure/very_very_frightening`）
 - `minecraft:kill_mob_near_sculk_catalyst`（当前为窄实现，基于幽匿催发体消耗死亡经验路径）
 - `minecraft:bee_nest_destroyed`（当前为窄实现，仅 `husbandry/silk_touch_nest`）
+- `minecraft:bred_animals`（当前为窄实现，支持无条件与 `conditions.child` 的单一 `type` 谓词；仍依赖成功繁殖且可从 `mLoveCause` 解析到当前玩家）
+- `minecraft:tame_animal`（当前为窄实现，仅驯服状态从未驯服变为已驯服）
 
 ## 安装
 
