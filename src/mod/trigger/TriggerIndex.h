@@ -67,6 +67,11 @@ struct ConstructBeaconTriggerPayload {
     int level;
 };
 
+struct BeeNestDestroyedPayload {
+    std::string blockId;
+    int         numBeesInside;
+};
+
 struct LootTablePayload {
     std::string lootTableId;
 };
@@ -110,6 +115,7 @@ using TriggerPayload = std::variant<
     LevitationTriggerPayload,
     EffectsChangedPayload,
     ConstructBeaconTriggerPayload,
+    BeeNestDestroyedPayload,
     LootTablePayload,
     PlayerHurtEntityPayload,
     TargetHitPayload,
@@ -216,6 +222,13 @@ struct PlayerKilledEntitySniperDuelCondition {
     std::optional<std::string> directEntityTypeId;
 };
 
+struct BeeNestDestroyedCondition {
+    std::optional<std::string> blockId;
+    std::optional<std::string> itemId;
+    bool                       requireSilkTouch;
+    std::optional<int>         numBeesInsideMin;
+};
+
 using TriggerCondition = std::variant<
     NoTriggerCondition,
     InvalidTriggerCondition,
@@ -232,6 +245,7 @@ using TriggerCondition = std::variant<
     LevitationTriggerCondition,
     EffectsChangedCondition,
     ConstructBeaconTriggerCondition,
+    BeeNestDestroyedCondition,
     LootTableCondition,
     VillagerTradeCondition,
     PlayerHurtEntityCondition,

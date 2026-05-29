@@ -1,6 +1,7 @@
 #include "mod/trigger/RuntimeTriggerAdapters.h"
 
 #include "mod/Entry.h"
+#include "mod/event/block/BeeNestDestroyedEvent.h"
 #include "mod/event/block/TargetBlockHitEvent.h"
 #include "mod/event/block/WitherSummonedEvent.h"
 #include "mod/event/block/BeaconLevelChangedEvent.h"
@@ -28,6 +29,7 @@
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
+#include "mod/trigger/triggers/BeeNestDestroyedTrigger.h"
 #include "mod/trigger/triggers/ChangedDimensionTrigger.h"
 #include "mod/trigger/triggers/ChanneledLightningTrigger.h"
 #include "mod/trigger/triggers/ConstructBeaconTrigger.h"
@@ -178,6 +180,14 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.level
                 );
+            } else if constexpr (std::is_same_v<Payload, BeeNestDestroyedPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} block={} bees={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.blockId,
+                    payload.numBeesInside
+                );
             } else if constexpr (std::is_same_v<Payload, PlayerKilledEntitySniperDuelPayload>) {
                 logger.debug(
                     "Advancements debug: trigger={} player={} killed_entity={} horizontal_distance={} killing_blow_projectile={}",
@@ -212,6 +222,7 @@ bool anyRuntimeRegistered() {
         || enterBlockTriggerRegistered()
         || itemUsedOnBlockTriggerRegistered()
         || constructBeaconTriggerRegistered()
+        || beeNestDestroyedTriggerRegistered()
         || killMobNearSculkCatalystTriggerRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
         || event::item::playerInventoryChangedEventSourceRegistered()
@@ -230,6 +241,7 @@ bool anyRuntimeRegistered() {
         || event::player::playerSleptInBedEventSourceRegistered()
         || event::player::playerUsedTotemEventSourceRegistered()
         || event::block::targetBlockHitEventSourceRegistered()
+        || event::block::beeNestDestroyedEventSourceRegistered()
         || event::block::beaconLevelChangedEventSourceRegistered()
         || event::block::sculkCatalystMobKilledEventSourceRegistered()
         || event::block::witherSummonedEventSourceRegistered()
@@ -260,6 +272,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
 
     gRuntimeTriggerMod = &mod;
     event::block::registerBeaconLevelChangedEventSource();
+    event::block::registerBeeNestDestroyedEventSource();
     event::block::registerSculkCatalystMobKilledEventSource();
     event::block::registerTargetBlockHitEventSource();
     event::block::registerWitherSummonedEventSource();
@@ -286,6 +299,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerEntityHurtPlayerTrigger(mod);
     registerEntityKilledPlayerTrigger(mod);
     registerConstructBeaconTrigger(mod);
+    registerBeeNestDestroyedTrigger(mod);
     registerKillMobNearSculkCatalystTrigger(mod);
     registerChanneledLightningTrigger(mod);
     registerChangedDimensionTrigger(mod);
@@ -319,6 +333,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterEntityHurtPlayerTrigger();
     unregisterEntityKilledPlayerTrigger();
     unregisterConstructBeaconTrigger();
+    unregisterBeeNestDestroyedTrigger();
     unregisterKillMobNearSculkCatalystTrigger();
     unregisterChanneledLightningTrigger();
     unregisterChangedDimensionTrigger();
@@ -346,6 +361,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterSleptInBedTrigger();
     unregisterLocationTrigger();
     event::block::unregisterBeaconLevelChangedEventSource();
+    event::block::unregisterBeeNestDestroyedEventSource();
     event::block::unregisterSculkCatalystMobKilledEventSource();
     event::block::unregisterTargetBlockHitEventSource();
     event::block::unregisterWitherSummonedEventSource();

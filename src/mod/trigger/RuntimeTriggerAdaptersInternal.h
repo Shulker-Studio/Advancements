@@ -121,6 +121,10 @@ bool constructBeaconTriggerRegistered();
 void registerConstructBeaconTrigger(Entry& mod);
 void unregisterConstructBeaconTrigger();
 
+bool beeNestDestroyedTriggerRegistered();
+void registerBeeNestDestroyedTrigger(Entry& mod);
+void unregisterBeeNestDestroyedTrigger();
+
 bool killMobNearSculkCatalystTriggerRegistered();
 void registerKillMobNearSculkCatalystTrigger(Entry& mod);
 void unregisterKillMobNearSculkCatalystTrigger();
