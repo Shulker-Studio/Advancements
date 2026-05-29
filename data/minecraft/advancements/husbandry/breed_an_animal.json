@@ -1,0 +1,26 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:husbandry/root",
+  "display": {
+    "title": {
+      "translate": "advancements.husbandry.breed_an_animal.title"
+    },
+    "description": {
+      "translate": "advancements.husbandry.breed_an_animal.description"
+    },
+    "icon": {
+      "item": "minecraft:wheat"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "bred_animals": {
+      "trigger": "minecraft:bred_animals",
+      "conditions": {}
+    }
+  },
+  "requirements": [["bred_animals"]]
+}
