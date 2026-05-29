@@ -49,7 +49,7 @@
 - `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
 - `minecraft:bee_nest_destroyed`（当前窄实现：仅 `husbandry/silk_touch_nest` 已核形状）
 - `minecraft:bred_animals`（当前窄实现：支持无条件与 `conditions.child` 的单一 `type` 谓词，仅成功繁殖且可从 `BreedableComponent::mLoveCause` 解析到当前玩家）
-- `minecraft:tame_animal`（当前窄实现：无条件，仅 `TameableComponent::tame` 后 `ActorFlags::Tamed` 从 false 变 true）
+- `minecraft:tame_animal`（当前窄实现：支持无条件与猫/狼 `type_specific.variant`，仅 `TameableComponent::tame` 后 `ActorFlags::Tamed` 从 false 变 true）
 
 当前项目已暂时移除/不应继续依赖的临时脚手架：
 
@@ -109,7 +109,7 @@
 | `started_riding` | missing-trigger | |
 | `summoned_entity` | done | 当前窄实现：仅支持已核原版 `nether/summon_wither` 与 `end/respawn_dragon` 形状；Wither 走 `SkullBlock::checkMobSpawn` 成功路径并对同维度 50 格切比雪夫距离内玩家派发，Ender Dragon 走 `EndDragonFight::tryRespawn()` 进入复活流程后的窄派发 |
 | `spear_mobs` | missing-trigger | |
-| `tame_animal` | partial | 当前窄实现：hook `TameableComponent::tame(Actor&, Player&)`，仅当 `ActorFlags::Tamed` 从 false 变 true 时派发；仅支持无 `conditions` 的 `husbandry/tame_an_animal`，不支持 Java entity/player 谓词、猫全目录或变种校验；仍需 live-server QA |
+| `tame_animal` | partial | 当前窄实现：hook `TameableComponent::tame(Actor&, Player&)`，仅当 `ActorFlags::Tamed` 从 false 变 true 时派发；支持无 `conditions` 的 `husbandry/tame_an_animal`、猫 `type_specific.variant`（用于 `husbandry/complete_catalogue`）与狼 `type_specific.variant`（用于 `husbandry/whole_pack`），不支持 Java player 谓词或完整 entity predicate parity；仍需 live-server QA |
 | `target_hit` | partial | 当前仅支持 `adventure/bullseye` 已核窄形状：`signal_strength = 15` + `projectile[0].condition = minecraft:entity_properties` + `projectile[0].entity = this` + `projectile[0].predicate.distance.horizontal.min = 30.0` |
 | `thrown_item_picked_up_by_entity` | missing-trigger | |
 | `thrown_item_picked_up_by_player` | missing-trigger | |
@@ -242,14 +242,15 @@
 | `husbandry/root` | `consume_item` | done | 已核原版 JSON：`consume_item` 且 `conditions` 为空；当前定义已回正 |
 | `husbandry/plant_seed` | other | missing-trigger | |
 | `husbandry/breed_an_animal` | `bred_animals` | done | 已补本地 JSON + lang；无条件 criteria 已通过 live-server QA 并可授予 `lwenk`。Trigger family 另支持窄 `conditions.child.predicate.type`，但该条件形状及 parent/partner/player predicates、child 变种/NBT/tags/full Java parity 仍未覆盖 |
+| `husbandry/bred_all_animals` | `bred_animals` | done | 已按原版 JSON 补齐 25 个 `conditions.child.predicate.type` criterion，复用当前 `bred_animals` child-type 窄实现；仍需 live-server QA 验证各 Bedrock 子代 type id 与 Java criterion 列表一致 |
 | `husbandry/balanced_diet` | `consume_item` | partial | 已补原版 ID，但当前仅实现已支持 consumable 子集，不是原版完整食物集合 |
 | `husbandry/obtain_netherite_hoe` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `husbandry/tame_an_animal` | `tame_animal` | done | 已补本地 JSON + lang，并接入窄实现：仅在 `TameableComponent::tame` 使目标 `ActorFlags::Tamed` 从 false 变 true 时授予；无 Java entity predicates / 全目录 / 变种条件，仍需 live-server QA |
+| `husbandry/tame_an_animal` | `tame_animal` | done | 已补本地 JSON + lang，并接入窄实现：仅在 `TameableComponent::tame` 使目标 `ActorFlags::Tamed` 从 false 变 true 时授予；当前 trigger family 另支持猫/狼 variant 条件，不支持 Java player 谓词或完整 entity predicate parity；仍需 live-server QA |
 | `husbandry/fishy_business` | `fishing_rod_hooked` | done | 原版 JSON 已恢复，按钓起的四种鱼 item 匹配 |
 | `husbandry/tactical_fishing` | `filled_bucket` | done | 原版 JSON 已恢复，按填充后的四种鱼桶 item 匹配 |
 | `husbandry/axolotl_in_a_bucket` | `filled_bucket` | done | 已按填充后的美西螈桶 item 匹配 |
 | `husbandry/kill_axolotl_target` | other | missing-trigger | |
-| `husbandry/complete_catalogue` | `inventory_changed` / tame family | missing-trigger | |
+| `husbandry/complete_catalogue` | `tame_animal` | done | 已按原版 JSON 补齐 11 个猫 `type_specific.variant` criterion；当前 Bedrock 映射基于 `Actor::getVariant()` 的猫 variant 值，仍需 live-server QA |
 | `husbandry/safely_harvest_honey` | other | missing-trigger | |
 | `husbandry/wax_on` | other | missing-trigger | |
 | `husbandry/wax_off` | other | missing-trigger | |
@@ -266,6 +267,7 @@
 | `husbandry/plant_any_sniffer_seed` | other | missing-trigger | |
 | `husbandry/remove_wolf_armor` | other | missing-trigger | |
 | `husbandry/repair_wolf_armor` | other | missing-trigger | |
+| `husbandry/whole_pack` | `tame_animal` | done | 已按原版 JSON 补齐 9 个狼 `type_specific.variant` criterion；Bedrock 数字 ID 映射采用已核实的 `0=pale`、`1=ashen`、`2=black`、`3=chestnut`、`4=rusty`、`5=snowy`、`6=spotted`、`7=striped`、`8=woods`，仍需 live-server QA 覆盖更多狼外观 |
 
 补充：当前已保留的 husbandry 定义：
 
