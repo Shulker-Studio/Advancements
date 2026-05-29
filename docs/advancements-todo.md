@@ -61,7 +61,7 @@
 | `allay_drop_item_on_block` | missing-trigger | |
 | `any_block_use` | missing-trigger | |
 | `avoid_vibration` | missing-trigger | |
-| `bee_nest_destroyed` | missing-trigger | |
+| `bee_nest_destroyed` | partial | 已接入窄实现：`BeehiveBlock::playerWillDestroy` 只派发破坏事实；条件匹配支持 `block`、`item.enchantments` 中的 `minecraft:silk_touch`、`num_bees_inside.min`，暂未覆盖完整 Java 物品/玩家谓词；live-server QA 已验证 `minecraft:bee_nest` 且 `bees=3` 时可授予 `husbandry/silk_touch_nest` |
 | `bred_animals` | missing-trigger | |
 | `brewed_potion` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `BrewingStandResultContainer` 成功转移且当前 screen type 为 `ContainerType::BrewingStand` 后触发；不检查输出物品类型，匹配 wiki/原版“从酿造台输出栏获取任意物品”的语义 |
 | `changed_dimension` | done | 当前窄实现，支持 `conditions.from` / `conditions.to`；通知时机仍有 caveat |
@@ -253,7 +253,7 @@
 | `husbandry/tadpole_in_a_bucket` | `filled_bucket` | done | 已按填充后的蝌蚪桶 item 匹配 |
 | `husbandry/leash_all_frog_variants` | `player_interacted_with_entity` | done | 已补本地 JSON + lang，并接入窄实现：仅支持玩家成功用 `minecraft:lead` 拴住 `minecraft:frog`，且按当前 Bedrock `variant` 值映射 `minecraft:temperate`/`minecraft:cold`/`minecraft:warm` 三种 criterion；青蛙不需要同时被拴住 |
 | `husbandry/froglights` | `inventory_changed` | done | 已补数据，复用 `inventory_changed` 的窄 `required_items` 形状；父级 `minecraft:husbandry/leash_all_frog_variants`，仅在当前物品栏同时拥有 `pearlescent_froglight`、`verdant_froglight`、`ochre_froglight` 时完成 |
-| `husbandry/silk_touch_nest` | silk-touch bee-nest break family | missing-trigger | wiki 语义要求“用精准采集破坏且巢内有 3 只蜜蜂”，并非单纯 `inventory_changed`；后续需要先找可验证 Bedrock seam |
+| `husbandry/silk_touch_nest` | `bee_nest_destroyed` | done | 已补数据并接入窄实现：事件源只派发蜂巢/蜂箱破坏事实，trigger 层从玩家当前手持物品匹配精准采集条件，并要求 `minecraft:bee_nest`、`num_bees_inside.min = 3`；live-server QA 已验证空蜂巢 `bees=0` 不完成、含 3 只蜜蜂的蜂巢 `bees=3` 可授予进度 |
 | `husbandry/ride_a_boat_with_a_goat` | other | missing-trigger | |
 | `husbandry/make_a_sign_glow` | other | missing-trigger | |
 | `husbandry/allay_deliver_item_to_player` | other | missing-trigger | |
@@ -281,5 +281,5 @@
 
 1. `adventure/kill_all_mobs` 已用当前已支持敌对怪集合正式建成原版 ID
 2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. `husbandry/froglights` 已补数据；若继续交互类，再为 `silk_touch_nest` 找到可靠 runtime seam
+3. `husbandry/froglights` 与 `husbandry/silk_touch_nest` 已补数据；`silk_touch_nest` 的 `bee_nest_destroyed` runtime seam 已通过 live-server QA
 4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
