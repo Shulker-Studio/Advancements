@@ -156,6 +156,60 @@ bool matchesPlayerKilledEntityProjectileCondition(TriggerCondition const& condit
     return true;
 }
 
+bool isVoluntaryExileHeadPredicate(nlohmann::json const& head) {
+    if (!head.is_object() || !head.contains("items") || !head.at("items").is_string()) {
+        return false;
+    }
+    return head.at("items").get<std::string>() == "minecraft:white_banner";
+}
+
+bool isVoluntaryExileEquipmentPredicate(nlohmann::json const& equipment) {
+    if (!equipment.is_object() || !hasOnlyKeys(equipment, {"head"}) || !equipment.contains("head")) {
+        return false;
+    }
+    return isVoluntaryExileHeadPredicate(equipment.at("head"));
+}
+
+TriggerCondition compilePlayerKilledEntityRaidCaptainCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"entity"})) {
+        return InvalidTriggerCondition{};
+    }
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "entity");
+    if (!entityPredicate) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type", "equipment"})) {
+        return InvalidTriggerCondition{};
+    }
+    auto const entityTypeId = predicate::parseEntityTypePredicate(entityPredicateJson);
+    if (!entityTypeId || *entityTypeId != "#minecraft:raiders") {
+        return InvalidTriggerCondition{};
+    }
+    if (!entityPredicateJson.contains("equipment")
+        || !isVoluntaryExileEquipmentPredicate(entityPredicateJson.at("equipment"))) {
+        return InvalidTriggerCondition{};
+    }
+
+    return PlayerKilledEntityRaidCaptainCondition{};
+}
+
+bool isSupportedRaiderEntityType(std::string const& entityTypeId) {
+    return entityTypeId == "minecraft:pillager" || entityTypeId == "minecraft:vindicator"
+        || entityTypeId == "minecraft:evocation_illager" || entityTypeId == "minecraft:evoker"
+        || entityTypeId == "minecraft:ravager" || entityTypeId == "minecraft:witch";
+}
+
+bool matchesPlayerKilledEntityRaidCaptainCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<PlayerKilledEntityRaidCaptainCondition>(&condition);
+    auto const* payload  = payloadAs<PlayerKilledEntitySniperDuelPayload>(context);
+    if (compiled == nullptr || payload == nullptr || !isSupportedRaiderEntityType(payload->killedEntityTypeId)) {
+        return false;
+    }
+    return payload->killedEntityIsIllagerCaptain;
+}
+
 } // namespace
 
 TriggerCondition compileEntityCondition(nlohmann::json const& conditions) {
@@ -173,6 +227,11 @@ TriggerCondition compilePlayerInteractedWithEntityCondition(nlohmann::json const
 }
 
 TriggerCondition compilePlayerKilledEntityCondition(nlohmann::json const& conditions) {
+    auto raidCaptain = compilePlayerKilledEntityRaidCaptainCondition(conditions);
+    if (!std::holds_alternative<InvalidTriggerCondition>(raidCaptain)) {
+        return raidCaptain;
+    }
+
     auto compiled = compilePlayerKilledEntityProjectileCondition(conditions);
     if (!std::holds_alternative<InvalidTriggerCondition>(compiled)) {
         return compiled;
@@ -309,6 +368,9 @@ bool matchesTameAnimalCondition(TriggerCondition const& condition, TriggerContex
 bool matchesPlayerKilledEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
     if (std::holds_alternative<PlayerKilledEntitySniperDuelCondition>(condition)) {
         return matchesPlayerKilledEntityProjectileCondition(condition, context);
+    }
+    if (std::holds_alternative<PlayerKilledEntityRaidCaptainCondition>(condition)) {
+        return matchesPlayerKilledEntityRaidCaptainCondition(condition, context);
     }
 
     auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);

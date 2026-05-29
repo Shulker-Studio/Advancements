@@ -9,6 +9,7 @@
 
 #include "mc/world/actor/Actor.h"
 #include "mc/world/actor/ActorDamageSource.h"
+#include "mc/world/actor/ActorFlags.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
 
@@ -86,6 +87,7 @@ void registerPlayerKilledEntityTrigger(Entry& mod) {
                         horizontalDistance((**player).getPosition(), event.self().getPosition()),
                         damageSourceIsSupportedProjectile(event.source()),
                         findDirectDamagerTypeId(event.source()),
+                        event.self().getStatusFlag(ActorFlags::IsIllagerCaptain),
                     },
                 }
             );

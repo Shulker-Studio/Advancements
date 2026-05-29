@@ -108,6 +108,7 @@ struct PlayerKilledEntitySniperDuelPayload {
     float                      horizontalDistance;
     bool                       killingBlowIsProjectile;
     std::optional<std::string> directEntityTypeId;
+    bool                       killedEntityIsIllagerCaptain;
 };
 
 using TriggerPayload = std::variant<
@@ -242,6 +243,8 @@ struct PlayerKilledEntitySniperDuelCondition {
     std::optional<std::string> directEntityTypeId;
 };
 
+struct PlayerKilledEntityRaidCaptainCondition {};
+
 struct BeeNestDestroyedCondition {
     std::optional<std::string> blockId;
     std::optional<std::string> itemId;
@@ -273,7 +276,8 @@ using TriggerCondition = std::variant<
     PlayerHurtEntityCondition,
     TargetHitCondition,
     EntityHurtPlayerCondition,
-    PlayerKilledEntitySniperDuelCondition>;
+    PlayerKilledEntitySniperDuelCondition,
+    PlayerKilledEntityRaidCaptainCondition>;
 
 struct TriggerDescriptor {
     using CompileFn = TriggerCondition (*)(nlohmann::json const& conditions);
