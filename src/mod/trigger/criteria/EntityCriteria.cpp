@@ -4,6 +4,8 @@
 #include "mod/predicate/EntityPredicate.h"
 #include "mod/trigger/criteria/Common.h"
 
+#include <algorithm>
+
 namespace advancements::criteria {
 namespace {
 
@@ -203,6 +205,31 @@ TriggerCondition compileSummonedEntityCondition(nlohmann::json const& conditions
     return EntityTriggerCondition{*entityTypeId};
 }
 
+TriggerCondition compileBredAnimalsCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"child"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("child") || !conditions.at("child").is_array()) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "child");
+    if (!entityPredicate) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityTypeId = predicate::parseEntityTypePredicate(entityPredicateJson);
+    if (!entityTypeId) {
+        return InvalidTriggerCondition{};
+    }
+    return BredAnimalsCondition{*entityTypeId};
+}
+
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
     auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
     auto const* payload  = payloadAs<EntityTriggerPayload>(context);
@@ -220,6 +247,15 @@ bool matchesPlayerInteractedWithEntityCondition(TriggerCondition const& conditio
     }
     return payload->itemId == compiled->itemId && payload->entityTypeId == compiled->entityTypeId
         && payload->entityVariantId == compiled->entityVariantId;
+}
+
+bool matchesBredAnimalsCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<BredAnimalsCondition>(&condition);
+    auto const* payload  = payloadAs<BredAnimalsPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    return std::ranges::find(payload->childTypeIds, compiled->childTypeId) != payload->childTypeIds.end();
 }
 
 bool matchesPlayerKilledEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
