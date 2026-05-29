@@ -39,7 +39,7 @@
 - `minecraft:used_totem`
 - `minecraft:filled_bucket`
 - `minecraft:fishing_rod_hooked`
-- `minecraft:player_killed_entity`
+- `minecraft:player_killed_entity`（包含 `adventure/voluntary_exile` 的袭击队长窄条件）
 - `minecraft:entity_killed_player`
 - `minecraft:player_hurt_entity`
 - `minecraft:entity_hurt_player`

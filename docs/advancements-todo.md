@@ -118,7 +118,7 @@
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
 | `using_item` | missing-trigger | |
 | `villager_trade` | done | 当前窄实现：基于 `ItemStackRequestActionHandler::_handleTransfer`，仅在从 `CreatedOutputContainer` 成功转移且当前 screen type 为 `ContainerType::Trade` 后触发；不依赖打开交易 UI；条件解析支持空条件 `adventure/trade` 与已核窄形状 `player[0].predicate.minecraft:location.position.y.min`（`adventure/trade_at_world_height`） |
-| `voluntary_exile` | missing-trigger | |
+| `voluntary_exile` | done | 已按当前 vanilla JSON 形状接入窄实现：复用 `minecraft:player_killed_entity`，支持 `entity[0].predicate.type = #minecraft:raiders` 且 `equipment.head.items = minecraft:white_banner` 这组条件形状；runtime 基于 `MobDieEvent` / `Actor::getLastHurtByPlayer()` 归因，并用 Bedrock `ActorFlags::IsIllagerCaptain` 判断袭击队长。live-server 正向 QA 已验证队长 pillager 死亡时 `illager_captain=true` 并完成 `adventure/voluntary_exile`；普通 pillager 负例 QA 已验证 `illager_captain=false` 且不授予该进度 |
 
 ## Story Vanilla Inventory
 
@@ -194,7 +194,7 @@
 | --- | --- | --- | --- |
 | `adventure/root` | `player_killed_entity` OR `entity_killed_player` | done | 已按原版补齐 `killed_something` / `killed_by_something` 两个 criterion，并使用 OR requirement |
 | `adventure/kill_a_mob` | `player_killed_entity` | done | 已补齐当前本地 hostile 集合窄切片，复用现有 `player_killed_entity` 简单实体匹配；本波次补入 `bogged`、`breeze`、`creaking`、`evoker`、`wither`、`zoglin` 六项，并保持不泛化其他 nested predicates |
-| `adventure/voluntary_exile` | `voluntary_exile` | missing-trigger | |
+| `adventure/voluntary_exile` | `player_killed_entity` / raid captain narrow slice | done | 已补数据并接入窄实现：当前 raw vanilla JSON 使用 `minecraft:player_killed_entity`，条件为 `#minecraft:raiders` + 头部 `minecraft:white_banner`；本地 runtime 将该条件映射到被杀实体属于当前支持的 raider 类型且 `ActorFlags::IsIllagerCaptain` 为真。live-server QA 已通过：队长 pillager 日志显示 `illager_captain=true` 后授予 `minecraft:adventure/voluntary_exile`；普通 pillager 日志显示 `illager_captain=false` 且仅授予 kill/root 相关进度，不授予 `voluntary_exile` |
 | `adventure/spyglass_at_parrot` | other | missing-trigger | |
 | `adventure/spyglass_at_ghast` | other | missing-trigger | |
 | `adventure/spyglass_at_dragon` | other | missing-trigger | |
@@ -282,9 +282,10 @@
 - `husbandry/obtain_sniffer_egg`
 - `husbandry/obtain_netherite_hoe`
 
-## Immediate Alignment Fixes
+## Current Alignment Notes
 
-1. `adventure/kill_all_mobs` 已用当前已支持敌对怪集合正式建成原版 ID
-2. `story/mine_stone` 继续评估是否要维持 `destroy_block` 近似，还是改成更贴近原版的获得语义
-3. `husbandry/froglights` 与 `husbandry/silk_touch_nest` 已补数据；`silk_touch_nest` 的 `bee_nest_destroyed` runtime seam 已通过 live-server QA
-4. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` 批量改状态
+1. `story/mine_stone` 已按获得 `cobblestone / blackstone / cobbled_deepslate` 的原版核心语义回正，不再作为 `destroy_block` 近似项排队。
+2. `adventure/very_very_frightening` 与 `adventure/kill_mob_near_sculk_catalyst` 已补数据并接入窄 runtime slice；后续不要再把它们列入 seam research 队列，除非有新的 Bedrock 行为证据需要修正。
+3. `husbandry/silk_touch_nest`、`husbandry/breed_an_animal`、`husbandry/bred_all_animals`、`husbandry/tame_an_animal`、`husbandry/complete_catalogue`、`husbandry/whole_pack` 已有数据与窄实现；对应 trigger family 仍按上方备注保留 Java parity caveat。
+4. `husbandry/balanced_diet` 当前仍保持 `partial`：本地已有原版 ID 数据，但食物集合与 Bedrock consume runtime 覆盖仍需逐项核对后才能标为 `done`。
+5. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` / `partial` 状态和 caveat 同步更新。
