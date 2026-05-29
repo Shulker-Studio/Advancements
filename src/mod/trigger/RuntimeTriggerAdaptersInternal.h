@@ -41,6 +41,14 @@ bool curedZombieVillagerTriggerRegistered();
 void registerCuredZombieVillagerTrigger(Entry& mod);
 void unregisterCuredZombieVillagerTrigger();
 
+bool bredAnimalsTriggerRegistered();
+void registerBredAnimalsTrigger(Entry& mod);
+void unregisterBredAnimalsTrigger();
+
+bool tameAnimalTriggerRegistered();
+void registerTameAnimalTrigger(Entry& mod);
+void unregisterTameAnimalTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();

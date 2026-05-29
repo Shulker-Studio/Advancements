@@ -6,6 +6,9 @@
 #include "mod/event/block/WitherSummonedEvent.h"
 #include "mod/event/block/BeaconLevelChangedEvent.h"
 #include "mod/event/block/SculkCatalystMobKilledEvent.h"
+#include "mod/event/entity/PlayerBredAnimalsEvent.h"
+#include "mod/event/entity/PlayerProjectileLightningHitEvent.h"
+#include "mod/event/entity/PlayerTamedAnimalEvent.h"
 #include "mod/event/item/ContainerOutputTakenEvent.h"
 #include "mod/event/item/EnchantedItemEvent.h"
 #include "mod/event/item/FishingRodHookedItemEvent.h"
@@ -14,7 +17,6 @@
 #include "mod/event/item/PlayerFilledBucketEvent.h"
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
-#include "mod/event/entity/PlayerProjectileLightningHitEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerChargedRespawnAnchorEvent.h"
 #include "mod/event/player/PlayerCuredZombieVillagerEvent.h"
@@ -28,6 +30,7 @@
 #include "mod/event/player/PlayerUsedTotemEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
 #include "mod/trigger/TriggerDispatcher.h"
+#include "mod/trigger/triggers/BredAnimalsTrigger.h"
 #include "mod/trigger/triggers/BrewedPotionTrigger.h"
 #include "mod/trigger/triggers/BeeNestDestroyedTrigger.h"
 #include "mod/trigger/triggers/ChangedDimensionTrigger.h"
@@ -55,6 +58,7 @@
 #include "mod/trigger/triggers/ShotCrossbowTrigger.h"
 #include "mod/trigger/triggers/SleptInBedTrigger.h"
 #include "mod/trigger/triggers/SummonedEntityTrigger.h"
+#include "mod/trigger/triggers/TameAnimalTrigger.h"
 #include "mod/trigger/triggers/TargetHitTrigger.h"
 #include "mod/trigger/triggers/UsedTotemTrigger.h"
 #include "mod/trigger/triggers/VillagerTradeTrigger.h"
@@ -212,6 +216,7 @@ bool anyRuntimeRegistered() {
         || summonedEntityTriggerRegistered()
         || playerInteractedWithEntityTriggerRegistered()
         || curedZombieVillagerTriggerRegistered()
+        || bredAnimalsTriggerRegistered() || tameAnimalTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
@@ -245,7 +250,9 @@ bool anyRuntimeRegistered() {
         || event::block::beaconLevelChangedEventSourceRegistered()
         || event::block::sculkCatalystMobKilledEventSourceRegistered()
         || event::block::witherSummonedEventSourceRegistered()
+        || event::entity::playerBredAnimalsEventSourceRegistered()
         || event::entity::playerProjectileLightningHitEventSourceRegistered()
+        || event::entity::playerTamedAnimalEventSourceRegistered()
         || event::player::dragonRespawnedEventSourceRegistered();
 }
 
@@ -284,7 +291,9 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerConsumedItemEventSource();
     event::item::registerPlayerInventoryChangedEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
+    event::entity::registerPlayerBredAnimalsEventSource();
     event::entity::registerPlayerProjectileLightningHitEventSource();
+    event::entity::registerPlayerTamedAnimalEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
     event::player::registerPlayerChargedRespawnAnchorEventSource();
     event::player::registerPlayerCuredZombieVillagerEventSource();
@@ -309,6 +318,8 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerSummonedEntityTrigger(mod);
     registerPlayerInteractedWithEntityTrigger(mod);
     registerCuredZombieVillagerTrigger(mod);
+    registerBredAnimalsTrigger(mod);
+    registerTameAnimalTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
     registerTargetHitTrigger(mod);
@@ -342,6 +353,8 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterSummonedEntityTrigger();
     unregisterPlayerInteractedWithEntityTrigger();
     unregisterCuredZombieVillagerTrigger();
+    unregisterBredAnimalsTrigger();
+    unregisterTameAnimalTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
     unregisterTargetHitTrigger();
@@ -373,7 +386,9 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerConsumedItemEventSource();
     event::item::unregisterPlayerInventoryChangedEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
+    event::entity::unregisterPlayerBredAnimalsEventSource();
     event::entity::unregisterPlayerProjectileLightningHitEventSource();
+    event::entity::unregisterPlayerTamedAnimalEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
     event::player::unregisterPlayerChargedRespawnAnchorEventSource();
     event::player::unregisterPlayerCuredZombieVillagerEventSource();
