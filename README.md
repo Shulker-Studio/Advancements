@@ -48,7 +48,7 @@
 - `minecraft:slept_in_bed`
 - `minecraft:changed_dimension`
 - `minecraft:location`（当前为窄实现，主要覆盖结构进入类）
-- `minecraft:player_generates_container_loot`（当前为窄实现，仅 `nether/loot_bastion`）
+- `minecraft:player_generates_container_loot`（当前为窄实现，覆盖 `nether/loot_bastion` 与 `adventure/salvage_sherd` 的刷扫考古产物）
 - `minecraft:nether_travel`
 - `minecraft:summoned_entity`（当前为窄实现，仅 `nether/summon_wither` / `end/respawn_dragon`）
 - `minecraft:levitation`（当前为窄实现，仅 `end/levitate` 的垂直位移条件）

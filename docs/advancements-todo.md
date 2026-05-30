@@ -95,7 +95,7 @@
 | `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold、trial_chambers；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
 | `nether_travel` | done | 当前窄实现：仅支持已核原版 `nether/fast_travel` 形状 `conditions.distance.horizontal.min`；runtime 在玩家从主世界进入下界前记录主世界水平起点，并在从下界返回主世界时按主世界水平距离触发；未泛化 `distance` 其他子键 |
 | `placed_block` | missing-trigger | |
-| `player_generates_container_loot` | done | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，仅支持玩家作为 loot context entity 生成的四个 bastion chest loot table 的 `conditions.loot_table` 精确匹配 |
+| `player_generates_container_loot` | partial | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，支持玩家作为 loot context entity 生成的四个 bastion chest loot table；另通过 `BrushItem::$_useOn` 调用栈中的当前玩家归因支持 `adventure/salvage_sherd` 的 6 个 archaeology brushable loot table，并要求本次生成物品为 `*_pottery_sherd`；不泛化其他 loot table context、掉落完成时机或完整 Java loot predicate |
 | `player_hurt_entity` | done | 当前窄实现：基于 `ll::event::ActorHurtEvent`，仅支持 `damage.type.direct_entity.type = #minecraft:arrows` + `damage.type.tags` 含 `minecraft:is_projectile` 这一已核 condition surface |
 | `player_interacted_with_entity` | partial | 当前窄实现：仅支持 `husbandry/leash_all_frog_variants` 已核 shape（玩家成功使用 `minecraft:lead` 与 `minecraft:frog` 交互，并按 `Actor::getVariant()` 的 Bedrock 取值 `0=temperate` / `1=cold` / `2=warm` 匹配三种青蛙变种）；不泛化其他 entity/item/type_specific 条件 |
 | `player_killed_entity` | done | 当前窄实现：保留 `conditions.entity`，并额外支持 `adventure/sniper_duel` 已核窄形状（骷髅 + 50m horizontal + projectile killing blow）与 `nether/return_to_sender` 已核窄形状（恶魂 + direct fireball + projectile killing blow）；不泛化其他 nested predicates |
@@ -209,7 +209,7 @@
 | `adventure/ol_betsy` | `shot_crossbow` | done | 已补数据并接入窄实现：仅支持 `conditions.item.items = minecraft:crossbow` 这组已核 shape，复用当前 `shot_crossbow` 窄触发 |
 | `adventure/trade` | `villager_trade` | done | 已补数据，复用当前完成交易语义的 `villager_trade` |
 | `adventure/trade_at_world_height` | `villager_trade` | done | 已按原版 raw JSON 形状补数据：父级 `minecraft:adventure/trade`，`minecraft:villager_trade` + `player[0].predicate.location.position.y.min = 319.0`；当前窄实现按玩家交易完成时脚部位置 `Y >= 319` 匹配 |
-| `adventure/salvage_sherd` | other | missing-trigger | |
+| `adventure/salvage_sherd` | `player_generates_container_loot` | partial | 已补本地 JSON + lang；runtime 在 `BrushItem::$_useOn` 调用栈内捕获 `Util::LootTableUtils::fillContainer` 的 brushable archaeology loot，按当前玩家归因，并在 generated item 为 `*_pottery_sherd` 时匹配对应原版 `minecraft:archaeology/*` criterion；不再额外依赖 `inventory_changed`，触发时机为内部 brushable loot 生成而非最终掉落/拾取；live-server QA 已验证空 brushable block 与非陶片考古产物不会完成，刷出 `minecraft:archer_pottery_sherd` 时在后续背包变更前完成 |
 | `adventure/sleep_in_bed` | `slept_in_bed` | done | 已补数据，复用现有 `slept_in_bed` |
 | `adventure/adventuring_time` | `location` | missing-trigger | |
 | `adventure/play_jukebox_in_meadows` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 在玩家用唱片对空唱片机交互且唱片机位于 meadow biome 时派发，支持本地列出的 music disc ID；pre-origin caveat：仍需 live-server QA 验证唱片机成功插入/播放时机与所有 Bedrock 唱片 ID。 |
