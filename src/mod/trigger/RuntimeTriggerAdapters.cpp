@@ -18,7 +18,6 @@
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
-#include "mod/event/player/PlayerChargedRespawnAnchorEvent.h"
 #include "mod/event/player/PlayerCuredZombieVillagerEvent.h"
 #include "mod/event/player/DragonRespawnedEvent.h"
 #include "mod/event/player/PlayerDimensionChangedEvent.h"
@@ -237,7 +236,6 @@ bool anyRuntimeRegistered() {
         || event::item::playerShotCrossbowEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered() || event::item::enchantedItemEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
-        || event::player::playerChargedRespawnAnchorEventSourceRegistered()
         || event::player::playerCuredZombieVillagerEventSourceRegistered()
         || event::player::playerDimensionChangedEventSourceRegistered()
         || event::player::playerEnteredEndGatewayEventSourceRegistered()
@@ -295,7 +293,6 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::entity::registerPlayerProjectileLightningHitEventSource();
     event::entity::registerPlayerTamedAnimalEventSource();
     event::player::registerPlayerBlockUsingShieldEventSource();
-    event::player::registerPlayerChargedRespawnAnchorEventSource();
     event::player::registerPlayerCuredZombieVillagerEventSource();
     event::player::registerDragonRespawnedEventSource();
     event::player::registerPlayerDimensionChangedEventSource();
@@ -390,7 +387,6 @@ void unregisterRuntimeTriggerAdapters() {
     event::entity::unregisterPlayerProjectileLightningHitEventSource();
     event::entity::unregisterPlayerTamedAnimalEventSource();
     event::player::unregisterPlayerBlockUsingShieldEventSource();
-    event::player::unregisterPlayerChargedRespawnAnchorEventSource();
     event::player::unregisterPlayerCuredZombieVillagerEventSource();
     event::player::unregisterDragonRespawnedEventSource();
     event::player::unregisterPlayerDimensionChangedEventSource();

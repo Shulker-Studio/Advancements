@@ -181,8 +181,8 @@ struct EnterBlockCondition {
 };
 
 struct ItemUsedOnBlockCondition {
-    std::string itemId;
-    std::string blockId;
+    std::vector<std::string> itemIds;
+    std::vector<std::string> blockIds;
 };
 
 struct DimensionTriggerCondition {

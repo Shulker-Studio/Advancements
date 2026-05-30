@@ -6,6 +6,7 @@
 
 #include "mc/world/actor/player/Inventory.h"
 #include "mc/world/actor/player/Player.h"
+#include <algorithm>
 
 namespace advancements::criteria {
 namespace {
@@ -64,21 +65,55 @@ TriggerCondition compileSimpleItemCondition(nlohmann::json const& conditions) {
 }
 
 TriggerCondition compileItemUsedOnBlockCondition(nlohmann::json const& conditions) {
-    if (!hasOnlyKeys(conditions, {"item", "block"})) {
+    if (!hasOnlyKeys(conditions, {"item", "items", "block", "blocks"})) {
         return InvalidTriggerCondition{};
     }
-    if (!conditions.contains("item") || !conditions.at("item").is_string()) {
-        return InvalidTriggerCondition{};
-    }
-    if (!conditions.contains("block") || !conditions.at("block").is_string()) {
-        return InvalidTriggerCondition{};
-    }
-    return ItemUsedOnBlockCondition{
-        conditions.at("item").get<std::string>(),
-        conditions.at("block").get<std::string>(),
-    };
-}
 
+    std::vector<std::string> itemIds;
+    if (conditions.contains("item")) {
+        if (conditions.contains("items") || !conditions.at("item").is_string()) {
+            return InvalidTriggerCondition{};
+        }
+        itemIds.push_back(conditions.at("item").get<std::string>());
+    } else if (conditions.contains("items")) {
+        if (!conditions.at("items").is_array()) {
+            return InvalidTriggerCondition{};
+        }
+        for (auto const& item : conditions.at("items")) {
+            if (!item.is_string()) {
+                return InvalidTriggerCondition{};
+            }
+            itemIds.push_back(item.get<std::string>());
+        }
+    } else {
+        return InvalidTriggerCondition{};
+    }
+
+    std::vector<std::string> blockIds;
+    if (conditions.contains("block")) {
+        if (conditions.contains("blocks") || !conditions.at("block").is_string()) {
+            return InvalidTriggerCondition{};
+        }
+        blockIds.push_back(conditions.at("block").get<std::string>());
+    } else if (conditions.contains("blocks")) {
+        if (!conditions.at("blocks").is_array()) {
+            return InvalidTriggerCondition{};
+        }
+        for (auto const& block : conditions.at("blocks")) {
+            if (!block.is_string()) {
+                return InvalidTriggerCondition{};
+            }
+            blockIds.push_back(block.get<std::string>());
+        }
+    } else {
+        return InvalidTriggerCondition{};
+    }
+
+    if (itemIds.empty() || blockIds.empty()) {
+        return InvalidTriggerCondition{};
+    }
+    return ItemUsedOnBlockCondition{std::move(itemIds), std::move(blockIds)};
+}
 TriggerCondition compileShotCrossbowCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"item"})) {
         return InvalidTriggerCondition{};
@@ -154,8 +189,8 @@ bool matchesItemUsedOnBlockCondition(TriggerCondition const& condition, TriggerC
     if (compiled == nullptr || payload == nullptr) {
         return false;
     }
-    return predicate::matchesItemPredicate(predicate::ItemPredicate{compiled->itemId, std::nullopt}, payload->itemId, std::nullopt)
-        && payload->blockId == compiled->blockId;
+    return std::ranges::find(compiled->itemIds, payload->itemId) != compiled->itemIds.end()
+        && std::ranges::find(compiled->blockIds, payload->blockId) != compiled->blockIds.end();
 }
 
 bool matchesVillagerTradeCondition(TriggerCondition const& condition, TriggerContext const& context) {
