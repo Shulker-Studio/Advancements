@@ -35,6 +35,8 @@ constexpr int FullBeehiveHoneyLevel = 5;
 
 constexpr auto GlowstoneItemId = "minecraft:glowstone";
 constexpr auto RespawnAnchorBlockId = "minecraft:respawn_anchor";
+constexpr auto CompassItemId = "minecraft:compass";
+constexpr auto LodestoneBlockId = "minecraft:lodestone";
 constexpr auto GlowInkSacItemId = "minecraft:glow_ink_sac";
 constexpr auto GlassBottleItemId = "minecraft:glass_bottle";
 constexpr auto HoneycombItemId = "minecraft:honeycomb";
@@ -222,6 +224,10 @@ bool isChargeRespawnAnchorUse(ll::event::player::PlayerInteractBlockEvent& event
     return charge && *charge == RespawnAnchorChargeBeforeFull;
 }
 
+bool isUseLodestoneUse(std::string_view itemId, std::string_view blockId) {
+    return itemId == CompassItemId && blockId == LodestoneBlockId;
+}
+
 SignBlockActor* signBlockActorAt(Player& player, BlockPos const& pos) {
     auto* blockActor = player.getDimensionBlockSource().getBlockEntity(pos);
     if (blockActor == nullptr || (blockActor->mType != BlockActorType::Sign && blockActor->mType != BlockActorType::HangingSign)) {
@@ -318,9 +324,9 @@ void handleItemUsedOnBlock(Entry& mod, ll::event::player::PlayerInteractBlockEve
     }
     auto const itemId = event.item().getTypeName();
 
-    if (isChargeRespawnAnchorUse(event, itemId, blockId) || isSignGlowUse(event, itemId) || isJukeboxMeadowUse(event, blockId)
-        || isSafeHoneyHarvestUse(event, itemId, blockId) || isWaxOnUse(itemId, blockId) || isWaxOffUse(itemId, blockId)
-        || isLightenUpUse(event, itemId, blockId)) {
+    if (isChargeRespawnAnchorUse(event, itemId, blockId) || isUseLodestoneUse(itemId, blockId)
+        || isSignGlowUse(event, itemId) || isJukeboxMeadowUse(event, blockId) || isSafeHoneyHarvestUse(event, itemId, blockId)
+        || isWaxOnUse(itemId, blockId) || isWaxOffUse(itemId, blockId) || isLightenUpUse(event, itemId, blockId)) {
         dispatchItemUsedOnBlock(mod, event.self(), itemId, blockId);
     }
 }
