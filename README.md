@@ -2,13 +2,13 @@
 
 一个面向 LeviLamina 的 Java 风格进度（Advancements）插件。
 
-当前版本：`0.1.2`
+当前版本：`0.1.3`
 
 ## 项目状态
 
 > 当前仍在开发中（WIP / Work in Progress）。
 
-`0.1.2` 在 `0.1.1` 的基础上继续扩展进度数据与窄实现 trigger，并将运行时触发路径进一步收敛到事件源 + trigger registry 架构。当前版本新增三叉戟、超越极限、下界合金盔甲、蛙明灯、拴住所有青蛙变种等进度，已经更适合继续分发测试与日常游玩使用，但距离完整覆盖 Java 原版进度系统仍有不少工作要做。
+`0.1.3` 在 `0.1.2` 的基础上继续补齐 Adventure、Nether 与 Husbandry 的窄实现进度，新增天涯共此石、自我放逐、非常非常可怕、它蔓延了、举巢搬迁、繁殖 / 驯服动物、完整猫目录、完整狼群，以及一批蜂蜜、铜方块、告示牌和唱片机交互类进度。当前版本已经覆盖更多日常游玩路径，但距离完整覆盖 Java 原版进度系统仍有不少工作要做。
 
 ## 关于 GPT Vibe Coding
 
@@ -91,7 +91,7 @@ plugins/
 如果你已经通过 release + `tooth.json` 发布，可以使用：
 
 ```bash
-lip install github.com/Shulker-Studio/Advancements@0.1.2
+lip install github.com/Shulker-Studio/Advancements@0.1.3
 ```
 
 安装目标目录为：

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3]
+
+### Added
+
+- 新增 `adventure/very_very_frightening`、`adventure/kill_mob_near_sculk_catalyst`、`adventure/voluntary_exile` 数据、文案与对应窄实现。
+- 新增 `husbandry/silk_touch_nest`、`husbandry/breed_an_animal`、`husbandry/bred_all_animals`、`husbandry/tame_an_animal`、`husbandry/complete_catalogue`、`husbandry/whole_pack` 数据、文案与繁殖 / 驯服 / 蜂巢破坏窄实现。
+- 新增并扩展 `minecraft:item_used_on_block` 窄切片，覆盖 `nether/use_lodestone`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`。
+- 新增 `minecraft:channeled_lightning`、`minecraft:kill_mob_near_sculk_catalyst`、`minecraft:bee_nest_destroyed`、`minecraft:bred_animals`、`minecraft:tame_animal` 等 runtime 事件源与 trigger 模块。
+
+### Changed
+
+- 扩展实体、物品、弹射物与蜂巢相关 criteria 匹配，支持猫 / 狼变种、繁殖 child type、精准采集蜂巢与幽匿催发体归因等窄条件。
+- 将更多方块交互类进度统一收敛到 `ItemUsedOnBlockTrigger` 白名单路径，移除旧的重生锚专用事件源。
+- 同步 architecture、target trigger architecture、advancements TODO 与 README，使文档反映当前 0.1.3 runtime 覆盖范围。
+
 ## [0.1.2]
 
 ### Added
