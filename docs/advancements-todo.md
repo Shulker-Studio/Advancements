@@ -44,7 +44,7 @@
 - `minecraft:construct_beacon`
 - `minecraft:effects_changed`
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
-- `minecraft:item_used_on_block`（当前窄实现：仅 `nether/charge_respawn_anchor`）
+- `minecraft:item_used_on_block`（当前窄实现：覆盖重生锚、草甸唱片机、点亮铜灯刮削、蜂蜜采集、铜方块上蜡/脱蜡、告示牌发光等本地 partial slices）
 - `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
 - `minecraft:bee_nest_destroyed`（当前窄实现：仅 `husbandry/silk_touch_nest` 已核形状）
@@ -87,7 +87,7 @@
 | `impossible` | missing-trigger | 可后续纯数据实现 |
 | `inventory_changed` | partial | 当前实现支持 `item` + `count`，并新增窄形状 `required_items` 供 `husbandry/froglights` 检查“当前物品栏同时拥有多种指定物品”；不泛化槽位、NBT 或更复杂 inventory predicate |
 | `item_durability_changed` | missing-trigger | |
-| `item_used_on_block` | done | 当前窄实现：仅支持 `nether/charge_respawn_anchor` 形状 `conditions.item = minecraft:glowstone` + `conditions.block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge`，只在玩家触发的正向充能把 `RespawnAnchorCharge` 从小于 4 提升到 4 时派发；保留 `Advancements debug: respawn_anchor_bump_charge ...` 日志供 live-server QA |
+| `item_used_on_block` | partial | 当前窄实现覆盖 `nether/charge_respawn_anchor`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow` 的本地 shape；trigger 直接监听 LeviLamina `ll::event::player::PlayerInteractBlockEvent`，使用 `EventPriority::Lowest` 让更早的取消逻辑先运行；由于该 LL 事件在 `GameMode::$useItemOn` 原始逻辑前发布，runtime 只在每个 advancement 的窄分支中派发，不做泛化 block-use 派发。 |
 | `kill_mob_near_sculk_catalyst` | done | 当前窄实现：hook `SculkCatalystBlockActor::_tryConsumeOnDeathExperience(Level&, Actor&)`，用 `Actor::getLastHurtByPlayer()` 解析 `mLastHurtByPlayerId` 玩家归因，并通过同一调用内的 `SculkSpreader::addCursors(charge > 0)` 与 XP drop 被关闭确认幽匿催发体已消费死亡经验；使用无条件 descriptor，对应原版无 conditions JSON；live-server QA 已验证玩家在幽匿催发体附近击杀 skeleton 可完成，命令击杀未误触发 |
 | `killed_by_arrow` | missing-trigger | |
 | `levitation` | done | 当前窄实现：基于 `Player::$tickWorld` 观察玩家 `MobEffect::LEVITATION()` 状态，仅支持已核 wiki 语义/本地 JSON 形状 `conditions.distance.y.min = 50.0`；效果开始时记录起始 Y，效果结束时用结束 Y 结算一次绝对垂直位移；仍需 live-server QA 验证潜影贝弹丸给予的 Bedrock levitation 状态与 Java 完成时机严格对齐 |
@@ -168,7 +168,7 @@
 | `nether/loot_bastion` | `player_generates_container_loot` | done | 已核原版 JSON：父级 `minecraft:nether/find_bastion`，四个 bastion chest loot table 条件，OR requirements；当前窄 runtime 仅覆盖这四个 loot table |
 | `nether/use_lodestone` | location / use item family | missing-trigger | |
 | `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
-| `nether/charge_respawn_anchor` | `item_used_on_block` / respawn anchor charge narrow slice | done | 已补数据并接入窄实现：criterion `charge_respawn_anchor` 使用 `minecraft:item_used_on_block` + `item = minecraft:glowstone` + `block = minecraft:respawn_anchor`；runtime hook `RespawnAnchorBlock::_bumpCharge` 并在 `delta > 0`、`source != nullptr`、充能从 `< 4` 变为 `4` 时派发；debug 日志会打印 player、pos、delta、before、after，供 live-server QA 验证 seam |
+| `nether/charge_respawn_anchor` | `item_used_on_block` / 重生锚直接交互窄切片 | done | 数据已补齐且保持窄实现：criterion `charge_respawn_anchor` 使用 `minecraft:item_used_on_block` + `item = minecraft:glowstone` + `block = minecraft:respawn_anchor`；runtime 现在由 `ItemUsedOnBlockTrigger` 直接监听 LeviLamina `PlayerInteractBlockEvent` / `GameMode::$useItemOn` seam，并以 Lowest 优先级运行；pre-origin caveat：当前在使用前 `RespawnAnchorCharge == 3` 时派发，该条件应对应一次被接受的荧石使用并充至满格。 |
 
 当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`fast_travel` 已作为 `nether_travel` 窄切片补齐；`summon_wither` 已作为 `summoned_entity` 凋灵窄切片补齐；`charge_respawn_anchor` 已作为 `item_used_on_block` / `_bumpCharge` 满充能窄切片补齐；`all_potions` 已作为 `effects_changed` 的 17 效果快照窄切片补齐；`all_effects` 已按当前项目定义作为“排除 `glowing` / `dolphins_grace` 的 Bedrock 子集”补齐。
 
@@ -212,7 +212,7 @@
 | `adventure/salvage_sherd` | other | missing-trigger | |
 | `adventure/sleep_in_bed` | `slept_in_bed` | done | 已补数据，复用现有 `slept_in_bed` |
 | `adventure/adventuring_time` | `location` | missing-trigger | |
-| `adventure/play_jukebox_in_meadows` | other | missing-trigger | |
+| `adventure/play_jukebox_in_meadows` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 在玩家用唱片对空唱片机交互且唱片机位于 meadow biome 时派发，支持本地列出的 music disc ID；pre-origin caveat：仍需 live-server QA 验证唱片机成功插入/播放时机与所有 Bedrock 唱片 ID。 |
 | `adventure/fall_from_world_height` | `fall_from_height` | missing-trigger | |
 | `adventure/trim_with_any_armor_pattern` | other | missing-trigger | |
 | `adventure/read_power_of_chiseled_bookshelf` | other | missing-trigger | |
@@ -221,7 +221,7 @@
 | `adventure/trim_with_all_exclusive_armor_patterns` | other | missing-trigger | |
 | `adventure/who_needs_rockets` | other | missing-trigger | |
 | `adventure/minecraft_trials_edition` | `location` / structure entry family | done | 已核原版 JSON：`minecraft:location` + `player[0].predicate.location.structures = minecraft:trial_chambers`；当前窄实现基于玩家所在 Trial Chambers 结构触发，按 location 语义每 20 tick 轮询 |
-| `adventure/lighten_up` | other | missing-trigger | |
+| `adventure/lighten_up` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 支持任意列出的斧对点亮的 exposed/weathered/oxidized copper bulb 使用；不覆盖完整 Java location predicate，涂蜡铜灯脱蜡相关 MC-269636 行为仍需 live-server QA。 |
 | `adventure/blowback` | other | missing-trigger | |
 | `adventure/under_lock_and_key` | other | missing-trigger | |
 | `adventure/revaulting` | other | missing-trigger | |
@@ -251,15 +251,15 @@
 | `husbandry/axolotl_in_a_bucket` | `filled_bucket` | done | 已按填充后的美西螈桶 item 匹配 |
 | `husbandry/kill_axolotl_target` | other | missing-trigger | |
 | `husbandry/complete_catalogue` | `tame_animal` | done | 已按原版 JSON 补齐 11 个猫 `type_specific.variant` criterion；当前 Bedrock 映射基于 `Actor::getVariant()` 的猫 variant 值，仍需 live-server QA |
-| `husbandry/safely_harvest_honey` | other | missing-trigger | |
-| `husbandry/wax_on` | other | missing-trigger | |
-| `husbandry/wax_off` | other | missing-trigger | |
+| `husbandry/safely_harvest_honey` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 为确认玻璃瓶本次能实际采到蜂蜜，要求 bee_nest/beehive 使用前 `honey_level >= 5`，并在 hive/nest 下方 3x3、向下 1-2 格范围内扫描 campfire/soul_campfire；若营火暴露 `Extinguished` state 则排除已熄灭营火，若该 state 不存在则按扫描到营火处理。该 smoke-safety 仍是窄形状，不覆盖完整 Java `location.smokey=true` 搜索范围，需 live-server QA 后再考虑 done。 |
+| `husbandry/wax_on` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 支持 honeycomb 对本地列出的可上蜡铜方块使用；依赖 pre-origin block ID 白名单，需 live-server QA 验证 Bedrock 方块 ID 和成功上蜡时机。 |
+| `husbandry/wax_off` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 支持任意列出的斧对本地列出的已涂蜡铜方块使用；需 live-server QA 验证 Bedrock 方块 ID 和成功脱蜡时机。 |
 | `husbandry/tadpole_in_a_bucket` | `filled_bucket` | done | 已按填充后的蝌蚪桶 item 匹配 |
 | `husbandry/leash_all_frog_variants` | `player_interacted_with_entity` | done | 已补本地 JSON + lang，并接入窄实现：仅支持玩家成功用 `minecraft:lead` 拴住 `minecraft:frog`，且按当前 Bedrock `variant` 值映射 `minecraft:temperate`/`minecraft:cold`/`minecraft:warm` 三种 criterion；青蛙不需要同时被拴住 |
 | `husbandry/froglights` | `inventory_changed` | done | 已补数据，复用 `inventory_changed` 的窄 `required_items` 形状；父级 `minecraft:husbandry/leash_all_frog_variants`，仅在当前物品栏同时拥有 `pearlescent_froglight`、`verdant_froglight`、`ochre_froglight` 时完成 |
 | `husbandry/silk_touch_nest` | `bee_nest_destroyed` | done | 已补数据并接入窄实现：事件源只派发蜂巢/蜂箱破坏事实，trigger 层从玩家当前手持物品匹配精准采集条件，并要求 `minecraft:bee_nest`、`num_bees_inside.min = 3`；live-server QA 已验证空蜂巢 `bees=0` 不完成、含 3 只蜜蜂的蜂巢 `bees=3` 可授予进度 |
 | `husbandry/ride_a_boat_with_a_goat` | other | missing-trigger | |
-| `husbandry/make_a_sign_glow` | other | missing-trigger | |
+| `husbandry/make_a_sign_glow` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 不再调用 `SignBlock::_getInteractResult`，改为只读检查 glow ink sac、告示牌/悬挂告示牌 block actor、未打蜡、玩家朝向侧文本存在且尚未发光；数据条件已包含实服观测到的 legacy `minecraft:standing_sign` / `minecraft:wall_sign` 以及本地木种 sign/hanging sign ID，仍需 live-server QA 覆盖更多 sign block ID。 |
 | `husbandry/allay_deliver_item_to_player` | other | missing-trigger | |
 | `husbandry/allay_deliver_cake_to_note_block` | `allay_drop_item_on_block` | missing-trigger | |
 | `husbandry/obtain_sniffer_egg` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed`；按原版保持 hidden |

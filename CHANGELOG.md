@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 新增 `adventure/overoverkill`、`adventure/throw_trident`、`nether/netherite_armor`、`husbandry/froglights` 数据与中英文文案。
 - 新增 `minecraft:target_hit` 的窄实现与 target block hit 事件源，用于支持 `adventure/bullseye`。
 - 新增 `minecraft:entity_hurt_player` 的窄实现与 shield block 事件源，用于支持盾牌格挡弹射物类进度。
-- 新增 `minecraft:item_used_on_block` 的窄实现与 respawn anchor 充能事件源，用于支持 `nether/charge_respawn_anchor`。
+- 新增并扩展 `minecraft:item_used_on_block` 的窄实现，用于支持 `nether/charge_respawn_anchor`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`；当前实现直接监听 LeviLamina `PlayerInteractBlockEvent` 并在 trigger 内做分支窄判定。
 - 新增 `husbandry/leash_all_frog_variants` 数据、文案与 `minecraft:player_interacted_with_entity` 的窄实现；当前仅支持玩家手持 `lead` 成功拴住三种青蛙变体的本地形状。
 - 新增一批独立 runtime event source，并将物品、玩家、实体、方块相关触发器逐步接入事件层。
 
