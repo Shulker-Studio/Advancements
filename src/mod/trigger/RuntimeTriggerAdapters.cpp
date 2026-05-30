@@ -141,10 +141,11 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                 );
             } else if constexpr (std::is_same_v<Payload, LootTablePayload>) {
                 logger.debug(
-                    "Advancements debug: trigger={} player={} loot_table={}",
+                    "Advancements debug: trigger={} player={} loot_table={} generated_items={}",
                     context.triggerId,
                     context.player.getRealName(),
-                    payload.lootTableId
+                    payload.lootTableId,
+                    payload.generatedItemIds.size()
                 );
             } else if constexpr (std::is_same_v<Payload, PlayerHurtEntityPayload>) {
                 logger.debug(

@@ -27,7 +27,7 @@ void registerPlayerGeneratedContainerLootTrigger(Entry& mod) {
                 TriggerContext{
                     event.player(),
                     "minecraft:player_generates_container_loot",
-                    LootTablePayload{event.lootTableId()},
+                    LootTablePayload{event.lootTableId(), event.generatedItemIds()},
                 }
             );
         });

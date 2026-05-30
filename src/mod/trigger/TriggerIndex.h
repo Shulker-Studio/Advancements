@@ -82,7 +82,8 @@ struct BeeNestDestroyedPayload {
 };
 
 struct LootTablePayload {
-    std::string lootTableId;
+    std::string              lootTableId;
+    std::vector<std::string> generatedItemIds;
 };
 
 struct PlayerHurtEntityPayload {
@@ -212,6 +213,7 @@ struct ConstructBeaconTriggerCondition {
 
 struct LootTableCondition {
     std::string lootTableId;
+    bool        requirePotterySherdGenerated;
 };
 
 struct VillagerTradeCondition {
