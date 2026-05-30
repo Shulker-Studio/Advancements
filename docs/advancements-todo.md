@@ -44,7 +44,7 @@
 - `minecraft:construct_beacon`
 - `minecraft:effects_changed`
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
-- `minecraft:item_used_on_block`（当前窄实现：覆盖重生锚、草甸唱片机、点亮铜灯刮削、蜂蜜采集、铜方块上蜡/脱蜡、告示牌发光等本地 partial slices）
+- `minecraft:item_used_on_block`（当前窄实现：覆盖重生锚、磁石指南针、草甸唱片机、点亮铜灯刮削、蜂蜜采集、铜方块上蜡/脱蜡、告示牌发光等本地 partial slices）
 - `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
 - `minecraft:bee_nest_destroyed`（当前窄实现：仅 `husbandry/silk_touch_nest` 已核形状）
@@ -87,7 +87,7 @@
 | `impossible` | missing-trigger | 可后续纯数据实现 |
 | `inventory_changed` | partial | 当前实现支持 `item` + `count`，并新增窄形状 `required_items` 供 `husbandry/froglights` 检查“当前物品栏同时拥有多种指定物品”；不泛化槽位、NBT 或更复杂 inventory predicate |
 | `item_durability_changed` | missing-trigger | |
-| `item_used_on_block` | partial | 当前窄实现覆盖 `nether/charge_respawn_anchor`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow` 的本地 shape；trigger 直接监听 LeviLamina `ll::event::player::PlayerInteractBlockEvent`，使用 `EventPriority::Lowest` 让更早的取消逻辑先运行；由于该 LL 事件在 `GameMode::$useItemOn` 原始逻辑前发布，runtime 只在每个 advancement 的窄分支中派发，不做泛化 block-use 派发。 |
+| `item_used_on_block` | partial | 当前窄实现覆盖 `nether/charge_respawn_anchor`、`nether/use_lodestone`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow` 的本地 shape；trigger 直接监听 LeviLamina `ll::event::player::PlayerInteractBlockEvent`，使用 `EventPriority::Lowest` 让更早的取消逻辑先运行；由于该 LL 事件在 `GameMode::$useItemOn` 原始逻辑前发布，runtime 只在每个 advancement 的窄分支中派发，不做泛化 block-use 派发。 |
 | `kill_mob_near_sculk_catalyst` | done | 当前窄实现：hook `SculkCatalystBlockActor::_tryConsumeOnDeathExperience(Level&, Actor&)`，用 `Actor::getLastHurtByPlayer()` 解析 `mLastHurtByPlayerId` 玩家归因，并通过同一调用内的 `SculkSpreader::addCursors(charge > 0)` 与 XP drop 被关闭确认幽匿催发体已消费死亡经验；使用无条件 descriptor，对应原版无 conditions JSON；live-server QA 已验证玩家在幽匿催发体附近击杀 skeleton 可完成，命令击杀未误触发 |
 | `killed_by_arrow` | missing-trigger | |
 | `levitation` | done | 当前窄实现：基于 `Player::$tickWorld` 观察玩家 `MobEffect::LEVITATION()` 状态，仅支持已核 wiki 语义/本地 JSON 形状 `conditions.distance.y.min = 50.0`；效果开始时记录起始 Y，效果结束时用结束 Y 结算一次绝对垂直位移；仍需 live-server QA 验证潜影贝弹丸给予的 Bedrock levitation 状态与 Java 完成时机严格对齐 |
@@ -166,11 +166,11 @@
 | `nether/ride_strider_in_overworld_lava` | `ride_entity_in_lava` | missing-trigger | |
 | `nether/distract_piglin` | interaction / inventory family | missing-trigger | |
 | `nether/loot_bastion` | `player_generates_container_loot` | done | 已核原版 JSON：父级 `minecraft:nether/find_bastion`，四个 bastion chest loot table 条件，OR requirements；当前窄 runtime 仅覆盖这四个 loot table |
-| `nether/use_lodestone` | location / use item family | missing-trigger | |
+| `nether/use_lodestone` | `item_used_on_block` / 磁石指南针窄切片 | done | 已补本地 JSON + lang；criterion `use_lodestone` 使用 `minecraft:item_used_on_block` + `item = minecraft:compass` + `block = minecraft:lodestone`；复用现有 `ItemUsedOnBlockTrigger` 白名单路径，live-server QA 已验证对磁石使用指南针可完成；1.21.4 raw JSON 位于 Nether，1.21.5 wiki 已移动到 Adventure。 |
 | `nether/obtain_crying_obsidian` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed` |
 | `nether/charge_respawn_anchor` | `item_used_on_block` / 重生锚直接交互窄切片 | done | 数据已补齐且保持窄实现：criterion `charge_respawn_anchor` 使用 `minecraft:item_used_on_block` + `item = minecraft:glowstone` + `block = minecraft:respawn_anchor`；runtime 现在由 `ItemUsedOnBlockTrigger` 直接监听 LeviLamina `PlayerInteractBlockEvent` / `GameMode::$useItemOn` seam，并以 Lowest 优先级运行；pre-origin caveat：当前在使用前 `RespawnAnchorCharge == 3` 时派发，该条件应对应一次被接受的荧石使用并充至满格。 |
 
-当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`fast_travel` 已作为 `nether_travel` 窄切片补齐；`summon_wither` 已作为 `summoned_entity` 凋灵窄切片补齐；`charge_respawn_anchor` 已作为 `item_used_on_block` / `_bumpCharge` 满充能窄切片补齐；`all_potions` 已作为 `effects_changed` 的 17 效果快照窄切片补齐；`all_effects` 已按当前项目定义作为“排除 `glowing` / `dolphins_grace` 的 Bedrock 子集”补齐。
+当前总评：多数 `nether/*` 仍是 `missing-trigger`；纯“获得某物”型条目已有一批通过 `inventory_changed` 补齐，包含 `obtain_crying_obsidian`；`return_to_sender` 已作为 `player_killed_entity` 的恶魂火球窄切片补齐；`fast_travel` 已作为 `nether_travel` 窄切片补齐；`summon_wither` 已作为 `summoned_entity` 凋灵窄切片补齐；`charge_respawn_anchor` 已作为 `item_used_on_block` / `_bumpCharge` 满充能窄切片补齐；`use_lodestone` 已作为 `item_used_on_block` 的 compass + lodestone 窄切片补齐并通过 live-server QA；`all_potions` 已作为 `effects_changed` 的 17 效果快照窄切片补齐；`all_effects` 已按当前项目定义作为“排除 `glowing` / `dolphins_grace` 的 Bedrock 子集”补齐。
 
 ## End Vanilla Inventory
 

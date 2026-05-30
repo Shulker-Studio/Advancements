@@ -56,7 +56,7 @@
 - `minecraft:brewed_potion`（当前为窄实现，仅从酿造台输出槽成功取物）
 - `minecraft:construct_beacon`（当前为窄实现，仅 `nether/create_beacon` / `nether/create_full_beacon`）
 - `minecraft:enter_block`（当前为窄实现，仅 `end/enter_end_gateway`）
-- `minecraft:item_used_on_block`（当前为窄实现，覆盖 `nether/charge_respawn_anchor`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`）
+- `minecraft:item_used_on_block`（当前为窄实现，覆盖 `nether/charge_respawn_anchor`、`nether/use_lodestone`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`）
 - `minecraft:player_interacted_with_entity`（当前为窄实现，仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
