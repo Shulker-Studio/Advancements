@@ -45,6 +45,7 @@ constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:player_hurt_entity", compilePlayerHurtEntityCondition, matchesPlayerHurtEntityCondition},
     {"minecraft:player_interacted_with_entity", compilePlayerInteractedWithEntityCondition, matchesPlayerInteractedWithEntityCondition},
     {"minecraft:player_killed_entity", compilePlayerKilledEntityCondition, matchesPlayerKilledEntityCondition},
+    {"minecraft:placed_block", compileBlockCondition, matchesBlockCondition},
     {"minecraft:shot_crossbow", compileShotCrossbowCondition, matchesSimpleItemCondition},
     {"minecraft:slept_in_bed", compileNoCondition, matchesNoCondition},
     {"minecraft:summoned_entity", compileSummonedEntityCondition, matchesEntityCondition},

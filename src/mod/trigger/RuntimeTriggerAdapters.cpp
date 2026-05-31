@@ -50,6 +50,7 @@
 #include "mod/trigger/triggers/LevitationTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/NetherTravelTrigger.h"
+#include "mod/trigger/triggers/PlacedBlockTrigger.h"
 #include "mod/trigger/triggers/PlayerGeneratedContainerLootTrigger.h"
 #include "mod/trigger/triggers/PlayerInteractedWithEntityTrigger.h"
 #include "mod/trigger/triggers/PlayerKilledEntityTrigger.h"
@@ -226,6 +227,7 @@ bool anyRuntimeRegistered() {
         || playerGeneratedContainerLootTriggerRegistered()
         || enterBlockTriggerRegistered()
         || itemUsedOnBlockTriggerRegistered()
+        || placedBlockTriggerRegistered()
         || constructBeaconTriggerRegistered()
         || beeNestDestroyedTriggerRegistered()
         || killMobNearSculkCatalystTriggerRegistered()
@@ -329,6 +331,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerEnterBlockTrigger(mod);
     registerEffectsChangedTrigger(mod);
     registerItemUsedOnBlockTrigger(mod);
+    registerPlacedBlockTrigger(mod);
     registerInventoryChangedTrigger(mod);
     registerFilledBucketTrigger(mod);
     registerFishingRodHookedTrigger(mod);
@@ -364,6 +367,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterEnterBlockTrigger();
     unregisterEffectsChangedTrigger();
     unregisterItemUsedOnBlockTrigger();
+    unregisterPlacedBlockTrigger();
     unregisterInventoryChangedTrigger();
     unregisterFilledBucketTrigger();
     unregisterFishingRodHookedTrigger();

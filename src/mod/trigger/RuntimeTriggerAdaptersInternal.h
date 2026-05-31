@@ -125,6 +125,10 @@ bool itemUsedOnBlockTriggerRegistered();
 void registerItemUsedOnBlockTrigger(Entry& mod);
 void unregisterItemUsedOnBlockTrigger();
 
+bool placedBlockTriggerRegistered();
+void registerPlacedBlockTrigger(Entry& mod);
+void unregisterPlacedBlockTrigger();
+
 bool constructBeaconTriggerRegistered();
 void registerConstructBeaconTrigger(Entry& mod);
 void unregisterConstructBeaconTrigger();
