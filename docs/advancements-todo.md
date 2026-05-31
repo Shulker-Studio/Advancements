@@ -45,6 +45,7 @@
 - `minecraft:effects_changed`
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
 - `minecraft:item_used_on_block`（当前窄实现：覆盖重生锚、磁石指南针、草甸唱片机、点亮铜灯刮削、蜂蜜采集、铜方块上蜡/脱蜡、告示牌发光等本地 partial slices）
+- `minecraft:placed_block`（当前窄实现：仅 `adventure/read_power_of_chiseled_bookshelf` 的放置雕纹书架到已有比较器旁路径）
 - `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
 - `minecraft:bee_nest_destroyed`（当前窄实现：仅 `husbandry/silk_touch_nest` 已核形状）
@@ -94,7 +95,7 @@
 | `lightning_strike` | missing-trigger | |
 | `location` | partial | 当前窄实现：仅支持已核原版 JSON 的 `conditions.player[0].predicate.location.structures` 结构进入条件，覆盖 bastion、fortress、end_city、stronghold、trial_chambers；按 location 语义每 20 tick 轮询，不支持 biome、y-position、维度或通用 location predicate |
 | `nether_travel` | done | 当前窄实现：仅支持已核原版 `nether/fast_travel` 形状 `conditions.distance.horizontal.min`；runtime 在玩家从主世界进入下界前记录主世界水平起点，并在从下界返回主世界时按主世界水平距离触发；未泛化 `distance` 其他子键 |
-| `placed_block` | missing-trigger | |
+| `placed_block` | partial | 当前窄实现：直接监听 LeviLamina `PlayerPlacedBlockEvent` post-placement 事件，仅覆盖 `adventure/read_power_of_chiseled_bookshelf` 中“放置雕纹书架到已有背面朝向它的比较器旁边”这一条路径；不支持放置比较器触发，不泛化完整 Java `location` 条件、方块谓词或其他 placed block advancement。 |
 | `player_generates_container_loot` | partial | 当前窄实现：基于 `Util::LootTableUtils::fillContainer`，支持玩家作为 loot context entity 生成的四个 bastion chest loot table；另通过 `BrushItem::$_useOn` 调用栈中的当前玩家归因支持 `adventure/salvage_sherd` 的 6 个 archaeology brushable loot table，并要求本次生成物品为 `*_pottery_sherd`；不泛化其他 loot table context、掉落完成时机或完整 Java loot predicate |
 | `player_hurt_entity` | done | 当前窄实现：基于 `ll::event::ActorHurtEvent`，仅支持 `damage.type.direct_entity.type = #minecraft:arrows` + `damage.type.tags` 含 `minecraft:is_projectile` 这一已核 condition surface |
 | `player_interacted_with_entity` | partial | 当前窄实现：仅支持 `husbandry/leash_all_frog_variants` 已核 shape（玩家成功使用 `minecraft:lead` 与 `minecraft:frog` 交互，并按 `Actor::getVariant()` 的 Bedrock 取值 `0=temperate` / `1=cold` / `2=warm` 匹配三种青蛙变种）；不泛化其他 entity/item/type_specific 条件 |
@@ -215,7 +216,7 @@
 | `adventure/play_jukebox_in_meadows` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 在玩家用唱片对空唱片机交互且唱片机位于 meadow biome 时派发，支持本地列出的 music disc ID；pre-origin caveat：仍需 live-server QA 验证唱片机成功插入/播放时机与所有 Bedrock 唱片 ID。 |
 | `adventure/fall_from_world_height` | `fall_from_height` | missing-trigger | |
 | `adventure/trim_with_any_armor_pattern` | other | missing-trigger | |
-| `adventure/read_power_of_chiseled_bookshelf` | other | missing-trigger | |
+| `adventure/read_power_of_chiseled_bookshelf` | `placed_block` | partial | 已补本地 JSON + lang；runtime 使用 `PlayerPlacedBlockEvent`，仅在玩家放置雕纹书架且邻近已有背面朝向它的比较器时派发；暂不支持“先放书架、再放比较器”的原版另一条路径；当前匹配 Bedrock `minecraft:cardinal_direction`，并保留 legacy `direction` fallback；仍需 live-server QA 验证 Bedrock comparator block id/state 与原版完成时机。 |
 | `adventure/craft_decorated_pot_using_only_sherds` | other | missing-trigger | |
 | `adventure/caves_and_cliffs` | `fall_from_height` / location family | missing-trigger | |
 | `adventure/trim_with_all_exclusive_armor_patterns` | other | missing-trigger | |

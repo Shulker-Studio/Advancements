@@ -57,6 +57,7 @@
 - `minecraft:construct_beacon`（当前为窄实现，仅 `nether/create_beacon` / `nether/create_full_beacon`）
 - `minecraft:enter_block`（当前为窄实现，仅 `end/enter_end_gateway`）
 - `minecraft:item_used_on_block`（当前为窄实现，覆盖 `nether/charge_respawn_anchor`、`nether/use_lodestone`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`）
+- `minecraft:placed_block`（当前为窄实现，仅 `adventure/read_power_of_chiseled_bookshelf` 的放置雕纹书架到已有比较器旁路径）
 - `minecraft:player_interacted_with_entity`（当前为窄实现，仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:villager_trade`
 - `minecraft:enchanted_item`
