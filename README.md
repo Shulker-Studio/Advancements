@@ -57,6 +57,7 @@
 - `minecraft:construct_beacon`（当前为窄实现，仅 `nether/create_beacon` / `nether/create_full_beacon`）
 - `minecraft:enter_block`（当前为窄实现，仅 `end/enter_end_gateway`）
 - `minecraft:item_used_on_block`（当前为窄实现，覆盖 `nether/charge_respawn_anchor`、`nether/use_lodestone`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`）
+- `minecraft:thrown_item_picked_up_by_entity`（当前为窄实现，仅覆盖 `nether/distract_piglin` 的玩家丢出金质物品后猪灵开始欣赏路径；手持金锭直接交互仍未覆盖）
 - `minecraft:placed_block`（当前为窄实现，仅 `adventure/read_power_of_chiseled_bookshelf` 的放置雕纹书架到已有比较器旁路径）
 - `minecraft:player_interacted_with_entity`（当前为窄实现，仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:villager_trade`
