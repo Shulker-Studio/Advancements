@@ -16,6 +16,7 @@
 #include "mod/event/item/PlayerConsumedItemEvent.h"
 #include "mod/event/item/PlayerFilledBucketEvent.h"
 #include "mod/event/item/PlayerInventoryChangedEvent.h"
+#include "mod/event/item/PlayerPiglinAdmireItemEvent.h"
 #include "mod/event/item/PlayerShotCrossbowEvent.h"
 #include "mod/event/player/PlayerBlockUsingShieldEvent.h"
 #include "mod/event/player/PlayerCuredZombieVillagerEvent.h"
@@ -50,6 +51,7 @@
 #include "mod/trigger/triggers/LevitationTrigger.h"
 #include "mod/trigger/triggers/LocationTrigger.h"
 #include "mod/trigger/triggers/NetherTravelTrigger.h"
+#include "mod/trigger/triggers/PiglinAdmireItemTrigger.h"
 #include "mod/trigger/triggers/PlacedBlockTrigger.h"
 #include "mod/trigger/triggers/PlayerGeneratedContainerLootTrigger.h"
 #include "mod/trigger/triggers/PlayerInteractedWithEntityTrigger.h"
@@ -100,6 +102,14 @@ void logTriggerDispatch(Entry& mod, TriggerContext const& context) {
                     context.player.getRealName(),
                     payload.itemId,
                     payload.blockId
+                );
+            } else if constexpr (std::is_same_v<Payload, PiglinAdmireItemPayload>) {
+                logger.debug(
+                    "Advancements debug: trigger={} player={} item={} targeting_barter_player={}",
+                    context.triggerId,
+                    context.player.getRealName(),
+                    payload.itemId,
+                    payload.wasTargetingBarteringPlayer
                 );
             } else if constexpr (std::is_same_v<Payload, ItemTriggerPayload>) {
                 logger.debug(
@@ -227,12 +237,14 @@ bool anyRuntimeRegistered() {
         || playerGeneratedContainerLootTriggerRegistered()
         || enterBlockTriggerRegistered()
         || itemUsedOnBlockTriggerRegistered()
+        || piglinAdmireItemTriggerRegistered()
         || placedBlockTriggerRegistered()
         || constructBeaconTriggerRegistered()
         || beeNestDestroyedTriggerRegistered()
         || killMobNearSculkCatalystTriggerRegistered()
         || event::item::playerConsumedItemEventSourceRegistered()
         || event::item::playerInventoryChangedEventSourceRegistered()
+        || event::item::playerPiglinAdmireItemEventSourceRegistered()
         || event::item::playerFilledBucketEventSourceRegistered()
         || event::item::fishingRodHookedItemEventSourceRegistered()
         || event::item::playerGeneratedContainerLootEventSourceRegistered()
@@ -291,6 +303,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerGeneratedContainerLootEventSource();
     event::item::registerPlayerConsumedItemEventSource();
     event::item::registerPlayerInventoryChangedEventSource();
+    event::item::registerPlayerPiglinAdmireItemEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
     event::entity::registerPlayerBredAnimalsEventSource();
     event::entity::registerPlayerProjectileLightningHitEventSource();
@@ -331,6 +344,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerEnterBlockTrigger(mod);
     registerEffectsChangedTrigger(mod);
     registerItemUsedOnBlockTrigger(mod);
+    registerPiglinAdmireItemTrigger(mod);
     registerPlacedBlockTrigger(mod);
     registerInventoryChangedTrigger(mod);
     registerFilledBucketTrigger(mod);
@@ -367,6 +381,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterEnterBlockTrigger();
     unregisterEffectsChangedTrigger();
     unregisterItemUsedOnBlockTrigger();
+    unregisterPiglinAdmireItemTrigger();
     unregisterPlacedBlockTrigger();
     unregisterInventoryChangedTrigger();
     unregisterFilledBucketTrigger();
@@ -387,6 +402,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerGeneratedContainerLootEventSource();
     event::item::unregisterPlayerConsumedItemEventSource();
     event::item::unregisterPlayerInventoryChangedEventSource();
+    event::item::unregisterPlayerPiglinAdmireItemEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
     event::entity::unregisterPlayerBredAnimalsEventSource();
     event::entity::unregisterPlayerProjectileLightningHitEventSource();
