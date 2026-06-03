@@ -114,6 +114,46 @@ TriggerCondition compileItemUsedOnBlockCondition(nlohmann::json const& condition
     }
     return ItemUsedOnBlockCondition{std::move(itemIds), std::move(blockIds)};
 }
+
+TriggerCondition compilePiglinAdmireItemCondition(nlohmann::json const& conditions) {
+    if (!hasOnlyKeys(conditions, {"item", "items", "was_targeting_bartering_player"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    std::vector<std::string> itemIds;
+    if (conditions.contains("item")) {
+        if (conditions.contains("items") || !conditions.at("item").is_string()) {
+            return InvalidTriggerCondition{};
+        }
+        itemIds.push_back(conditions.at("item").get<std::string>());
+    } else if (conditions.contains("items")) {
+        if (!conditions.at("items").is_array()) {
+            return InvalidTriggerCondition{};
+        }
+        for (auto const& item : conditions.at("items")) {
+            if (!item.is_string()) {
+                return InvalidTriggerCondition{};
+            }
+            itemIds.push_back(item.get<std::string>());
+        }
+    } else {
+        return InvalidTriggerCondition{};
+    }
+
+    std::optional<bool> wasTargetingBarteringPlayer;
+    if (conditions.contains("was_targeting_bartering_player")) {
+        if (!conditions.at("was_targeting_bartering_player").is_boolean()) {
+            return InvalidTriggerCondition{};
+        }
+        wasTargetingBarteringPlayer = conditions.at("was_targeting_bartering_player").get<bool>();
+    }
+
+    if (itemIds.empty()) {
+        return InvalidTriggerCondition{};
+    }
+    return PiglinAdmireItemCondition{std::move(itemIds), wasTargetingBarteringPlayer};
+}
+
 TriggerCondition compileShotCrossbowCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"item"})) {
         return InvalidTriggerCondition{};
@@ -191,6 +231,21 @@ bool matchesItemUsedOnBlockCondition(TriggerCondition const& condition, TriggerC
     }
     return std::ranges::find(compiled->itemIds, payload->itemId) != compiled->itemIds.end()
         && std::ranges::find(compiled->blockIds, payload->blockId) != compiled->blockIds.end();
+}
+
+bool matchesPiglinAdmireItemCondition(TriggerCondition const& condition, TriggerContext const& context) {
+    auto const* compiled = std::get_if<PiglinAdmireItemCondition>(&condition);
+    auto const* payload  = payloadAs<PiglinAdmireItemPayload>(context);
+    if (compiled == nullptr || payload == nullptr) {
+        return false;
+    }
+    if (std::ranges::find(compiled->itemIds, payload->itemId) == compiled->itemIds.end()) {
+        return false;
+    }
+    if (!compiled->wasTargetingBarteringPlayer) {
+        return true;
+    }
+    return payload->wasTargetingBarteringPlayer == *compiled->wasTargetingBarteringPlayer;
 }
 
 bool matchesVillagerTradeCondition(TriggerCondition const& condition, TriggerContext const& context) {

@@ -53,6 +53,11 @@ struct ItemUsedOnBlockPayload {
     std::string blockId;
 };
 
+struct PiglinAdmireItemPayload {
+    std::string itemId;
+    bool        wasTargetingBarteringPlayer;
+};
+
 struct DimensionTriggerPayload {
     std::string fromDimension;
     std::string toDimension;
@@ -122,6 +127,7 @@ using TriggerPayload = std::variant<
     BlockTriggerPayload,
     EnterBlockPayload,
     ItemUsedOnBlockPayload,
+    PiglinAdmireItemPayload,
     DimensionTriggerPayload,
     LocationStructurePayload,
     NetherTravelTriggerPayload,
@@ -184,6 +190,11 @@ struct EnterBlockCondition {
 struct ItemUsedOnBlockCondition {
     std::vector<std::string> itemIds;
     std::vector<std::string> blockIds;
+};
+
+struct PiglinAdmireItemCondition {
+    std::vector<std::string> itemIds;
+    std::optional<bool>      wasTargetingBarteringPlayer;
 };
 
 struct DimensionTriggerCondition {
@@ -266,6 +277,7 @@ using TriggerCondition = std::variant<
     BlockTriggerCondition,
     EnterBlockCondition,
     ItemUsedOnBlockCondition,
+    PiglinAdmireItemCondition,
     DimensionTriggerCondition,
     LocationStructureCondition,
     NetherTravelTriggerCondition,
