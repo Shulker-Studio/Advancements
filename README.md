@@ -59,6 +59,7 @@
 - `minecraft:item_used_on_block`（当前为窄实现，覆盖 `nether/charge_respawn_anchor`、`nether/use_lodestone`、`adventure/play_jukebox_in_meadows`、`adventure/lighten_up`、`husbandry/safely_harvest_honey`、`husbandry/wax_on`、`husbandry/wax_off`、`husbandry/make_a_sign_glow`）
 - `minecraft:thrown_item_picked_up_by_entity`（当前为窄实现，仅覆盖 `nether/distract_piglin` 的玩家丢出金质物品后猪灵开始欣赏路径；手持金锭直接交互仍未覆盖）
 - `minecraft:thrown_item_picked_up_by_player`（当前为窄实现，仅覆盖 `husbandry/allay_deliver_item_to_player` 的悦灵向主人投递物品路径）
+- `minecraft:allay_drop_item_on_block`（当前为窄实现，仅覆盖 `husbandry/allay_deliver_cake_to_note_block` 的悦灵持有蛋糕并 tick 到音符盒目标路径；接受 Bedrock `minecraft:noteblock` 并归一化为 `minecraft:note_block`；同一悦灵/目标音符盒只派发一次）
 - `minecraft:placed_block`（当前为窄实现，仅 `adventure/read_power_of_chiseled_bookshelf` 的放置雕纹书架到已有比较器旁路径）
 - `minecraft:player_interacted_with_entity`（当前为窄实现，仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:villager_trade`
