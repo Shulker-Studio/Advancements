@@ -1,0 +1,58 @@
+{
+  "format_version": "1.0.0",
+  "parent": "minecraft:nether/root",
+  "display": {
+    "title": {
+      "translate": "advancements.nether.distract_piglin.title"
+    },
+    "description": {
+      "translate": "advancements.nether.distract_piglin.description"
+    },
+    "icon": {
+      "item": "minecraft:gold_ingot"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "distract_piglin": {
+      "trigger": "minecraft:thrown_item_picked_up_by_entity",
+      "conditions": {
+        "items": [
+          "minecraft:bell",
+          "minecraft:gold_block",
+          "minecraft:raw_gold_block",
+          "minecraft:clock",
+          "minecraft:deepslate_gold_ore",
+          "minecraft:enchanted_golden_apple",
+          "minecraft:gilded_blackstone",
+          "minecraft:glistering_melon_slice",
+          "minecraft:gold_ingot",
+          "minecraft:gold_ore",
+          "minecraft:golden_apple",
+          "minecraft:golden_axe",
+          "minecraft:golden_boots",
+          "minecraft:golden_carrot",
+          "minecraft:golden_chestplate",
+          "minecraft:yellow_flower",
+          "minecraft:golden_helmet",
+          "minecraft:golden_hoe",
+          "minecraft:golden_horse_armor",
+          "minecraft:golden_leggings",
+          "minecraft:golden_nautilus_armor",
+          "minecraft:golden_pickaxe",
+          "minecraft:golden_shovel",
+          "minecraft:golden_spear",
+          "minecraft:golden_sword",
+          "minecraft:light_weighted_pressure_plate",
+          "minecraft:nether_gold_ore",
+          "minecraft:raw_gold"
+        ],
+        "was_targeting_bartering_player": false
+      }
+    }
+  },
+  "requirements": [["distract_piglin"]]
+}
