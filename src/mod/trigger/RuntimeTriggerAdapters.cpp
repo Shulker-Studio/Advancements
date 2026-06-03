@@ -6,6 +6,7 @@
 #include "mod/event/block/WitherSummonedEvent.h"
 #include "mod/event/block/BeaconLevelChangedEvent.h"
 #include "mod/event/block/SculkCatalystMobKilledEvent.h"
+#include "mod/event/entity/PlayerAllayDroppedItemOnBlockEvent.h"
 #include "mod/event/entity/PlayerAllayDeliveredItemEvent.h"
 #include "mod/event/entity/PlayerBredAnimalsEvent.h"
 #include "mod/event/entity/PlayerProjectileLightningHitEvent.h"
@@ -30,6 +31,7 @@
 #include "mod/event/player/PlayerTickEvent.h"
 #include "mod/event/player/PlayerUsedTotemEvent.h"
 #include "mod/trigger/RuntimeTriggerAdaptersInternal.h"
+#include "mod/trigger/triggers/AllayDropItemOnBlockTrigger.h"
 #include "mod/trigger/triggers/AllayDeliveredItemTrigger.h"
 #include "mod/trigger/TriggerDispatcher.h"
 #include "mod/trigger/triggers/BredAnimalsTrigger.h"
@@ -229,7 +231,8 @@ bool anyRuntimeRegistered() {
         || summonedEntityTriggerRegistered()
         || playerInteractedWithEntityTriggerRegistered()
         || curedZombieVillagerTriggerRegistered()
-        || bredAnimalsTriggerRegistered() || tameAnimalTriggerRegistered() || allayDeliveredItemTriggerRegistered()
+        || bredAnimalsTriggerRegistered() || tameAnimalTriggerRegistered() || allayDropItemOnBlockTriggerRegistered()
+        || allayDeliveredItemTriggerRegistered()
         || entityHurtPlayerTriggerRegistered() || entityKilledPlayerTriggerRegistered() || playerHurtEntityTriggerRegistered()
         || playerKilledEntityTriggerRegistered() || targetHitTriggerRegistered() || brewedPotionTriggerRegistered()
         || enchantedItemTriggerRegistered() || villagerTradeTriggerRegistered() || usedTotemTriggerRegistered()
@@ -252,6 +255,7 @@ bool anyRuntimeRegistered() {
         || event::item::playerGeneratedContainerLootEventSourceRegistered()
         || event::item::playerShotCrossbowEventSourceRegistered()
         || event::item::containerOutputTakenEventSourceRegistered() || event::item::enchantedItemEventSourceRegistered()
+        || event::entity::playerAllayDroppedItemOnBlockEventSourceRegistered()
         || event::entity::playerAllayDeliveredItemEventSourceRegistered()
         || event::player::playerBlockUsingShieldEventSourceRegistered()
         || event::player::playerCuredZombieVillagerEventSourceRegistered()
@@ -309,6 +313,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     event::item::registerPlayerPiglinAdmireItemEventSource();
     event::item::registerPlayerShotCrossbowEventSource();
     event::entity::registerPlayerBredAnimalsEventSource();
+    event::entity::registerPlayerAllayDroppedItemOnBlockEventSource();
     event::entity::registerPlayerAllayDeliveredItemEventSource();
     event::entity::registerPlayerProjectileLightningHitEventSource();
     event::entity::registerPlayerTamedAnimalEventSource();
@@ -337,6 +342,7 @@ void registerRuntimeTriggerAdapters(Entry& mod) {
     registerCuredZombieVillagerTrigger(mod);
     registerBredAnimalsTrigger(mod);
     registerTameAnimalTrigger(mod);
+    registerAllayDropItemOnBlockTrigger(mod);
     registerAllayDeliveredItemTrigger(mod);
     registerPlayerKilledEntityTrigger(mod);
     registerPlayerHurtEntityTrigger(mod);
@@ -375,6 +381,7 @@ void unregisterRuntimeTriggerAdapters() {
     unregisterCuredZombieVillagerTrigger();
     unregisterBredAnimalsTrigger();
     unregisterTameAnimalTrigger();
+    unregisterAllayDropItemOnBlockTrigger();
     unregisterAllayDeliveredItemTrigger();
     unregisterPlayerKilledEntityTrigger();
     unregisterPlayerHurtEntityTrigger();
@@ -411,6 +418,7 @@ void unregisterRuntimeTriggerAdapters() {
     event::item::unregisterPlayerPiglinAdmireItemEventSource();
     event::item::unregisterPlayerShotCrossbowEventSource();
     event::entity::unregisterPlayerBredAnimalsEventSource();
+    event::entity::unregisterPlayerAllayDroppedItemOnBlockEventSource();
     event::entity::unregisterPlayerAllayDeliveredItemEventSource();
     event::entity::unregisterPlayerProjectileLightningHitEventSource();
     event::entity::unregisterPlayerTamedAnimalEventSource();

@@ -53,6 +53,10 @@ bool allayDeliveredItemTriggerRegistered();
 void registerAllayDeliveredItemTrigger(Entry& mod);
 void unregisterAllayDeliveredItemTrigger();
 
+bool allayDropItemOnBlockTriggerRegistered();
+void registerAllayDropItemOnBlockTrigger(Entry& mod);
+void unregisterAllayDropItemOnBlockTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();
