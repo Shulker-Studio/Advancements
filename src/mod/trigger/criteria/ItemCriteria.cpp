@@ -11,6 +11,9 @@
 namespace advancements::criteria {
 namespace {
 
+constexpr auto CakeId = "minecraft:cake";
+constexpr auto NoteBlockId = "minecraft:note_block";
+
 TriggerCondition compileRequiredInventoryItemsCondition(nlohmann::json const& conditions) {
     if (!hasOnlyKeys(conditions, {"required_items"})) {
         return InvalidTriggerCondition{};
@@ -113,6 +116,24 @@ TriggerCondition compileItemUsedOnBlockCondition(nlohmann::json const& condition
         return InvalidTriggerCondition{};
     }
     return ItemUsedOnBlockCondition{std::move(itemIds), std::move(blockIds)};
+}
+
+TriggerCondition compileAllayDropItemOnBlockCondition(nlohmann::json const& conditions) {
+    if (conditions.empty()) {
+        return ItemUsedOnBlockCondition{{CakeId}, {NoteBlockId}};
+    }
+    if (!hasOnlyKeys(conditions, {"item", "block"})) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("item") || !conditions.at("item").is_string() || conditions.at("item").get<std::string>() != CakeId) {
+        return InvalidTriggerCondition{};
+    }
+    if (!conditions.contains("block") || !conditions.at("block").is_string()
+        || conditions.at("block").get<std::string>() != NoteBlockId) {
+        return InvalidTriggerCondition{};
+    }
+
+    return ItemUsedOnBlockCondition{{CakeId}, {NoteBlockId}};
 }
 
 TriggerCondition compilePiglinAdmireItemCondition(nlohmann::json const& conditions) {

@@ -36,6 +36,7 @@ constexpr TriggerRegistration MigratedDescriptors[]{
     {"minecraft:filled_bucket", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:fishing_rod_hooked", compileSimpleItemCondition, matchesSimpleItemCondition},
     {"minecraft:inventory_changed", compileInventoryItemCondition, matchesInventoryItemCondition},
+    {"minecraft:allay_drop_item_on_block", compileAllayDropItemOnBlockCondition, matchesItemUsedOnBlockCondition},
     {"minecraft:item_used_on_block", compileItemUsedOnBlockCondition, matchesItemUsedOnBlockCondition},
     {"minecraft:kill_mob_near_sculk_catalyst", compileNoCondition, matchesNoCondition},
     {"minecraft:levitation", compileLevitationCondition, matchesLevitationCondition},
