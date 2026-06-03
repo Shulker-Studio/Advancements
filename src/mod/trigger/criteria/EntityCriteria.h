@@ -10,6 +10,7 @@ TriggerCondition compilePlayerKilledEntityCondition(nlohmann::json const& condit
 TriggerCondition compileSummonedEntityCondition(nlohmann::json const& conditions);
 TriggerCondition compileBredAnimalsCondition(nlohmann::json const& conditions);
 TriggerCondition compileTameAnimalCondition(nlohmann::json const& conditions);
+TriggerCondition compileAllayDeliveredItemCondition(nlohmann::json const& conditions);
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context);
 bool matchesPlayerInteractedWithEntityCondition(TriggerCondition const& condition, TriggerContext const& context);
 bool matchesPlayerKilledEntityCondition(TriggerCondition const& condition, TriggerContext const& context);

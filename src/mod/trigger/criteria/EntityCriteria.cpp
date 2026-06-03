@@ -324,6 +324,31 @@ TriggerCondition compileTameAnimalCondition(nlohmann::json const& conditions) {
     return TameAnimalCondition{entityTypeId, entityVariantId};
 }
 
+TriggerCondition compileAllayDeliveredItemCondition(nlohmann::json const& conditions) {
+    if (conditions.empty()) {
+        return EntityTriggerCondition{"minecraft:allay"};
+    }
+    if (!hasOnlyKeys(conditions, {"entity"})) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const entityPredicate = predicate::parseSingleThisEntityPredicateRoot(conditions, "entity");
+    if (!entityPredicate) {
+        return InvalidTriggerCondition{};
+    }
+
+    auto const& entityPredicateJson = **entityPredicate;
+    if (!hasOnlyKeys(entityPredicateJson, {"type"})) {
+        return InvalidTriggerCondition{};
+    }
+    auto const entityTypeId = predicate::parseEntityTypePredicate(entityPredicateJson);
+    if (!entityTypeId) {
+        return InvalidTriggerCondition{};
+    }
+
+    return EntityTriggerCondition{*entityTypeId};
+}
+
 bool matchesEntityCondition(TriggerCondition const& condition, TriggerContext const& context) {
     auto const* compiled = std::get_if<EntityTriggerCondition>(&condition);
     auto const* payload  = payloadAs<EntityTriggerPayload>(context);

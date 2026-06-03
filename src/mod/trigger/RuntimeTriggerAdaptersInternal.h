@@ -49,6 +49,10 @@ bool tameAnimalTriggerRegistered();
 void registerTameAnimalTrigger(Entry& mod);
 void unregisterTameAnimalTrigger();
 
+bool allayDeliveredItemTriggerRegistered();
+void registerAllayDeliveredItemTrigger(Entry& mod);
+void unregisterAllayDeliveredItemTrigger();
+
 bool entityHurtPlayerTriggerRegistered();
 void registerEntityHurtPlayerTrigger(Entry& mod);
 void unregisterEntityHurtPlayerTrigger();
