@@ -46,6 +46,7 @@
 - `minecraft:enter_block`（当前窄实现：hook `EndGatewayBlockActor::teleportEntity(Actor&)`，仅 `{ "block": "minecraft:end_gateway" }` / `end/enter_end_gateway`）
 - `minecraft:item_used_on_block`（当前窄实现：覆盖重生锚、磁石指南针、草甸唱片机、点亮铜灯刮削、蜂蜜采集、铜方块上蜡/脱蜡、告示牌发光等本地 partial slices）
 - `minecraft:thrown_item_picked_up_by_entity`（当前窄实现：仅 `nether/distract_piglin` 的猪灵通过 `AdmireItemGoal::start()` 开始欣赏玩家丢出的金质物品路径）
+- `minecraft:thrown_item_picked_up_by_player`（当前窄实现：仅 `husbandry/allay_deliver_item_to_player`，基于 `GoAndGiveItemsToOwnerGoal::_attemptToGiveItem()` 成功向主人投物路径）
 - `minecraft:placed_block`（当前窄实现：仅 `adventure/read_power_of_chiseled_bookshelf` 的放置雕纹书架到已有比较器旁路径）
 - `minecraft:player_interacted_with_entity`（当前窄实现：仅 `husbandry/leash_all_frog_variants`）
 - `minecraft:kill_mob_near_sculk_catalyst`（当前窄实现：基于幽匿催发体消耗死亡经验路径）
@@ -114,7 +115,7 @@
 | `tame_animal` | partial | 当前窄实现：hook `TameableComponent::tame(Actor&, Player&)`，仅当 `ActorFlags::Tamed` 从 false 变 true 时派发；支持无 `conditions` 的 `husbandry/tame_an_animal`、猫 `type_specific.variant`（用于 `husbandry/complete_catalogue`）与狼 `type_specific.variant`（用于 `husbandry/whole_pack`），不支持 Java player 谓词或完整 entity predicate parity；仍需 live-server QA |
 | `target_hit` | partial | 当前仅支持 `adventure/bullseye` 已核窄形状：`signal_strength = 15` + `projectile[0].condition = minecraft:entity_properties` + `projectile[0].entity = this` + `projectile[0].predicate.distance.horizontal.min = 30.0` |
 | `thrown_item_picked_up_by_entity` | partial | 当前窄实现仅覆盖 `nether/distract_piglin` 中玩家丢出金质物品后猪灵通过 `AdmireItemGoal::start()` 开始欣赏/拾起的路径；支持本地 `item` / `items` 与可选 `was_targeting_bartering_player` 布尔条件；当前本地数据只保留可完成的 thrown criterion，不覆盖完整 Java entity/player 谓词或手持金锭直接交互 |
-| `thrown_item_picked_up_by_player` | missing-trigger | |
+| `thrown_item_picked_up_by_player` | partial | 当前窄实现仅覆盖 `husbandry/allay_deliver_item_to_player`：hook `GoAndGiveItemsToOwnerGoal::_attemptToGiveItem()` 成功返回后派发悦灵与主人玩家；支持本地 `entity[0].predicate.type = minecraft:allay` 形状，不覆盖完整 Java item/entity/player 谓词或非悦灵拾取路径 |
 | `tick` | missing-trigger | 已不再用于现有 advancement 定义，应继续保持移除状态 |
 | `used_ender_eye` | missing-trigger | Java 原版存在该 trigger，但当前项目已不再保留其独立运行时路径；`story/follow_ender_eye` 已回正为 `minecraft:location` + stronghold 结构条件 |
 | `used_totem` | done | 当前窄实现，复用 item 条件；Hook `Player::$consumeTotem` 且仅在实际消耗图腾后触发 |
@@ -262,8 +263,8 @@
 | `husbandry/silk_touch_nest` | `bee_nest_destroyed` | done | 已补数据并接入窄实现：事件源只派发蜂巢/蜂箱破坏事实，trigger 层从玩家当前手持物品匹配精准采集条件，并要求 `minecraft:bee_nest`、`num_bees_inside.min = 3`；live-server QA 已验证空蜂巢 `bees=0` 不完成、含 3 只蜜蜂的蜂巢 `bees=3` 可授予进度 |
 | `husbandry/ride_a_boat_with_a_goat` | other | missing-trigger | |
 | `husbandry/make_a_sign_glow` | `item_used_on_block` | partial | 已补本地 JSON + lang；runtime 不再调用 `SignBlock::_getInteractResult`，改为只读检查 glow ink sac、告示牌/悬挂告示牌 block actor、未打蜡、玩家朝向侧文本存在且尚未发光；数据条件已包含实服观测到的 legacy `minecraft:standing_sign` / `minecraft:wall_sign` 以及本地木种 sign/hanging sign ID，仍需 live-server QA 覆盖更多 sign block ID。 |
-| `husbandry/allay_deliver_item_to_player` | other | missing-trigger | 尚未实现；当前没有本地 JSON/lang/runtime，需先研究悦灵向玩家投物的可靠事件 seam |
-| `husbandry/allay_deliver_cake_to_note_block` | `allay_drop_item_on_block` | missing-trigger | 尚未实现；当前没有本地 JSON/lang/runtime，且 `allay_drop_item_on_block` trigger 仍缺可靠事件 seam |
+| `husbandry/allay_deliver_item_to_player` | `thrown_item_picked_up_by_player` / allay owner delivery narrow slice | partial | 已补本地 JSON + lang，并接入 `GoAndGiveItemsToOwnerGoal::_attemptToGiveItem()` 成功向主人投物路径；runtime 要求投递实体为 `minecraft:allay`、`getPlayerOwner()` 可解析玩家；当前仅匹配本地 `entity=this allay` 条件，不覆盖完整 Java 谓词；live-server QA 已验证可触发 |
+| `husbandry/allay_deliver_cake_to_note_block` | `allay_drop_item_on_block` | missing-trigger | 尚未实现；当前没有本地 JSON/lang/runtime；`GoAndGiveItemsToNoteblockGoal` 只有 `tick()` / `mTargetBlockPos` 暴露，缺少类似 `_attemptToGiveItem()` 的可靠投物成功 seam，不能仅凭状态猜测实现 |
 | `husbandry/obtain_sniffer_egg` | `inventory_changed` | done | 已补数据，复用现有 `inventory_changed`；按原版保持 hidden |
 | `husbandry/feed_snifflet` | other | missing-trigger | |
 | `husbandry/plant_any_sniffer_seed` | other | missing-trigger | |
@@ -281,6 +282,7 @@
 - `husbandry/froglights`
 - `husbandry/axolotl_in_a_bucket`
 - `husbandry/balanced_diet`
+- `husbandry/allay_deliver_item_to_player`
 - `husbandry/obtain_sniffer_egg`
 - `husbandry/obtain_netherite_hoe`
 
@@ -290,5 +292,5 @@
 2. `adventure/very_very_frightening` 与 `adventure/kill_mob_near_sculk_catalyst` 已补数据并接入窄 runtime slice；后续不要再把它们列入 seam research 队列，除非有新的 Bedrock 行为证据需要修正。
 3. `husbandry/silk_touch_nest`、`husbandry/breed_an_animal`、`husbandry/bred_all_animals`、`husbandry/tame_an_animal`、`husbandry/complete_catalogue`、`husbandry/whole_pack` 已有数据与窄实现；对应 trigger family 仍按上方备注保留 Java parity caveat。
 4. `husbandry/balanced_diet` 当前仍保持 `partial`：本地已有原版 ID 数据，但食物集合与 Bedrock consume runtime 覆盖仍需逐项核对后才能标为 `done`。
-5. `nether/distract_piglin` 仅是猪灵欣赏玩家丢出金质物品路径的 `partial` 窄切片；两个悦灵进度（`husbandry/allay_deliver_item_to_player`、`husbandry/allay_deliver_cake_to_note_block`）仍未实现，不要因为已有 wiki/数据线索把它们标为 `partial` 或 `done`。
+5. `nether/distract_piglin` 仅是猪灵欣赏玩家丢出金质物品路径的 `partial` 窄切片；`husbandry/allay_deliver_item_to_player` 已是悦灵向主人投物路径的 `partial` 窄切片；`husbandry/allay_deliver_cake_to_note_block` 仍未实现，不要因为已有 wiki/数据线索把它标为 `partial` 或 `done`。
 6. 后续每完成一个 trigger，就回到本文件把对应 `missing-trigger` / `missing-data` / `partial` 状态和 caveat 同步更新。
